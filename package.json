@@ -1,7 +1,12 @@
 {
-  "name": "hardhat-project",
+  "name": "coti-contracts",
+  "version": "1.0.0",
+  "description": "",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "hardhat": "^2.22.8"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2"
   }
 }
