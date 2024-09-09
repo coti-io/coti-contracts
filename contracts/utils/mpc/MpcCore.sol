@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MIT
+// COTI Contracts (last updated v0.1.0) (utils/mpc/MpcCore.sol)
+
 pragma solidity ^0.8.19;
 
 
