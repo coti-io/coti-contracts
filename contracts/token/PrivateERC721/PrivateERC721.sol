@@ -14,8 +14,6 @@ import {IERC721Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.s
  * @dev Only partially implements the Metadata extension.
  */
 abstract contract PrivateERC721 is Context, ERC165, IERC721, IERC721Errors {
-
-    address public a;
     
     // Token name
     string private _name;

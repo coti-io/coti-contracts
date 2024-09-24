@@ -33,7 +33,7 @@ abstract contract PrivateERC721URIStorage is IERC4906, PrivateERC721 {
     function tokenURI(uint256 tokenId) public view virtual returns (ctUint64[] memory) {
         utUint64[] memory _tokenURI = _tokenURIs[tokenId];
 
-        ctUint64[] memory _userTokenURI = new ctUint64[](_tokenURIs[tokenId].length);
+        ctUint64[] memory _userTokenURI = new ctUint64[](_tokenURI.length);
 
         for (uint256 i = 0; i < _tokenURI.length; ++i) {
             _userTokenURI[i] = _tokenURI[i].userCiphertext;
@@ -91,17 +91,15 @@ abstract contract PrivateERC721URIStorage is IERC4906, PrivateERC721 {
 
                 tokenURI_.push(offBoardCombined);
             }
-
-            _tokenURIs[tokenId] = tokenURI_;
         } else {
             for (uint256 i = 0; i < gtTokenURI.length; ++i) {
                 offBoardCombined = MpcCore.offBoardCombined(gtTokenURI[i], to);
 
                 tokenURI_[i].userCiphertext = offBoardCombined.userCiphertext;
             }
-
-            _tokenURIs[tokenId] = tokenURI_;
         }
+
+        _tokenURIs[tokenId] = tokenURI_;
     }
 
     function _update(

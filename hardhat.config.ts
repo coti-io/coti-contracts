@@ -6,7 +6,7 @@ dotenv.config()
 
 const config: HardhatUserConfig = {
   defaultNetwork: "devnet",
-  solidity: "0.8.19",
+  solidity: "0.8.20",
   networks: {
     devnet: {
       url: "https://devnet.coti.io/rpc",

@@ -209,15 +209,15 @@ describe("Data Privacy Framework", function () {
 
       const conditionIdx = await contract.permissions("0x70D6c0e13B60964D3A3e372Dd86acA7b75dcc562", "gt")
 
-      expect(conditionIdx).to.equal(2)
+      expect(conditionIdx).to.equal(3)
     })
 
     it("Should update the conditions mapping", async function () {
       const { contract } = deployment
 
-      const condition = await contract.conditions(2)
+      const condition = await contract.conditions(3)
 
-      expect(condition[0]).to.equal(BigInt(2))
+      expect(condition[0]).to.equal(BigInt(3))
       expect(condition[1]).to.equal("0x70D6c0e13B60964D3A3e372Dd86acA7b75dcc562")
       expect(condition[2]).to.equal("gt")
       expect(condition[3]).to.equal(true)
@@ -400,18 +400,18 @@ describe("Data Privacy Framework", function () {
       expect(conditions.length).to.equal(2)
     })
 
-    it("Should return the third and fourth conditions", async function () {
+    it("Should return the third, fourth and fifth conditions", async function () {
       const { contract } = deployment
 
-      const conditions = await contract.getConditions(3, 2)
+      const conditions = await contract.getConditions(3, 3)
 
-      expect(conditions.length).to.equal(2)
+      expect(conditions.length).to.equal(3)
     })
 
     it("Should return the fifth condition", async function () {
       const { contract } = deployment
 
-      const conditions = await contract.getConditions(5, 2)
+      const conditions = await contract.getConditions(6, 2)
 
       expect(conditions.length).to.equal(1)
     })
