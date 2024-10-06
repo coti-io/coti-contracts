@@ -23,10 +23,13 @@ import type {
   TypedContractMethod,
 } from "../../../../common";
 
+export type CtStringStruct = { value: BigNumberish[] };
+
+export type CtStringStructOutput = [value: bigint[]] & { value: bigint[] };
+
 export interface PrivateERC721URIStorageInterface extends Interface {
   getFunction(
     nameOrSignature:
-      | "a"
       | "approve"
       | "balanceOf"
       | "getApproved"
@@ -51,7 +54,6 @@ export interface PrivateERC721URIStorageInterface extends Interface {
       | "Transfer"
   ): EventFragment;
 
-  encodeFunctionData(functionFragment: "a", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "approve",
     values: [AddressLike, BigNumberish]
@@ -99,7 +101,6 @@ export interface PrivateERC721URIStorageInterface extends Interface {
     values: [AddressLike, AddressLike, BigNumberish]
   ): string;
 
-  decodeFunctionResult(functionFragment: "a", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(
@@ -265,8 +266,6 @@ export interface PrivateERC721URIStorage extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  a: TypedContractMethod<[], [string], "view">;
-
   approve: TypedContractMethod<
     [to: AddressLike, tokenId: BigNumberish],
     [void],
@@ -318,7 +317,11 @@ export interface PrivateERC721URIStorage extends BaseContract {
 
   symbol: TypedContractMethod<[], [string], "view">;
 
-  tokenURI: TypedContractMethod<[tokenId: BigNumberish], [bigint[]], "view">;
+  tokenURI: TypedContractMethod<
+    [tokenId: BigNumberish],
+    [CtStringStructOutput],
+    "view"
+  >;
 
   transferFrom: TypedContractMethod<
     [from: AddressLike, to: AddressLike, tokenId: BigNumberish],
@@ -330,7 +333,6 @@ export interface PrivateERC721URIStorage extends BaseContract {
     key: string | FunctionFragment
   ): T;
 
-  getFunction(nameOrSignature: "a"): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "approve"
   ): TypedContractMethod<
@@ -391,7 +393,11 @@ export interface PrivateERC721URIStorage extends BaseContract {
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "tokenURI"
-  ): TypedContractMethod<[tokenId: BigNumberish], [bigint[]], "view">;
+  ): TypedContractMethod<
+    [tokenId: BigNumberish],
+    [CtStringStructOutput],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "transferFrom"
   ): TypedContractMethod<

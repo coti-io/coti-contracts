@@ -231,19 +231,6 @@ const _abi = [
     type: "event",
   },
   {
-    inputs: [],
-    name: "a",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [
       {
         internalType: "address",
@@ -467,9 +454,16 @@ const _abi = [
     name: "tokenURI",
     outputs: [
       {
-        internalType: "ctUint64[]",
+        components: [
+          {
+            internalType: "ctUint64[]",
+            name: "value",
+            type: "uint256[]",
+          },
+        ],
+        internalType: "struct ctString",
         name: "",
-        type: "uint256[]",
+        type: "tuple",
       },
     ],
     stateMutability: "view",

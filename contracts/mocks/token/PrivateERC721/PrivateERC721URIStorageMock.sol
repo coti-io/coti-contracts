@@ -19,14 +19,13 @@ contract PrivateERC721URIStorageMock is PrivateERC721URIStorage {
 
     function mint(
         address to,
-        ctUint64[] calldata _itTokenURI,
-        bytes[] calldata _itSignature
+        itString calldata itTokenURI
     ) public {
         uint256 tokenId = _totalSupply;
         
         _mint(to, tokenId);
 
-        PrivateERC721URIStorage._setTokenURI(msg.sender, tokenId, _itTokenURI, _itSignature);
+        PrivateERC721URIStorage._setTokenURI(msg.sender, tokenId, itTokenURI);
 
         _totalSupply += 1;
 

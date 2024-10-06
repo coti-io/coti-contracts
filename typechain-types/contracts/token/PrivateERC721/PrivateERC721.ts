@@ -26,7 +26,6 @@ import type {
 export interface PrivateERC721Interface extends Interface {
   getFunction(
     nameOrSignature:
-      | "a"
       | "approve"
       | "balanceOf"
       | "getApproved"
@@ -45,7 +44,6 @@ export interface PrivateERC721Interface extends Interface {
     nameOrSignatureOrTopic: "Approval" | "ApprovalForAll" | "Transfer"
   ): EventFragment;
 
-  encodeFunctionData(functionFragment: "a", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "approve",
     values: [AddressLike, BigNumberish]
@@ -89,7 +87,6 @@ export interface PrivateERC721Interface extends Interface {
     values: [AddressLike, AddressLike, BigNumberish]
   ): string;
 
-  decodeFunctionResult(functionFragment: "a", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(
@@ -226,8 +223,6 @@ export interface PrivateERC721 extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  a: TypedContractMethod<[], [string], "view">;
-
   approve: TypedContractMethod<
     [to: AddressLike, tokenId: BigNumberish],
     [void],
@@ -289,7 +284,6 @@ export interface PrivateERC721 extends BaseContract {
     key: string | FunctionFragment
   ): T;
 
-  getFunction(nameOrSignature: "a"): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "approve"
   ): TypedContractMethod<

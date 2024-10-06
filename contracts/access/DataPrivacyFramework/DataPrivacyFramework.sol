@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-// COTI Contracts (last updated v0.1.0) (access/DataPrivacyFramework/DataPrivacyFramework.sol)
 
 pragma solidity ^0.8.19;
 

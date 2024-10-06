@@ -23,10 +23,23 @@ import type {
   TypedContractMethod,
 } from "../../../../common";
 
+export type CtStringStruct = { value: BigNumberish[] };
+
+export type CtStringStructOutput = [value: bigint[]] & { value: bigint[] };
+
+export type ItStringStruct = {
+  ciphertext: CtStringStruct;
+  signature: BytesLike[];
+};
+
+export type ItStringStructOutput = [
+  ciphertext: CtStringStructOutput,
+  signature: string[]
+] & { ciphertext: CtStringStructOutput; signature: string[] };
+
 export interface PrivateERC721URIStorageMockInterface extends Interface {
   getFunction(
     nameOrSignature:
-      | "a"
       | "approve"
       | "balanceOf"
       | "getApproved"
@@ -54,7 +67,6 @@ export interface PrivateERC721URIStorageMockInterface extends Interface {
       | "Transfer"
   ): EventFragment;
 
-  encodeFunctionData(functionFragment: "a", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "approve",
     values: [AddressLike, BigNumberish]
@@ -73,7 +85,7 @@ export interface PrivateERC721URIStorageMockInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "mint",
-    values: [AddressLike, BigNumberish[], BytesLike[]]
+    values: [AddressLike, ItStringStruct]
   ): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
   encodeFunctionData(
@@ -110,7 +122,6 @@ export interface PrivateERC721URIStorageMockInterface extends Interface {
     values: [AddressLike, AddressLike, BigNumberish]
   ): string;
 
-  decodeFunctionResult(functionFragment: "a", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(
@@ -294,8 +305,6 @@ export interface PrivateERC721URIStorageMock extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  a: TypedContractMethod<[], [string], "view">;
-
   approve: TypedContractMethod<
     [to: AddressLike, tokenId: BigNumberish],
     [void],
@@ -313,7 +322,7 @@ export interface PrivateERC721URIStorageMock extends BaseContract {
   >;
 
   mint: TypedContractMethod<
-    [to: AddressLike, _itTokenURI: BigNumberish[], _itSignature: BytesLike[]],
+    [to: AddressLike, itTokenURI: ItStringStruct],
     [void],
     "nonpayable"
   >;
@@ -353,7 +362,11 @@ export interface PrivateERC721URIStorageMock extends BaseContract {
 
   symbol: TypedContractMethod<[], [string], "view">;
 
-  tokenURI: TypedContractMethod<[tokenId: BigNumberish], [bigint[]], "view">;
+  tokenURI: TypedContractMethod<
+    [tokenId: BigNumberish],
+    [CtStringStructOutput],
+    "view"
+  >;
 
   totalSupply: TypedContractMethod<[], [bigint], "view">;
 
@@ -367,7 +380,6 @@ export interface PrivateERC721URIStorageMock extends BaseContract {
     key: string | FunctionFragment
   ): T;
 
-  getFunction(nameOrSignature: "a"): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "approve"
   ): TypedContractMethod<
@@ -391,7 +403,7 @@ export interface PrivateERC721URIStorageMock extends BaseContract {
   getFunction(
     nameOrSignature: "mint"
   ): TypedContractMethod<
-    [to: AddressLike, _itTokenURI: BigNumberish[], _itSignature: BytesLike[]],
+    [to: AddressLike, itTokenURI: ItStringStruct],
     [void],
     "nonpayable"
   >;
@@ -435,7 +447,11 @@ export interface PrivateERC721URIStorageMock extends BaseContract {
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "tokenURI"
-  ): TypedContractMethod<[tokenId: BigNumberish], [bigint[]], "view">;
+  ): TypedContractMethod<
+    [tokenId: BigNumberish],
+    [CtStringStructOutput],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "totalSupply"
   ): TypedContractMethod<[], [bigint], "view">;

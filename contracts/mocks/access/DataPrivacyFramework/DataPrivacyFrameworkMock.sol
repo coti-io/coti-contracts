@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-// Data Privacy Framework (last updated v0.1.0)
 
 pragma solidity ^0.8.19;
 

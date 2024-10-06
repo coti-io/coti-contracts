@@ -7,7 +7,7 @@
     "hardhat": "^2.22.8"
   },
   "dependencies": {
-    "@coti-io/coti-sdk-typescript": "0.6.3",
+    "@coti-io/coti-sdk-typescript": "git+https://github.com/coti-io/coti-sdk-typescript.git#0183765d6fb79ac42dfa0e3370bc2604d551f6dd",
     "@openzeppelin/contracts": "^5.0.2",
     "dotenv": "^16.4.5"
   }

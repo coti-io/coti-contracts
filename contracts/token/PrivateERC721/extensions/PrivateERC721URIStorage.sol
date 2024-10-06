@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-// COTI Contracts (last updated v0.1.0) (token/PrivateERC721/extensions/PrivateERC721URIStorage.sol)
 
 pragma solidity ^0.8.19;
 
@@ -19,7 +18,7 @@ abstract contract PrivateERC721URIStorage is IERC4906, PrivateERC721 {
     // defines events and does not include any external function.
     bytes4 private constant ERC4906_INTERFACE_ID = bytes4(0x000000); // TODO: GET INTERFACE ID
 
-    mapping(uint256 tokenId => utUint64[]) private _tokenURIs;
+    mapping(uint256 tokenId => utString) private _tokenURIs;
 
     /**
      * @dev See {IERC165-supportsInterface}
@@ -30,16 +29,8 @@ abstract contract PrivateERC721URIStorage is IERC4906, PrivateERC721 {
         return interfaceId == ERC4906_INTERFACE_ID || super.supportsInterface(interfaceId);
     }
 
-    function tokenURI(uint256 tokenId) public view virtual returns (ctUint64[] memory) {
-        utUint64[] memory _tokenURI = _tokenURIs[tokenId];
-
-        ctUint64[] memory _userTokenURI = new ctUint64[](_tokenURI.length);
-
-        for (uint256 i = 0; i < _tokenURI.length; ++i) {
-            _userTokenURI[i] = _tokenURI[i].userCiphertext;
-        }
-        
-        return _userTokenURI;
+    function tokenURI(uint256 tokenId) public view virtual returns (ctString memory) {
+        return _tokenURIs[tokenId].userCiphertext;
     }
 
     /**
@@ -49,19 +40,9 @@ abstract contract PrivateERC721URIStorage is IERC4906, PrivateERC721 {
     function _setTokenURI(
         address to,
         uint256 tokenId,
-        ctUint64[] calldata itTokenURI,
-        bytes[] calldata itSignature
+        itString calldata itTokenURI
     ) internal virtual {
-        gtUint64[] memory gtTokenURI = new gtUint64[](itTokenURI.length);
-
-        itUint64 memory it;
-
-        for (uint256 i = 0; i < itTokenURI.length; ++i) {
-            it.ciphertext = itTokenURI[i];
-            it.signature = itSignature[i];
-
-            gtTokenURI[i] = MpcCore.validateCiphertext(it);
-        }
+        gtString memory gtTokenURI = MpcCore.validateCiphertext(itTokenURI);
 
         _setTokenURI(to, tokenId, gtTokenURI, true);
     }
@@ -73,33 +54,20 @@ abstract contract PrivateERC721URIStorage is IERC4906, PrivateERC721 {
     function _setTokenURI(
         address to,
         uint256 tokenId,
-        gtUint64[] memory gtTokenURI,
+        gtString memory gtTokenURI,
         bool updateCiphertext
     ) private {
         if (ownerOf(tokenId) == address(0)) {
             revert ERC721URIStorageNonMintedToken(tokenId);
         }
 
-        // we must first make sure that tokenURI has the correct length
-        utUint64[] storage tokenURI_ = _tokenURIs[tokenId];
-
-        utUint64 memory offBoardCombined;
+        utString memory utTokenURI =  MpcCore.offBoardCombined(gtTokenURI, to);
 
         if (updateCiphertext) {
-            for (uint256 i = 0; i < gtTokenURI.length; ++i) {
-                offBoardCombined = MpcCore.offBoardCombined(gtTokenURI[i], to);
-
-                tokenURI_.push(offBoardCombined);
-            }
+            _tokenURIs[tokenId] = utTokenURI;
         } else {
-            for (uint256 i = 0; i < gtTokenURI.length; ++i) {
-                offBoardCombined = MpcCore.offBoardCombined(gtTokenURI[i], to);
-
-                tokenURI_[i].userCiphertext = offBoardCombined.userCiphertext;
-            }
+             _tokenURIs[tokenId].userCiphertext = utTokenURI.userCiphertext;
         }
-
-        _tokenURIs[tokenId] = tokenURI_;
     }
 
     function _update(
@@ -107,13 +75,7 @@ abstract contract PrivateERC721URIStorage is IERC4906, PrivateERC721 {
         uint256 tokenId,
         address auth
     ) internal virtual override returns (address) {
-        utUint64[] memory tokenURI_ = _tokenURIs[tokenId];
-
-        gtUint64[] memory gtTokenURI = new gtUint64[](tokenURI_.length);
-
-        for (uint256 i = 0; i < gtTokenURI.length; ++i) {
-            gtTokenURI[i] = MpcCore.onBoard(tokenURI_[i].ciphertext);
-        }
+        gtString memory gtTokenURI = MpcCore.onBoard(_tokenURIs[tokenId].ciphertext);
 
         address previousOwner = PrivateERC721._update(to, tokenId, auth);
 

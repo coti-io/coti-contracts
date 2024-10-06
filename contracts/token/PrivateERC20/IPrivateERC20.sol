@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-// COTI Contracts (last updated v0.1.0) (token/PrivateERC20/IPrivateERC20.sol)
 
 pragma solidity ^0.8.19;
 
