@@ -11,7 +11,7 @@ async function deploy() {
   const DataPrivacyFrameworkMock = await hre.ethers.getContractFactory("DataPrivacyFrameworkMock")
 
   const dataPrivacyFrameworkMock = await DataPrivacyFrameworkMock
-    .connect(owner.wallet)
+    .connect(owner)
     .deploy()
 
   const contract = await dataPrivacyFrameworkMock.waitForDeployment()
