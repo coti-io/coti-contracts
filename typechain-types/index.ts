@@ -6,8 +6,6 @@ export type { openzeppelin };
 import type * as contracts from "./contracts";
 export type { contracts };
 export * as factories from "./factories";
-export type { Ownable } from "./@openzeppelin/contracts/access/Ownable";
-export { Ownable__factory } from "./factories/@openzeppelin/contracts/access/Ownable__factory";
 export type { IERC1155Errors } from "./@openzeppelin/contracts/interfaces/draft-IERC6093.sol/IERC1155Errors";
 export { IERC1155Errors__factory } from "./factories/@openzeppelin/contracts/interfaces/draft-IERC6093.sol/IERC1155Errors__factory";
 export type { IERC20Errors } from "./@openzeppelin/contracts/interfaces/draft-IERC6093.sol/IERC20Errors";
