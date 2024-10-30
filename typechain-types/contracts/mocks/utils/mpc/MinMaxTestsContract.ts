@@ -121,7 +121,8 @@ export interface MinMaxTestsContractInterface extends Interface {
       | "decryptAndCompareResults16"
       | "decryptAndCompareResults32"
       | "decryptAndCompareResults64"
-      | "getResult"
+      | "getMaxResult"
+      | "getMinResult"
       | "maxTest"
       | "minTest"
       | "setPublicValues"
@@ -139,7 +140,14 @@ export interface MinMaxTestsContractInterface extends Interface {
     functionFragment: "decryptAndCompareResults64",
     values: [MinMaxTestsContract.Check64Struct]
   ): string;
-  encodeFunctionData(functionFragment: "getResult", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "getMaxResult",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getMinResult",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "maxTest",
     values: [BigNumberish, BigNumberish]
@@ -169,7 +177,14 @@ export interface MinMaxTestsContractInterface extends Interface {
     functionFragment: "decryptAndCompareResults64",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "getResult", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getMaxResult",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getMinResult",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "maxTest", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "minTest", data: BytesLike): Result;
   decodeFunctionResult(
@@ -239,7 +254,9 @@ export interface MinMaxTestsContract extends BaseContract {
     "nonpayable"
   >;
 
-  getResult: TypedContractMethod<[], [bigint], "view">;
+  getMaxResult: TypedContractMethod<[], [bigint], "view">;
+
+  getMinResult: TypedContractMethod<[], [bigint], "view">;
 
   maxTest: TypedContractMethod<
     [a: BigNumberish, b: BigNumberish],
@@ -289,7 +306,10 @@ export interface MinMaxTestsContract extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "getResult"
+    nameOrSignature: "getMaxResult"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getMinResult"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "maxTest"

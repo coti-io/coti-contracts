@@ -78,15 +78,15 @@ export declare namespace TransferTestsContract {
 export interface TransferTestsContractInterface extends Interface {
   getFunction(
     nameOrSignature:
-      | "computeAndChekTransfer16"
-      | "computeAndChekTransfer32"
-      | "computeAndChekTransfer64"
+      | "computeAndCheckTransfer16"
+      | "computeAndCheckTransfer32"
+      | "computeAndCheckTransfer64"
       | "getResults"
       | "transferTest"
   ): FunctionFragment;
 
   encodeFunctionData(
-    functionFragment: "computeAndChekTransfer16",
+    functionFragment: "computeAndCheckTransfer16",
     values: [
       TransferTestsContract.AllGTCastingValuesStruct,
       TransferTestsContract.AllAmountValuesStruct,
@@ -96,7 +96,7 @@ export interface TransferTestsContractInterface extends Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "computeAndChekTransfer32",
+    functionFragment: "computeAndCheckTransfer32",
     values: [
       TransferTestsContract.AllGTCastingValuesStruct,
       TransferTestsContract.AllAmountValuesStruct,
@@ -106,7 +106,7 @@ export interface TransferTestsContractInterface extends Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "computeAndChekTransfer64",
+    functionFragment: "computeAndCheckTransfer64",
     values: [
       TransferTestsContract.AllGTCastingValuesStruct,
       TransferTestsContract.AllAmountValuesStruct,
@@ -125,15 +125,15 @@ export interface TransferTestsContractInterface extends Interface {
   ): string;
 
   decodeFunctionResult(
-    functionFragment: "computeAndChekTransfer16",
+    functionFragment: "computeAndCheckTransfer16",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "computeAndChekTransfer32",
+    functionFragment: "computeAndCheckTransfer32",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "computeAndChekTransfer64",
+    functionFragment: "computeAndCheckTransfer64",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getResults", data: BytesLike): Result;
@@ -186,7 +186,7 @@ export interface TransferTestsContract extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  computeAndChekTransfer16: TypedContractMethod<
+  computeAndCheckTransfer16: TypedContractMethod<
     [
       allGTCastingValues: TransferTestsContract.AllGTCastingValuesStruct,
       allAmountValues: TransferTestsContract.AllAmountValuesStruct,
@@ -198,7 +198,7 @@ export interface TransferTestsContract extends BaseContract {
     "nonpayable"
   >;
 
-  computeAndChekTransfer32: TypedContractMethod<
+  computeAndCheckTransfer32: TypedContractMethod<
     [
       allGTCastingValues: TransferTestsContract.AllGTCastingValuesStruct,
       allAmountValues: TransferTestsContract.AllAmountValuesStruct,
@@ -210,7 +210,7 @@ export interface TransferTestsContract extends BaseContract {
     "nonpayable"
   >;
 
-  computeAndChekTransfer64: TypedContractMethod<
+  computeAndCheckTransfer64: TypedContractMethod<
     [
       allGTCastingValues: TransferTestsContract.AllGTCastingValuesStruct,
       allAmountValues: TransferTestsContract.AllAmountValuesStruct,
@@ -235,7 +235,7 @@ export interface TransferTestsContract extends BaseContract {
   ): T;
 
   getFunction(
-    nameOrSignature: "computeAndChekTransfer16"
+    nameOrSignature: "computeAndCheckTransfer16"
   ): TypedContractMethod<
     [
       allGTCastingValues: TransferTestsContract.AllGTCastingValuesStruct,
@@ -248,7 +248,7 @@ export interface TransferTestsContract extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "computeAndChekTransfer32"
+    nameOrSignature: "computeAndCheckTransfer32"
   ): TypedContractMethod<
     [
       allGTCastingValues: TransferTestsContract.AllGTCastingValuesStruct,
@@ -261,7 +261,7 @@ export interface TransferTestsContract extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "computeAndChekTransfer64"
+    nameOrSignature: "computeAndCheckTransfer64"
   ): TypedContractMethod<
     [
       allGTCastingValues: TransferTestsContract.AllGTCastingValuesStruct,

@@ -123,7 +123,9 @@ export interface Comparison2TestsContractInterface extends Interface {
       | "decryptAndCompareResults64"
       | "eqTest"
       | "geTest"
-      | "getResult"
+      | "getEqResult"
+      | "getGeResult"
+      | "getNeResult"
       | "neTest"
       | "setPublicValues"
   ): FunctionFragment;
@@ -148,7 +150,18 @@ export interface Comparison2TestsContractInterface extends Interface {
     functionFragment: "geTest",
     values: [BigNumberish, BigNumberish]
   ): string;
-  encodeFunctionData(functionFragment: "getResult", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "getEqResult",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getGeResult",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getNeResult",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "neTest",
     values: [BigNumberish, BigNumberish]
@@ -176,7 +189,18 @@ export interface Comparison2TestsContractInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "eqTest", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "geTest", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "getResult", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getEqResult",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getGeResult",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getNeResult",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "neTest", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setPublicValues",
@@ -257,7 +281,11 @@ export interface Comparison2TestsContract extends BaseContract {
     "nonpayable"
   >;
 
-  getResult: TypedContractMethod<[], [boolean], "view">;
+  getEqResult: TypedContractMethod<[], [boolean], "view">;
+
+  getGeResult: TypedContractMethod<[], [boolean], "view">;
+
+  getNeResult: TypedContractMethod<[], [boolean], "view">;
 
   neTest: TypedContractMethod<
     [a: BigNumberish, b: BigNumberish],
@@ -315,7 +343,13 @@ export interface Comparison2TestsContract extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "getResult"
+    nameOrSignature: "getEqResult"
+  ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "getGeResult"
+  ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "getNeResult"
   ): TypedContractMethod<[], [boolean], "view">;
   getFunction(
     nameOrSignature: "neTest"

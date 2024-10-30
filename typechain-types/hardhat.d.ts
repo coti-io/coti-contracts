@@ -90,9 +90,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Miscellaneous1TestsContract__factory>;
     getContractFactory(
-      name: "Miscellaneous2TestsContract",
+      name: "MiscellaneousTestsContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Miscellaneous2TestsContract__factory>;
+    ): Promise<Contracts.MiscellaneousTestsContract__factory>;
     getContractFactory(
       name: "OffboardToUserKeyTestContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -101,10 +101,6 @@ declare module "hardhat/types/runtime" {
       name: "ShiftTestsContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ShiftTestsContract__factory>;
-    getContractFactory(
-      name: "StringTestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.StringTestsContract__factory>;
     getContractFactory(
       name: "TransferScalarTestsContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -137,6 +133,10 @@ declare module "hardhat/types/runtime" {
       name: "PrivateERC721",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PrivateERC721__factory>;
+    getContractFactory(
+      name: "MpcCore",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.MpcCore__factory>;
     getContractFactory(
       name: "ExtendedOperations",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -238,10 +238,10 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.Miscellaneous1TestsContract>;
     getContractAt(
-      name: "Miscellaneous2TestsContract",
+      name: "MiscellaneousTestsContract",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.Miscellaneous2TestsContract>;
+    ): Promise<Contracts.MiscellaneousTestsContract>;
     getContractAt(
       name: "OffboardToUserKeyTestContract",
       address: string | ethers.Addressable,
@@ -252,11 +252,6 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.ShiftTestsContract>;
-    getContractAt(
-      name: "StringTestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.StringTestsContract>;
     getContractAt(
       name: "TransferScalarTestsContract",
       address: string | ethers.Addressable,
@@ -297,6 +292,11 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.PrivateERC721>;
+    getContractAt(
+      name: "MpcCore",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.MpcCore>;
     getContractAt(
       name: "ExtendedOperations",
       address: string | ethers.Addressable,
@@ -380,9 +380,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Miscellaneous1TestsContract>;
     deployContract(
-      name: "Miscellaneous2TestsContract",
+      name: "MiscellaneousTestsContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Miscellaneous2TestsContract>;
+    ): Promise<Contracts.MiscellaneousTestsContract>;
     deployContract(
       name: "OffboardToUserKeyTestContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -391,10 +391,6 @@ declare module "hardhat/types/runtime" {
       name: "ShiftTestsContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ShiftTestsContract>;
-    deployContract(
-      name: "StringTestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.StringTestsContract>;
     deployContract(
       name: "TransferScalarTestsContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -427,6 +423,10 @@ declare module "hardhat/types/runtime" {
       name: "PrivateERC721",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.PrivateERC721>;
+    deployContract(
+      name: "MpcCore",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MpcCore>;
     deployContract(
       name: "ExtendedOperations",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -528,10 +528,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Miscellaneous1TestsContract>;
     deployContract(
-      name: "Miscellaneous2TestsContract",
+      name: "MiscellaneousTestsContract",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Miscellaneous2TestsContract>;
+    ): Promise<Contracts.MiscellaneousTestsContract>;
     deployContract(
       name: "OffboardToUserKeyTestContract",
       args: any[],
@@ -542,11 +542,6 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ShiftTestsContract>;
-    deployContract(
-      name: "StringTestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.StringTestsContract>;
     deployContract(
       name: "TransferScalarTestsContract",
       args: any[],
@@ -587,6 +582,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.PrivateERC721>;
+    deployContract(
+      name: "MpcCore",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MpcCore>;
     deployContract(
       name: "ExtendedOperations",
       args: any[],

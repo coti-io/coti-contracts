@@ -2,3 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as mpcInterfaceSol from "./MpcInterface.sol";
+export { MpcCore__factory } from "./MpcCore__factory";

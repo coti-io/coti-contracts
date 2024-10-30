@@ -25,7 +25,11 @@ export interface ExtendedOperationsInterface extends Interface {
     nameOrSignature:
       | "Add"
       | "And"
+      | "CheckedAdd"
+      | "CheckedMul"
+      | "CheckedSub"
       | "Decrypt"
+      | "DeleteUserKey"
       | "Div"
       | "Eq"
       | "Ge"
@@ -65,8 +69,24 @@ export interface ExtendedOperationsInterface extends Interface {
     values: [BytesLike, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "CheckedAdd",
+    values: [BytesLike, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "CheckedMul",
+    values: [BytesLike, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "CheckedSub",
+    values: [BytesLike, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "Decrypt",
     values: [BytesLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "DeleteUserKey",
+    values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "Div",
@@ -180,7 +200,14 @@ export interface ExtendedOperationsInterface extends Interface {
 
   decodeFunctionResult(functionFragment: "Add", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "And", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "CheckedAdd", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "CheckedMul", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "CheckedSub", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "Decrypt", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "DeleteUserKey",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "Div", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "Eq", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "Ge", data: BytesLike): Result;
@@ -278,9 +305,33 @@ export interface ExtendedOperations extends BaseContract {
     "nonpayable"
   >;
 
+  CheckedAdd: TypedContractMethod<
+    [metaData: BytesLike, lhs: BigNumberish, rhs: BigNumberish],
+    [[bigint, bigint] & { overflowBit: bigint; result: bigint }],
+    "nonpayable"
+  >;
+
+  CheckedMul: TypedContractMethod<
+    [metaData: BytesLike, lhs: BigNumberish, rhs: BigNumberish],
+    [[bigint, bigint] & { overflowBit: bigint; result: bigint }],
+    "nonpayable"
+  >;
+
+  CheckedSub: TypedContractMethod<
+    [metaData: BytesLike, lhs: BigNumberish, rhs: BigNumberish],
+    [[bigint, bigint] & { overflowBit: bigint; result: bigint }],
+    "nonpayable"
+  >;
+
   Decrypt: TypedContractMethod<
     [metaData: BytesLike, a: BigNumberish],
     [bigint],
+    "nonpayable"
+  >;
+
+  DeleteUserKey: TypedContractMethod<
+    [signature: BytesLike],
+    [boolean],
     "nonpayable"
   >;
 
@@ -302,7 +353,11 @@ export interface ExtendedOperations extends BaseContract {
     "nonpayable"
   >;
 
-  GetUserKey: TypedContractMethod<[signedEK: BytesLike], [string], "view">;
+  GetUserKey: TypedContractMethod<
+    [signedEK: BytesLike],
+    [string],
+    "nonpayable"
+  >;
 
   Gt: TypedContractMethod<
     [metaData: BytesLike, lhs: BigNumberish, rhs: BigNumberish],
@@ -481,12 +536,36 @@ export interface ExtendedOperations extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "CheckedAdd"
+  ): TypedContractMethod<
+    [metaData: BytesLike, lhs: BigNumberish, rhs: BigNumberish],
+    [[bigint, bigint] & { overflowBit: bigint; result: bigint }],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "CheckedMul"
+  ): TypedContractMethod<
+    [metaData: BytesLike, lhs: BigNumberish, rhs: BigNumberish],
+    [[bigint, bigint] & { overflowBit: bigint; result: bigint }],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "CheckedSub"
+  ): TypedContractMethod<
+    [metaData: BytesLike, lhs: BigNumberish, rhs: BigNumberish],
+    [[bigint, bigint] & { overflowBit: bigint; result: bigint }],
+    "nonpayable"
+  >;
+  getFunction(
     nameOrSignature: "Decrypt"
   ): TypedContractMethod<
     [metaData: BytesLike, a: BigNumberish],
     [bigint],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "DeleteUserKey"
+  ): TypedContractMethod<[signature: BytesLike], [boolean], "nonpayable">;
   getFunction(
     nameOrSignature: "Div"
   ): TypedContractMethod<
@@ -510,7 +589,7 @@ export interface ExtendedOperations extends BaseContract {
   >;
   getFunction(
     nameOrSignature: "GetUserKey"
-  ): TypedContractMethod<[signedEK: BytesLike], [string], "view">;
+  ): TypedContractMethod<[signedEK: BytesLike], [string], "nonpayable">;
   getFunction(
     nameOrSignature: "Gt"
   ): TypedContractMethod<

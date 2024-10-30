@@ -3,3 +3,4 @@
 /* eslint-disable */
 import type * as mpcInterfaceSol from "./MpcInterface.sol";
 export type { mpcInterfaceSol };
+export type { MpcCore } from "./MpcCore";

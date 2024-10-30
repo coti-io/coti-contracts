@@ -27,9 +27,12 @@ export interface Miscellaneous1TestsContractInterface extends Interface {
       | "checkBound"
       | "getBooleanResults"
       | "getRandom"
+      | "getRandomBounded"
+      | "getValidateCiphertextResult"
       | "randTest_"
       | "randomBoundedTest"
       | "randomTest"
+      | "validateCiphertextTest"
   ): FunctionFragment;
 
   encodeFunctionData(
@@ -46,6 +49,14 @@ export interface Miscellaneous1TestsContractInterface extends Interface {
   ): string;
   encodeFunctionData(functionFragment: "getRandom", values?: undefined): string;
   encodeFunctionData(
+    functionFragment: "getRandomBounded",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getValidateCiphertextResult",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "randTest_",
     values: [boolean, BigNumberish]
   ): string;
@@ -56,6 +67,10 @@ export interface Miscellaneous1TestsContractInterface extends Interface {
   encodeFunctionData(
     functionFragment: "randomTest",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "validateCiphertextTest",
+    values: [BigNumberish, BigNumberish, BigNumberish, BigNumberish, BytesLike]
   ): string;
 
   decodeFunctionResult(
@@ -68,12 +83,24 @@ export interface Miscellaneous1TestsContractInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getRandom", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getRandomBounded",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getValidateCiphertextResult",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "randTest_", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "randomBoundedTest",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "randomTest", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "validateCiphertextTest",
+    data: BytesLike
+  ): Result;
 }
 
 export interface Miscellaneous1TestsContract extends BaseContract {
@@ -139,6 +166,10 @@ export interface Miscellaneous1TestsContract extends BaseContract {
 
   getRandom: TypedContractMethod<[], [bigint], "view">;
 
+  getRandomBounded: TypedContractMethod<[], [bigint], "view">;
+
+  getValidateCiphertextResult: TypedContractMethod<[], [bigint], "view">;
+
   randTest_: TypedContractMethod<
     [isBounded: boolean, numBits: BigNumberish],
     [bigint],
@@ -152,6 +183,18 @@ export interface Miscellaneous1TestsContract extends BaseContract {
   >;
 
   randomTest: TypedContractMethod<[], [bigint], "nonpayable">;
+
+  validateCiphertextTest: TypedContractMethod<
+    [
+      ct8: BigNumberish,
+      ct16: BigNumberish,
+      ct32: BigNumberish,
+      ct64: BigNumberish,
+      signature: BytesLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
 
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
@@ -182,6 +225,12 @@ export interface Miscellaneous1TestsContract extends BaseContract {
     nameOrSignature: "getRandom"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
+    nameOrSignature: "getRandomBounded"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getValidateCiphertextResult"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "randTest_"
   ): TypedContractMethod<
     [isBounded: boolean, numBits: BigNumberish],
@@ -194,6 +243,19 @@ export interface Miscellaneous1TestsContract extends BaseContract {
   getFunction(
     nameOrSignature: "randomTest"
   ): TypedContractMethod<[], [bigint], "nonpayable">;
+  getFunction(
+    nameOrSignature: "validateCiphertextTest"
+  ): TypedContractMethod<
+    [
+      ct8: BigNumberish,
+      ct16: BigNumberish,
+      ct32: BigNumberish,
+      ct64: BigNumberish,
+      signature: BytesLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
 
   filters: {};
 }

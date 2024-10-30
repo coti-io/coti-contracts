@@ -20,7 +20,7 @@ import type {
   TypedContractMethod,
 } from "../../../../common";
 
-export declare namespace BitwiseTestsContract {
+export declare namespace MiscellaneousTestsContract {
   export type Check16Struct = {
     res16_16: BigNumberish;
     res8_16: BigNumberish;
@@ -115,67 +115,73 @@ export declare namespace BitwiseTestsContract {
   };
 }
 
-export interface BitwiseTestsContractInterface extends Interface {
+export interface MiscellaneousTestsContractInterface extends Interface {
   getFunction(
     nameOrSignature:
-      | "andTest"
       | "decryptAndCompareResults16"
       | "decryptAndCompareResults32"
       | "decryptAndCompareResults64"
-      | "getAndResult"
-      | "getOrResult"
-      | "getXorResult"
-      | "orTest"
+      | "divTest"
+      | "getBoolResult"
+      | "getDivResult"
+      | "getMuxResult"
+      | "getRemResult"
+      | "muxTest"
+      | "notTest"
+      | "remTest"
       | "setPublicValues"
-      | "xorTest"
   ): FunctionFragment;
 
   encodeFunctionData(
-    functionFragment: "andTest",
-    values: [BigNumberish, BigNumberish]
-  ): string;
-  encodeFunctionData(
     functionFragment: "decryptAndCompareResults16",
-    values: [BitwiseTestsContract.Check16Struct]
+    values: [MiscellaneousTestsContract.Check16Struct]
   ): string;
   encodeFunctionData(
     functionFragment: "decryptAndCompareResults32",
-    values: [BitwiseTestsContract.Check32Struct]
+    values: [MiscellaneousTestsContract.Check32Struct]
   ): string;
   encodeFunctionData(
     functionFragment: "decryptAndCompareResults64",
-    values: [BitwiseTestsContract.Check64Struct]
+    values: [MiscellaneousTestsContract.Check64Struct]
   ): string;
   encodeFunctionData(
-    functionFragment: "getAndResult",
+    functionFragment: "divTest",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getBoolResult",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "getOrResult",
+    functionFragment: "getDivResult",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "getXorResult",
+    functionFragment: "getMuxResult",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "orTest",
+    functionFragment: "getRemResult",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "muxTest",
+    values: [boolean, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(functionFragment: "notTest", values: [boolean]): string;
+  encodeFunctionData(
+    functionFragment: "remTest",
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "setPublicValues",
     values: [
-      BitwiseTestsContract.AllGTCastingValuesStruct,
+      MiscellaneousTestsContract.AllGTCastingValuesStruct,
       BigNumberish,
       BigNumberish
     ]
   ): string;
-  encodeFunctionData(
-    functionFragment: "xorTest",
-    values: [BigNumberish, BigNumberish]
-  ): string;
 
-  decodeFunctionResult(functionFragment: "andTest", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "decryptAndCompareResults16",
     data: BytesLike
@@ -188,31 +194,37 @@ export interface BitwiseTestsContractInterface extends Interface {
     functionFragment: "decryptAndCompareResults64",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "divTest", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "getAndResult",
+    functionFragment: "getBoolResult",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getOrResult",
+    functionFragment: "getDivResult",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getXorResult",
+    functionFragment: "getMuxResult",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "orTest", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getRemResult",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "muxTest", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "notTest", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "remTest", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setPublicValues",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "xorTest", data: BytesLike): Result;
 }
 
-export interface BitwiseTestsContract extends BaseContract {
-  connect(runner?: ContractRunner | null): BitwiseTestsContract;
+export interface MiscellaneousTestsContract extends BaseContract {
+  connect(runner?: ContractRunner | null): MiscellaneousTestsContract;
   waitForDeployment(): Promise<this>;
 
-  interface: BitwiseTestsContractInterface;
+  interface: MiscellaneousTestsContractInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,
@@ -251,37 +263,47 @@ export interface BitwiseTestsContract extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  andTest: TypedContractMethod<
-    [a: BigNumberish, b: BigNumberish],
-    [bigint],
-    "nonpayable"
-  >;
-
   decryptAndCompareResults16: TypedContractMethod<
-    [check16: BitwiseTestsContract.Check16Struct],
+    [check16: MiscellaneousTestsContract.Check16Struct],
     [bigint],
     "nonpayable"
   >;
 
   decryptAndCompareResults32: TypedContractMethod<
-    [check32: BitwiseTestsContract.Check32Struct],
+    [check32: MiscellaneousTestsContract.Check32Struct],
     [bigint],
     "nonpayable"
   >;
 
   decryptAndCompareResults64: TypedContractMethod<
-    [check64: BitwiseTestsContract.Check64Struct],
+    [check64: MiscellaneousTestsContract.Check64Struct],
     [bigint],
     "nonpayable"
   >;
 
-  getAndResult: TypedContractMethod<[], [bigint], "view">;
+  divTest: TypedContractMethod<
+    [a: BigNumberish, b: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
 
-  getOrResult: TypedContractMethod<[], [bigint], "view">;
+  getBoolResult: TypedContractMethod<[], [boolean], "view">;
 
-  getXorResult: TypedContractMethod<[], [bigint], "view">;
+  getDivResult: TypedContractMethod<[], [bigint], "view">;
 
-  orTest: TypedContractMethod<
+  getMuxResult: TypedContractMethod<[], [bigint], "view">;
+
+  getRemResult: TypedContractMethod<[], [bigint], "view">;
+
+  muxTest: TypedContractMethod<
+    [selectionBit: boolean, a: BigNumberish, b: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+
+  notTest: TypedContractMethod<[a: boolean], [boolean], "nonpayable">;
+
+  remTest: TypedContractMethod<
     [a: BigNumberish, b: BigNumberish],
     [bigint],
     "nonpayable"
@@ -289,17 +311,11 @@ export interface BitwiseTestsContract extends BaseContract {
 
   setPublicValues: TypedContractMethod<
     [
-      castingValues: BitwiseTestsContract.AllGTCastingValuesStruct,
+      castingValues: MiscellaneousTestsContract.AllGTCastingValuesStruct,
       a: BigNumberish,
       b: BigNumberish
     ],
     [void],
-    "nonpayable"
-  >;
-
-  xorTest: TypedContractMethod<
-    [a: BigNumberish, b: BigNumberish],
-    [bigint],
     "nonpayable"
   >;
 
@@ -308,44 +324,57 @@ export interface BitwiseTestsContract extends BaseContract {
   ): T;
 
   getFunction(
-    nameOrSignature: "andTest"
-  ): TypedContractMethod<
-    [a: BigNumberish, b: BigNumberish],
-    [bigint],
-    "nonpayable"
-  >;
-  getFunction(
     nameOrSignature: "decryptAndCompareResults16"
   ): TypedContractMethod<
-    [check16: BitwiseTestsContract.Check16Struct],
+    [check16: MiscellaneousTestsContract.Check16Struct],
     [bigint],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "decryptAndCompareResults32"
   ): TypedContractMethod<
-    [check32: BitwiseTestsContract.Check32Struct],
+    [check32: MiscellaneousTestsContract.Check32Struct],
     [bigint],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "decryptAndCompareResults64"
   ): TypedContractMethod<
-    [check64: BitwiseTestsContract.Check64Struct],
+    [check64: MiscellaneousTestsContract.Check64Struct],
     [bigint],
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "getAndResult"
+    nameOrSignature: "divTest"
+  ): TypedContractMethod<
+    [a: BigNumberish, b: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "getBoolResult"
+  ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "getDivResult"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "getOrResult"
+    nameOrSignature: "getMuxResult"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "getXorResult"
+    nameOrSignature: "getRemResult"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "orTest"
+    nameOrSignature: "muxTest"
+  ): TypedContractMethod<
+    [selectionBit: boolean, a: BigNumberish, b: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "notTest"
+  ): TypedContractMethod<[a: boolean], [boolean], "nonpayable">;
+  getFunction(
+    nameOrSignature: "remTest"
   ): TypedContractMethod<
     [a: BigNumberish, b: BigNumberish],
     [bigint],
@@ -355,18 +384,11 @@ export interface BitwiseTestsContract extends BaseContract {
     nameOrSignature: "setPublicValues"
   ): TypedContractMethod<
     [
-      castingValues: BitwiseTestsContract.AllGTCastingValuesStruct,
+      castingValues: MiscellaneousTestsContract.AllGTCastingValuesStruct,
       a: BigNumberish,
       b: BigNumberish
     ],
     [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "xorTest"
-  ): TypedContractMethod<
-    [a: BigNumberish, b: BigNumberish],
-    [bigint],
     "nonpayable"
   >;
 

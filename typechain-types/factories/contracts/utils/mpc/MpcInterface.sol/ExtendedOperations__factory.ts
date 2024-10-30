@@ -70,6 +70,108 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "bytes3",
+        name: "metaData",
+        type: "bytes3",
+      },
+      {
+        internalType: "uint256",
+        name: "lhs",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "rhs",
+        type: "uint256",
+      },
+    ],
+    name: "CheckedAdd",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "overflowBit",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "result",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes3",
+        name: "metaData",
+        type: "bytes3",
+      },
+      {
+        internalType: "uint256",
+        name: "lhs",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "rhs",
+        type: "uint256",
+      },
+    ],
+    name: "CheckedMul",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "overflowBit",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "result",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes3",
+        name: "metaData",
+        type: "bytes3",
+      },
+      {
+        internalType: "uint256",
+        name: "lhs",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "rhs",
+        type: "uint256",
+      },
+    ],
+    name: "CheckedSub",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "overflowBit",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "result",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "bytes1",
         name: "metaData",
         type: "bytes1",
@@ -86,6 +188,25 @@ const _abi = [
         internalType: "uint256",
         name: "result",
         type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes",
+        name: "signature",
+        type: "bytes",
+      },
+    ],
+    name: "DeleteUserKey",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
       },
     ],
     stateMutability: "nonpayable",
@@ -194,7 +315,7 @@ const _abi = [
         type: "bytes",
       },
     ],
-    stateMutability: "view",
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -794,9 +915,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes4",
+        internalType: "bytes5",
         name: "metaData",
-        type: "bytes4",
+        type: "bytes5",
       },
       {
         internalType: "uint256",

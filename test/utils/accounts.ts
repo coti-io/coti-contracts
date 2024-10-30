@@ -4,7 +4,7 @@ import { CotiNetwork, getDefaultProvider, parseEther, Wallet } from "@coti-io/co
 let pks = process.env.SIGNING_KEYS ? process.env.SIGNING_KEYS.split(",") : []
 
 export async function setupAccounts() {
-  const provider = getDefaultProvider(CotiNetwork.Devnet);
+  const provider = getDefaultProvider(CotiNetwork.Testnet);
 
   if (pks.length == 0) {
     const key1 = Wallet.createRandom(provider)

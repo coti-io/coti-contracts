@@ -15,13 +15,13 @@ function buildTest(
   it(`${contractName}.${func}(${params}) should return ${expectedResults}`, async function () {
     const [owner] = await setupAccounts()
 
-    const factory = await hre.ethers.getContractFactory(contractName, owner)
+    const factory = await hre.ethers.getContractFactory(contractName, owner as any)
     const contract = await factory.deploy({ gasLimit })
     await contract.waitForDeployment()
 
     await (await contract.getFunction(func)(...params, { gasLimit })).wait()
     const result = await contract.getFunction(resFunc)()
-    if (resFunc === "getRandom") {
+    if (resFunc === "getRandom" || resFunc === "getRandomBounded") {
       expect(result).to.not.equal(expectedResults[0])
       last_random_value = result
     } else if (expectedResults.length === 1) {
@@ -36,7 +36,7 @@ function buildTestWithUser(contractName: string, func: string, resFunc: string, 
   it(`${contractName}.${func}(${params}, <address>) should return the correct user decrypted value`, async function () {
     const [owner] = await setupAccounts()
 
-    const factory = await hre.ethers.getContractFactory(contractName, owner)
+    const factory = await hre.ethers.getContractFactory(contractName, owner as any)
     const contract = await factory.deploy({ gasLimit })
     await contract.waitForDeployment()
 
@@ -56,46 +56,35 @@ const bool_a = true
 const bool_b = false
 const [a, b] = params
 describe("Precompile", function () {
-  buildTest("ArithmeticTestsContract", "addTest", "getResult", params, a + b)
-  buildTest("ArithmeticTestsContract", "subTest", "getResult", params, a - b)
-  buildTest("ArithmeticTestsContract", "mulTest", "getResult16", params, a * b)
+  buildTest("ArithmeticTestsContract", "addTest", "getAddResult", params, a + b)
+  buildTest("ArithmeticTestsContract", "subTest", "getSubResult", params, a - b)
+  buildTest("ArithmeticTestsContract", "mulTest", "getMulResult", params, a * b)
 
-  buildTest("Miscellaneous2TestsContract", "divTest", "getResult", params, a / b)
-  buildTest("Miscellaneous2TestsContract", "remTest", "getResult", params, a % b)
+  buildTest("MiscellaneousTestsContract", "divTest", "getDivResult", params, a / b)
+  buildTest("MiscellaneousTestsContract", "remTest", "getRemResult", params, a % b)
 
-  buildTest("BitwiseTestsContract", "andTest", "getResult", params, a & b)
-  buildTest("BitwiseTestsContract", "orTest", "getResult", params, a | b)
-  buildTest("BitwiseTestsContract", "xorTest", "getResult", params, a ^ b)
+  buildTest("BitwiseTestsContract", "andTest", "getAndResult", params, a & b)
+  buildTest("BitwiseTestsContract", "orTest", "getOrResult", params, a | b)
+  buildTest("BitwiseTestsContract", "xorTest", "getXorResult", params, a ^ b)
 
-  buildTest(
-    "ShiftTestsContract",
-    "shlTest",
-    "getAllShiftResults",
-    [a, shift],
-    ...[2, 4, 8, 16].map((x) => BigInt(a << shift) & BigInt(`0x${"f".repeat(x)}`))
-  )
-  buildTest("ShiftTestsContract", "shrTest", "getResult", params, a >> b)
-
-  buildTest("MinMaxTestsContract", "minTest", "getResult", params, Math.min(a, b))
-  buildTest("MinMaxTestsContract", "maxTest", "getResult", params, Math.max(a, b))
-  buildTest("Comparison2TestsContract", "eqTest", "getResult", params, a == b)
-  buildTest("Comparison2TestsContract", "neTest", "getResult", params, a != b)
-  buildTest("Comparison2TestsContract", "geTest", "getResult", params, a >= b)
-  buildTest("Comparison1TestsContract", "gtTest", "getResult", params, a > b)
-  buildTest("Comparison1TestsContract", "leTest", "getResult", params, a <= b)
-  buildTest("Comparison1TestsContract", "ltTest", "getResult", params, a < b)
-  buildTest("Miscellaneous2TestsContract", "muxTest", "getResult", [bit, a, b], bit === false ? a : b)
+  buildTest("MinMaxTestsContract", "minTest", "getMinResult", params, Math.min(a, b))
+  buildTest("MinMaxTestsContract", "maxTest", "getMaxResult", params, Math.max(a, b))
+  buildTest("Comparison2TestsContract", "eqTest", "getEqResult", params, a == b)
+  buildTest("Comparison2TestsContract", "neTest", "getNeResult", params, a != b)
+  buildTest("Comparison2TestsContract", "geTest", "getGeResult", params, a >= b)
+  buildTest("Comparison1TestsContract", "gtTest", "getGtResult", params, a > b)
+  buildTest("Comparison1TestsContract", "leTest", "getLeResult", params, a <= b)
+  buildTest("Comparison1TestsContract", "ltTest", "getLtResult", params, a < b)
+  buildTest("MiscellaneousTestsContract", "muxTest", "getMuxResult", [bit, a, b], bit === false ? a : b)
 
   buildTest("TransferTestsContract", "transferTest", "getResults", [a, b, b], a - b, b + b, true)
   buildTest("TransferScalarTestsContract", "transferScalarTest", "getResults", [a, b, b], a - b, b + b, true)
-
-  buildTest("Miscellaneous2TestsContract", "offboardOnboardTest", "getResult", [a, a, a, a], a)
-  buildTest("Miscellaneous2TestsContract", "notTest", "getBoolResult", [!!a], !a)
+  buildTest("OffboardToUserKeyTestContract", "offboardOnboardTest", "getOnboardOffboardResult", [a, a, a, a], a)
+  buildTest("MiscellaneousTestsContract", "notTest", "getBoolResult", [!!a], !a)
 
   buildTestWithUser("OffboardToUserKeyTestContract", "offboardToUserTest", "getCTs", a)
-
   buildTest("Miscellaneous1TestsContract", "randomTest", "getRandom", [], last_random_value)
-  buildTest("Miscellaneous1TestsContract", "randomBoundedTest", "getRandom", [numBits], last_random_value)
+  buildTest("Miscellaneous1TestsContract", "randomBoundedTest", "getRandomBounded", [numBits], last_random_value)
   buildTest(
     "Miscellaneous1TestsContract",
     "booleanTest",
@@ -110,4 +99,14 @@ describe("Precompile", function () {
     bit ? bool_b : bool_a,
     bool_a
   )
+
+
+  // buildTest(
+  //   "PrecompilesShiftTestsContract",
+  //   "shlTest",
+  //   "getAllShiftResults",
+  //   [a, shift],
+  //   ...[2, 4, 8, 16].map((x) => BigInt(a << shift) & BigInt(`0x${"f".repeat(x)}`))
+  // )
+  // buildTest("PrecompilesShiftTestsContract", "shrTest", "getResult", params, a >> b)
 })

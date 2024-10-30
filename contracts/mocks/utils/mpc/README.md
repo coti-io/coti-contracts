@@ -1,4 +1,4 @@
-# ArithmeticTestsContract.sol
+# PrecompilesArythmeticTestsContract.sol
 
 Performs arithmetic operations (addition, subtraction, and multiplication) on different bit-length values and ensures consistency across various data types.
 
@@ -49,7 +49,7 @@ The contract relies on the `MpcCore` library for:
 ## Summary
 The contract ensures that arithmetic operations on various bit-length values are consistent and correct by performing the operations, decrypting the results, and comparing them across different types and combinations. This can be particularly useful for testing and validating the correctness of arithmetic operations in a decentralized environment.
 
-# BitwiseTestsContract.sol
+# PrecompilesBitwiseTestsContract.sol
 
 Performs bitwise operations (AND, OR, XOR) on different bit-length values and ensures consistency across various data types.
 
@@ -97,7 +97,7 @@ The contract relies on the `MpcCore` library for:
 ## Summary
 The contract ensures that bitwise operations on various bit-length values are consistent and correct by performing the operations, decrypting the results, and comparing them across different types and combinations. This can be particularly useful for testing and validating the correctness of bitwise operations in a decentralized environment.
 
-# Comparison1TestsContract.sol
+# PrecompilesComparison1TestsContract.sol
 
 Performs comparison operations (greater than, less than or equal to, and less than) on different bit-length values and ensures consistency across various data types.
 
@@ -145,7 +145,7 @@ The contract relies on the `MpcCore` library for:
 ## Summary
 The contract ensures that comparison operations on various bit-length values are consistent and correct by performing the operations, decrypting the results, and comparing them across different types and combinations. This can be particularly useful for testing and validating the correctness of comparison operations in a decentralized environment.
 
-# Comparison2TestsContract.sol
+# PrecompilesComparison2TestsContract.sol
 
 Performs additional comparison operations (equal to, not equal to, greater than or equal to) on different bit-length values and ensures consistency across various data types.
 
@@ -193,7 +193,7 @@ The contract relies on the `MpcCore` library for:
 ## Summary
 The contract ensures that comparison operations on various bit-length values are consistent and correct by performing the operations, decrypting the results, and comparing them across different types and combinations. This can be particularly useful for testing and validating the correctness of comparison operations in a decentralized environment.
 
-# MinMaxTestsContract.sol
+# PrecompilesMinMaxTestsContract.sol
 
 Performs minimum and maximum operations on different bit-length values and ensures consistency across various data types.
 
@@ -235,7 +235,7 @@ The contract relies on the `MpcCore` library for:
 ## Summary
 The contract ensures that min/max operations on various bit-length values are consistent and correct by performing the operations, decrypting the results, and comparing them across different types and combinations. This can be particularly useful for testing and validating the correctness of min/max operations in a decentralized environment.
 
-# Miscellaneous1TestsContract.sol
+# PrecompilesMiscellaneous1TestsContract.sol
 
 Performs various miscellaneous operations including random number generation and boolean logic operations.
 
@@ -277,7 +277,7 @@ The contract relies on the `MpcCore` library for:
 ## Summary
 The contract ensures the correctness of random number generation and boolean operations by performing the operations, decrypting the results, and comparing them as necessary. This can be particularly useful for testing and validating the correctness of these operations in a decentralized environment.
 
-# Miscellaneous2TestsContract.sol
+# PrecompilesMiscellaneousTestsContract.sol
 
 Performs various miscellaneous operations including division, remainder, mux, offboard/onboard, and boolean NOT operations.
 
@@ -334,7 +334,7 @@ The contract relies on the `MpcCore` library for:
 ## Summary
 The contract ensures the correctness of various miscellaneous operations by performing the operations, decrypting the results, and comparing them as necessary. This can be particularly useful for testing and validating the correctness of these operations in a decentralized environment.
 
-# OffboardToUserKeyTestContract.sol
+# PrecompilesOffboardToUserKeyTestContract.sol
 
 Performs operations involving offboarding data to a user key and handling various cryptographic operations.
 
@@ -373,7 +373,7 @@ The contract relies on the `MpcCore` library for:
 ## Summary
 The contract ensures the correctness of operations involving offboarding to user keys by performing the operations, decrypting the results, and comparing them as necessary. This can be particularly useful for testing and validating the correctness of these operations in a decentralized environment.
 
-# ShiftTestsContract.sol
+# PrecompilesShiftTestsContract.sol
 
 Performs various shift operations (left and right) on different bit-length values and ensures consistency across various data types.
 
@@ -419,7 +419,7 @@ The contract relies on the `MpcCore` library for:
 ## Summary
 The contract ensures the correctness of shift operations on various bit-length values by performing the operations, decrypting the results, and comparing them as necessary. This can be particularly useful for testing and validating the correctness of these operations in a decentralized environment.
 
-# TransferScalarTestsContract.sol
+# PrecompilesTransferScalarTestsContract.sol
 
 Performs transfer operations with scalar values, checking the correctness of these operations across different bit-length values.
 
@@ -456,7 +456,7 @@ The contract relies on the `MpcCore` library for:
 ## Summary
 The contract ensures the correctness of transfer operations with scalar values by performing the operations, decrypting the results, and comparing them as necessary. This can be particularly useful for testing and validating the correctness of these operations in a decentralized environment.
 
-# TransferTestsContract.sol
+# PrecompilesTransferTestsContract.sol
 
 Designed to test the transfer functionality of the `MpcCore` library with different data types and casting scenarios. The contract includes several key components and functions.
 

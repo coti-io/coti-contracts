@@ -122,8 +122,9 @@ export interface ArithmeticTestsContractInterface extends Interface {
       | "decryptAndCompareResults16"
       | "decryptAndCompareResults32"
       | "decryptAndCompareResults64"
-      | "getResult"
-      | "getResult16"
+      | "getAddResult"
+      | "getMulResult"
+      | "getSubResult"
       | "mulTest"
       | "setPublicValues"
       | "subTest"
@@ -145,9 +146,16 @@ export interface ArithmeticTestsContractInterface extends Interface {
     functionFragment: "decryptAndCompareResults64",
     values: [ArithmeticTestsContract.Check64Struct]
   ): string;
-  encodeFunctionData(functionFragment: "getResult", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "getResult16",
+    functionFragment: "getAddResult",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getMulResult",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getSubResult",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -180,9 +188,16 @@ export interface ArithmeticTestsContractInterface extends Interface {
     functionFragment: "decryptAndCompareResults64",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "getResult", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "getResult16",
+    functionFragment: "getAddResult",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getMulResult",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getSubResult",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "mulTest", data: BytesLike): Result;
@@ -260,9 +275,11 @@ export interface ArithmeticTestsContract extends BaseContract {
     "nonpayable"
   >;
 
-  getResult: TypedContractMethod<[], [bigint], "view">;
+  getAddResult: TypedContractMethod<[], [bigint], "view">;
 
-  getResult16: TypedContractMethod<[], [bigint], "view">;
+  getMulResult: TypedContractMethod<[], [bigint], "view">;
+
+  getSubResult: TypedContractMethod<[], [bigint], "view">;
 
   mulTest: TypedContractMethod<
     [a: BigNumberish, b: BigNumberish],
@@ -319,10 +336,13 @@ export interface ArithmeticTestsContract extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "getResult"
+    nameOrSignature: "getAddResult"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "getResult16"
+    nameOrSignature: "getMulResult"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getSubResult"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "mulTest"

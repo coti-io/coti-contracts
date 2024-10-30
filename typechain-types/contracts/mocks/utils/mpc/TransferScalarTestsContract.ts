@@ -56,15 +56,15 @@ export declare namespace TransferScalarTestsContract {
 export interface TransferScalarTestsContractInterface extends Interface {
   getFunction(
     nameOrSignature:
-      | "computeAndChekTransfer16"
-      | "computeAndChekTransfer32"
-      | "computeAndChekTransfer64"
+      | "computeAndCheckTransfer16"
+      | "computeAndCheckTransfer32"
+      | "computeAndCheckTransfer64"
       | "getResults"
       | "transferScalarTest"
   ): FunctionFragment;
 
   encodeFunctionData(
-    functionFragment: "computeAndChekTransfer16",
+    functionFragment: "computeAndCheckTransfer16",
     values: [
       TransferScalarTestsContract.AllGTCastingValuesStruct,
       BigNumberish,
@@ -74,7 +74,7 @@ export interface TransferScalarTestsContractInterface extends Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "computeAndChekTransfer32",
+    functionFragment: "computeAndCheckTransfer32",
     values: [
       TransferScalarTestsContract.AllGTCastingValuesStruct,
       BigNumberish,
@@ -84,7 +84,7 @@ export interface TransferScalarTestsContractInterface extends Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "computeAndChekTransfer64",
+    functionFragment: "computeAndCheckTransfer64",
     values: [
       TransferScalarTestsContract.AllGTCastingValuesStruct,
       BigNumberish,
@@ -103,15 +103,15 @@ export interface TransferScalarTestsContractInterface extends Interface {
   ): string;
 
   decodeFunctionResult(
-    functionFragment: "computeAndChekTransfer16",
+    functionFragment: "computeAndCheckTransfer16",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "computeAndChekTransfer32",
+    functionFragment: "computeAndCheckTransfer32",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "computeAndChekTransfer64",
+    functionFragment: "computeAndCheckTransfer64",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getResults", data: BytesLike): Result;
@@ -164,7 +164,7 @@ export interface TransferScalarTestsContract extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  computeAndChekTransfer16: TypedContractMethod<
+  computeAndCheckTransfer16: TypedContractMethod<
     [
       allGTCastingValues: TransferScalarTestsContract.AllGTCastingValuesStruct,
       new_a: BigNumberish,
@@ -176,7 +176,7 @@ export interface TransferScalarTestsContract extends BaseContract {
     "nonpayable"
   >;
 
-  computeAndChekTransfer32: TypedContractMethod<
+  computeAndCheckTransfer32: TypedContractMethod<
     [
       allGTCastingValues: TransferScalarTestsContract.AllGTCastingValuesStruct,
       new_a: BigNumberish,
@@ -188,7 +188,7 @@ export interface TransferScalarTestsContract extends BaseContract {
     "nonpayable"
   >;
 
-  computeAndChekTransfer64: TypedContractMethod<
+  computeAndCheckTransfer64: TypedContractMethod<
     [
       allGTCastingValues: TransferScalarTestsContract.AllGTCastingValuesStruct,
       new_a: BigNumberish,
@@ -213,7 +213,7 @@ export interface TransferScalarTestsContract extends BaseContract {
   ): T;
 
   getFunction(
-    nameOrSignature: "computeAndChekTransfer16"
+    nameOrSignature: "computeAndCheckTransfer16"
   ): TypedContractMethod<
     [
       allGTCastingValues: TransferScalarTestsContract.AllGTCastingValuesStruct,
@@ -226,7 +226,7 @@ export interface TransferScalarTestsContract extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "computeAndChekTransfer32"
+    nameOrSignature: "computeAndCheckTransfer32"
   ): TypedContractMethod<
     [
       allGTCastingValues: TransferScalarTestsContract.AllGTCastingValuesStruct,
@@ -239,7 +239,7 @@ export interface TransferScalarTestsContract extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "computeAndChekTransfer64"
+    nameOrSignature: "computeAndCheckTransfer64"
   ): TypedContractMethod<
     [
       allGTCastingValues: TransferScalarTestsContract.AllGTCastingValuesStruct,

@@ -48,7 +48,7 @@ abstract contract DataPrivacyFrameworkMpc is DataPrivacyFramework {
     )
         internal
         onlyAllowedUserOperation("op_mul", uintParameter, addressParameter, stringParameter)
-        returns (gtUint16)
+        returns (gtUint8)
     {
         return MpcCore.mul(a, b);
     }
@@ -330,7 +330,7 @@ abstract contract DataPrivacyFrameworkMpc is DataPrivacyFramework {
     )
         internal
         onlyAllowedUserOperation("op_mul", uintParameter, addressParameter, stringParameter)
-        returns (gtUint32)
+        returns (gtUint16)
     {
         return MpcCore.mul(a, b);
     }
@@ -612,7 +612,7 @@ abstract contract DataPrivacyFrameworkMpc is DataPrivacyFramework {
     )
         internal
         onlyAllowedUserOperation("op_mul", uintParameter, addressParameter, stringParameter)
-        returns (gtUint64)
+        returns (gtUint32)
     {
         return MpcCore.mul(a, b);
     }

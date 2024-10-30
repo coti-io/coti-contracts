@@ -39,11 +39,16 @@ export interface AccountOnboardInterface extends Interface {
 }
 
 export namespace AccountOnboardedEvent {
-  export type InputTuple = [_from: AddressLike, userKey: BytesLike];
-  export type OutputTuple = [_from: string, userKey: string];
+  export type InputTuple = [
+    _from: AddressLike,
+    userKey1: BytesLike,
+    userKey2: BytesLike
+  ];
+  export type OutputTuple = [_from: string, userKey1: string, userKey2: string];
   export interface OutputObject {
     _from: string;
-    userKey: string;
+    userKey1: string;
+    userKey2: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -121,7 +126,7 @@ export interface AccountOnboard extends BaseContract {
   >;
 
   filters: {
-    "AccountOnboarded(address,bytes)": TypedContractEvent<
+    "AccountOnboarded(address,bytes,bytes)": TypedContractEvent<
       AccountOnboardedEvent.InputTuple,
       AccountOnboardedEvent.OutputTuple,
       AccountOnboardedEvent.OutputObject

@@ -8,7 +8,6 @@ import type {
   FunctionFragment,
   Result,
   Interface,
-  EventFragment,
   AddressLike,
   ContractRunner,
   ContractMethod,
@@ -18,27 +17,30 @@ import type {
   TypedContractEvent,
   TypedDeferredTopicFilter,
   TypedEventLog,
-  TypedLogDescription,
   TypedListener,
   TypedContractMethod,
-} from "../../../../../common";
+} from "../../../../common";
 
 export interface OffboardToUserKeyTestContractInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "getCTs"
       | "getCt"
+      | "getOnboardOffboardResult"
       | "getUserKeyShares"
       | "getUserKeyTest"
       | "getX"
+      | "offboardOnboardTest"
       | "offboardToUserTest"
       | "userKeyTest"
   ): FunctionFragment;
 
-  getEvent(nameOrSignatureOrTopic: "AccountOnboarded"): EventFragment;
-
   encodeFunctionData(functionFragment: "getCTs", values?: undefined): string;
   encodeFunctionData(functionFragment: "getCt", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "getOnboardOffboardResult",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "getUserKeyShares",
     values?: undefined
@@ -48,6 +50,10 @@ export interface OffboardToUserKeyTestContractInterface extends Interface {
     values: [BytesLike, BytesLike, AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "getX", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "offboardOnboardTest",
+    values: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "offboardToUserTest",
     values: [BigNumberish, AddressLike]
@@ -60,6 +66,10 @@ export interface OffboardToUserKeyTestContractInterface extends Interface {
   decodeFunctionResult(functionFragment: "getCTs", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getCt", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "getOnboardOffboardResult",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getUserKeyShares",
     data: BytesLike
   ): Result;
@@ -69,6 +79,10 @@ export interface OffboardToUserKeyTestContractInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "getX", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "offboardOnboardTest",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "offboardToUserTest",
     data: BytesLike
   ): Result;
@@ -76,19 +90,6 @@ export interface OffboardToUserKeyTestContractInterface extends Interface {
     functionFragment: "userKeyTest",
     data: BytesLike
   ): Result;
-}
-
-export namespace AccountOnboardedEvent {
-  export type InputTuple = [_from: AddressLike, userKey: BytesLike];
-  export type OutputTuple = [_from: string, userKey: string];
-  export interface OutputObject {
-    _from: string;
-    userKey: string;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export interface OffboardToUserKeyTestContract extends BaseContract {
@@ -138,6 +139,8 @@ export interface OffboardToUserKeyTestContract extends BaseContract {
 
   getCt: TypedContractMethod<[], [bigint], "view">;
 
+  getOnboardOffboardResult: TypedContractMethod<[], [bigint], "view">;
+
   getUserKeyShares: TypedContractMethod<[], [[string, string]], "view">;
 
   getUserKeyTest: TypedContractMethod<
@@ -147,6 +150,12 @@ export interface OffboardToUserKeyTestContract extends BaseContract {
   >;
 
   getX: TypedContractMethod<[], [bigint], "view">;
+
+  offboardOnboardTest: TypedContractMethod<
+    [a8: BigNumberish, a16: BigNumberish, a32: BigNumberish, a64: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
 
   offboardToUserTest: TypedContractMethod<
     [a: BigNumberish, addr: AddressLike],
@@ -171,6 +180,9 @@ export interface OffboardToUserKeyTestContract extends BaseContract {
     nameOrSignature: "getCt"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
+    nameOrSignature: "getOnboardOffboardResult"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "getUserKeyShares"
   ): TypedContractMethod<[], [[string, string]], "view">;
   getFunction(
@@ -183,6 +195,13 @@ export interface OffboardToUserKeyTestContract extends BaseContract {
   getFunction(
     nameOrSignature: "getX"
   ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "offboardOnboardTest"
+  ): TypedContractMethod<
+    [a8: BigNumberish, a16: BigNumberish, a32: BigNumberish, a64: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "offboardToUserTest"
   ): TypedContractMethod<
@@ -198,24 +217,5 @@ export interface OffboardToUserKeyTestContract extends BaseContract {
     "nonpayable"
   >;
 
-  getEvent(
-    key: "AccountOnboarded"
-  ): TypedContractEvent<
-    AccountOnboardedEvent.InputTuple,
-    AccountOnboardedEvent.OutputTuple,
-    AccountOnboardedEvent.OutputObject
-  >;
-
-  filters: {
-    "AccountOnboarded(address,bytes)": TypedContractEvent<
-      AccountOnboardedEvent.InputTuple,
-      AccountOnboardedEvent.OutputTuple,
-      AccountOnboardedEvent.OutputObject
-    >;
-    AccountOnboarded: TypedContractEvent<
-      AccountOnboardedEvent.InputTuple,
-      AccountOnboardedEvent.OutputTuple,
-      AccountOnboardedEvent.OutputObject
-    >;
-  };
+  filters: {};
 }
