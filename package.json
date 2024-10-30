@@ -1,6 +1,6 @@
 {
   "name": "@coti-io/coti-contracts",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
