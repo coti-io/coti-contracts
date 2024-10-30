@@ -1,5 +1,5 @@
 {
-  "name": "coti-contracts",
+  "name": "@coti-io/coti-contracts",
   "version": "0.1.0",
   "description": "",
   "devDependencies": {
