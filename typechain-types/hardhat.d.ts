@@ -98,9 +98,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.OffboardToUserKeyTestContract__factory>;
     getContractFactory(
-      name: "ShiftTestsContract",
+      name: "StringTestsContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ShiftTestsContract__factory>;
+    ): Promise<Contracts.StringTestsContract__factory>;
     getContractFactory(
       name: "TransferScalarTestsContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -248,10 +248,10 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.OffboardToUserKeyTestContract>;
     getContractAt(
-      name: "ShiftTestsContract",
+      name: "StringTestsContract",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.ShiftTestsContract>;
+    ): Promise<Contracts.StringTestsContract>;
     getContractAt(
       name: "TransferScalarTestsContract",
       address: string | ethers.Addressable,
@@ -388,9 +388,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.OffboardToUserKeyTestContract>;
     deployContract(
-      name: "ShiftTestsContract",
+      name: "StringTestsContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ShiftTestsContract>;
+    ): Promise<Contracts.StringTestsContract>;
     deployContract(
       name: "TransferScalarTestsContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -538,10 +538,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.OffboardToUserKeyTestContract>;
     deployContract(
-      name: "ShiftTestsContract",
+      name: "StringTestsContract",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ShiftTestsContract>;
+    ): Promise<Contracts.StringTestsContract>;
     deployContract(
       name: "TransferScalarTestsContract",
       args: any[],

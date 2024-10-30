@@ -99,14 +99,4 @@ describe("Precompile", function () {
     bit ? bool_b : bool_a,
     bool_a
   )
-
-
-  // buildTest(
-  //   "PrecompilesShiftTestsContract",
-  //   "shlTest",
-  //   "getAllShiftResults",
-  //   [a, shift],
-  //   ...[2, 4, 8, 16].map((x) => BigInt(a << shift) & BigInt(`0x${"f".repeat(x)}`))
-  // )
-  // buildTest("PrecompilesShiftTestsContract", "shrTest", "getResult", params, a >> b)
 })

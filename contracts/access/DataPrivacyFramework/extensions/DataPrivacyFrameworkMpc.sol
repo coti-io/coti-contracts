@@ -123,34 +123,6 @@ abstract contract DataPrivacyFrameworkMpc is DataPrivacyFramework {
         return MpcCore.xor(a, b);
     }
 
-    function shl(
-        gtUint8 a,
-        gtUint8 b,
-        uint256 uintParameter,
-        address addressParameter,
-        string calldata stringParameter
-    )
-        internal
-        onlyAllowedUserOperation("op_shl", uintParameter, addressParameter, stringParameter)
-        returns (gtUint8)
-    {
-        return MpcCore.shl(a, b);
-    }
-
-    function shr(
-        gtUint8 a,
-        gtUint8 b,
-        uint256 uintParameter,
-        address addressParameter,
-        string calldata stringParameter
-    )
-        internal
-        onlyAllowedUserOperation("op_shr", uintParameter, addressParameter, stringParameter)
-        returns (gtUint8)
-    {
-        return MpcCore.shr(a, b);
-    }
-
     function eq(
         gtUint8 a,
         gtUint8 b,
@@ -403,34 +375,6 @@ abstract contract DataPrivacyFrameworkMpc is DataPrivacyFramework {
         returns (gtUint16)
     {
         return MpcCore.xor(a, b);
-    }
-
-    function shl(
-        gtUint16 a,
-        gtUint16 b,
-        uint256 uintParameter,
-        address addressParameter,
-        string calldata stringParameter
-    )
-        internal
-        onlyAllowedUserOperation("op_shl", uintParameter, addressParameter, stringParameter)
-        returns (gtUint16)
-    {
-        return MpcCore.shl(a, b);
-    }
-
-    function shr(
-        gtUint16 a,
-        gtUint16 b,
-        uint256 uintParameter,
-        address addressParameter,
-        string calldata stringParameter
-    )
-        internal
-        onlyAllowedUserOperation("op_shr", uintParameter, addressParameter, stringParameter)
-        returns (gtUint16)
-    {
-        return MpcCore.shr(a, b);
     }
 
     function eq(
@@ -687,34 +631,6 @@ abstract contract DataPrivacyFrameworkMpc is DataPrivacyFramework {
         return MpcCore.xor(a, b);
     }
 
-    function shl(
-        gtUint32 a,
-        gtUint32 b,
-        uint256 uintParameter,
-        address addressParameter,
-        string calldata stringParameter
-    )
-        internal
-        onlyAllowedUserOperation("op_shl", uintParameter, addressParameter, stringParameter)
-        returns (gtUint32)
-    {
-        return MpcCore.shl(a, b);
-    }
-
-    function shr(
-        gtUint32 a,
-        gtUint32 b,
-        uint256 uintParameter,
-        address addressParameter,
-        string calldata stringParameter
-    )
-        internal
-        onlyAllowedUserOperation("op_shr", uintParameter, addressParameter, stringParameter)
-        returns (gtUint32)
-    {
-        return MpcCore.shr(a, b);
-    }
-
     function eq(
         gtUint32 a,
         gtUint32 b,
@@ -967,34 +883,6 @@ abstract contract DataPrivacyFrameworkMpc is DataPrivacyFramework {
         returns (gtUint64)
     {
         return MpcCore.xor(a, b);
-    }
-
-    function shl(
-        gtUint64 a,
-        gtUint64 b,
-        uint256 uintParameter,
-        address addressParameter,
-        string calldata stringParameter
-    )
-        internal
-        onlyAllowedUserOperation("op_shl", uintParameter, addressParameter, stringParameter)
-        returns (gtUint64)
-    {
-        return MpcCore.shl(a, b);
-    }
-
-    function shr(
-        gtUint64 a,
-        gtUint64 b,
-        uint256 uintParameter,
-        address addressParameter,
-        string calldata stringParameter
-    )
-        internal
-        onlyAllowedUserOperation("op_shr", uintParameter, addressParameter, stringParameter)
-        returns (gtUint64)
-    {
-        return MpcCore.shr(a, b);
     }
 
     function eq(

@@ -22,8 +22,6 @@ interface ExtendedOperations {
     function And(bytes3 metaData, uint256 lhs, uint256 rhs) external returns (uint256 result);
     function Or(bytes3 metaData, uint256 lhs, uint256 rhs) external returns (uint256 result);
     function Xor(bytes3 metaData, uint256 lhs, uint256 rhs) external returns (uint256 result);
-    function Shl(bytes3 metaData, uint256 lhs, uint256 rhs) external returns (uint256 result);
-    function Shr(bytes3 metaData, uint256 lhs, uint256 rhs) external returns (uint256 result);
     function Eq(bytes3 metaData, uint256 lhs, uint256 rhs) external returns (uint256 result);
     function Ne(bytes3 metaData, uint256 lhs, uint256 rhs) external returns (uint256 result);
     function Ge(bytes3 metaData, uint256 lhs, uint256 rhs) external returns (uint256 result);
