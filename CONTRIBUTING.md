@@ -1,7 +1,7 @@
 
-# Contributing to COTI SDK TypeScript Examples
+# Contributing to COTI Contracts
 
-Thank you for your interest in contributing to the COTI SDK TypeScript Examples project! We welcome contributions from the community and appreciate your efforts to improve our project.
+Thank you for your interest in contributing to the COTI Contracts project! We welcome contributions from the community and appreciate your efforts to improve our project.
 
 ## Table of Contents
 
