@@ -1,48 +1,31 @@
+[![image](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://telegram.coti.io)
+[![image](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.coti.io)
+[![image](https://img.shields.io/badge/X-000000?style=for-the-badge&logo=x&logoColor=white)](https://twitter.coti.io)
+[![image](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.coti.io)
+
 # COTI Contracts
 
-A library for smart contract development on the COTI network.
+[![image](https://img.shields.io/badge/npm-CB3837?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/@coti-io/coti-contracts)
+[![image](https://img.shields.io/badge/Node%20js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/download/release/v18.20.5/)
 
-> [!NOTE]
-> This repository is meant to replace the now-deprecated [confidentiality-contracts](https://github.com/coti-io/confidentiality-contracts) repository.
+Welcome to COTI Contracts, a library of smart contracts for COTI's GC technology, including MPC contract for secure computations, private ERC20 and ERC721 contracts, and test mocks for validation. These components enable privacy-focused and decentralized DeFi solutions.
 
-#### Important Links
+## Documentation
 
-[Docs](https://docs.coti.io) | [Discord](https://discord.gg/cuCykh8P4m) | [Faucet](https://faucet.coti.io)
+Full API documentation is available in the [COTI docs](https://docs.coti.io/coti-v2-documentation/build-on-coti/tools/ethers.js)
 
-#### Network-Specific Links
-
-[Devnet Explorer](https://explorer-devnet.coti.io) | [Testnet Explorer](https://testnet.cotiscan.io)
-
-## Overview
-
-> [!NOTE]  
-> Due to the nature of ongoing development, future versions might break existing functionality
-
-The following contracts are included in the library:
-- [DataPrivacyFramework](/contracts/access/DataPrivacyFramework/)
-- [AccountOnboard](/contracts/onboard/)
-- [PrivateERC20](/contracts/token/PrivateERC20/)
-- [PrivateERC721](/contracts/token/PrivateERC721/)
-- [MpcCore](/contracts/utils/mpc/)
-
-### Installation
-
-#### Hardhat (npm)
+## Build and Install
 
 ```bash
-npm install @coti-io/coti-contracts
+npm install
 ```
 
-### Usage
+## Testing
 
-Once installed, you can use the contracts in the library by importing them:
-
-```solidity
-pragma solidity ^0.8.20;
-
-import {PrivateERC20} from "@coti-io/coti-contracts/token/PrivateERC20/PrivateERC20.sol";
-
-contract MyToken is PrivateERC20 {
-    constructor() ERC721("MyToken", "MTOK") {}
-}
+```bash
+npx hardhat test
 ```
+
+---
+
+To report an issue, please see the [issues](https://github.com/coti-io/coti-contracts/issues/new) tab.
