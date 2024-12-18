@@ -135,7 +135,11 @@ export interface OffboardToUserKeyTestContract extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  getCTs: TypedContractMethod<[], [[bigint, bigint, bigint, bigint]], "view">;
+  getCTs: TypedContractMethod<
+    [],
+    [[bigint, bigint, bigint, bigint, bigint]],
+    "view"
+  >;
 
   getCt: TypedContractMethod<[], [bigint], "view">;
 
@@ -153,13 +157,13 @@ export interface OffboardToUserKeyTestContract extends BaseContract {
 
   offboardOnboardTest: TypedContractMethod<
     [a8: BigNumberish, a16: BigNumberish, a32: BigNumberish, a64: BigNumberish],
-    [bigint],
+    [void],
     "nonpayable"
   >;
 
   offboardToUserTest: TypedContractMethod<
     [a: BigNumberish, addr: AddressLike],
-    [[bigint, bigint, bigint, bigint]],
+    [void],
     "nonpayable"
   >;
 
@@ -175,7 +179,11 @@ export interface OffboardToUserKeyTestContract extends BaseContract {
 
   getFunction(
     nameOrSignature: "getCTs"
-  ): TypedContractMethod<[], [[bigint, bigint, bigint, bigint]], "view">;
+  ): TypedContractMethod<
+    [],
+    [[bigint, bigint, bigint, bigint, bigint]],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "getCt"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -199,14 +207,14 @@ export interface OffboardToUserKeyTestContract extends BaseContract {
     nameOrSignature: "offboardOnboardTest"
   ): TypedContractMethod<
     [a8: BigNumberish, a16: BigNumberish, a32: BigNumberish, a64: BigNumberish],
-    [bigint],
+    [void],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "offboardToUserTest"
   ): TypedContractMethod<
     [a: BigNumberish, addr: AddressLike],
-    [[bigint, bigint, bigint, bigint]],
+    [void],
     "nonpayable"
   >;
   getFunction(
