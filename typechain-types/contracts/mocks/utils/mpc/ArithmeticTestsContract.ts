@@ -119,6 +119,9 @@ export interface ArithmeticTestsContractInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "addTest"
+      | "checkedAddTest"
+      | "checkedMulTest"
+      | "checkedSubTest"
       | "decryptAndCompareResults16"
       | "decryptAndCompareResults32"
       | "decryptAndCompareResults64"
@@ -132,6 +135,18 @@ export interface ArithmeticTestsContractInterface extends Interface {
 
   encodeFunctionData(
     functionFragment: "addTest",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "checkedAddTest",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "checkedMulTest",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "checkedSubTest",
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
@@ -176,6 +191,18 @@ export interface ArithmeticTestsContractInterface extends Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "addTest", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "checkedAddTest",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "checkedMulTest",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "checkedSubTest",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "decryptAndCompareResults16",
     data: BytesLike
@@ -257,6 +284,24 @@ export interface ArithmeticTestsContract extends BaseContract {
     "nonpayable"
   >;
 
+  checkedAddTest: TypedContractMethod<
+    [a: BigNumberish, b: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+
+  checkedMulTest: TypedContractMethod<
+    [a: BigNumberish, b: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+
+  checkedSubTest: TypedContractMethod<
+    [a: BigNumberish, b: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+
   decryptAndCompareResults16: TypedContractMethod<
     [check16: ArithmeticTestsContract.Check16Struct],
     [bigint],
@@ -309,6 +354,27 @@ export interface ArithmeticTestsContract extends BaseContract {
 
   getFunction(
     nameOrSignature: "addTest"
+  ): TypedContractMethod<
+    [a: BigNumberish, b: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "checkedAddTest"
+  ): TypedContractMethod<
+    [a: BigNumberish, b: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "checkedMulTest"
+  ): TypedContractMethod<
+    [a: BigNumberish, b: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "checkedSubTest"
   ): TypedContractMethod<
     [a: BigNumberish, b: BigNumberish],
     [bigint],

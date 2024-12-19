@@ -57,8 +57,11 @@ const bool_b = false
 const [a, b] = params
 describe("Precompile", function () {
   buildTest("ArithmeticTestsContract", "addTest", "getAddResult", params, a + b)
+  buildTest("ArithmeticTestsContract", "checkedAddTest", "getAddResult", params, a + b)
   buildTest("ArithmeticTestsContract", "subTest", "getSubResult", params, a - b)
+  buildTest("ArithmeticTestsContract", "checkedSubTest", "getSubResult", params, a - b)
   buildTest("ArithmeticTestsContract", "mulTest", "getMulResult", params, a * b)
+  buildTest("ArithmeticTestsContract", "checkedMulTest", "getMulResult", params, a * b)
 
   buildTest("MiscellaneousTestsContract", "divTest", "getDivResult", params, a / b)
   buildTest("MiscellaneousTestsContract", "remTest", "getRemResult", params, a % b)
@@ -83,6 +86,7 @@ describe("Precompile", function () {
   buildTest("MiscellaneousTestsContract", "notTest", "getBoolResult", [!!a], !a)
 
   buildTestWithUser("OffboardToUserKeyTestContract", "offboardToUserTest", "getCTs", a)
+  buildTestWithUser("OffboardToUserKeyTestContract", "offboardCombinedTest", "getCTs", a)
   buildTest("Miscellaneous1TestsContract", "randomTest", "getRandom", [], last_random_value)
   buildTest("Miscellaneous1TestsContract", "randomBoundedTest", "getRandomBounded", [numBits], last_random_value)
   buildTest(

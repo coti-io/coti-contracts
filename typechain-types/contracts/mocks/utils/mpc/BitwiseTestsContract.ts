@@ -84,6 +84,8 @@ export declare namespace BitwiseTestsContract {
   };
 
   export type AllGTCastingValuesStruct = {
+    aBool_s: BigNumberish;
+    bBool_s: BigNumberish;
     a8_s: BigNumberish;
     b8_s: BigNumberish;
     a16_s: BigNumberish;
@@ -95,6 +97,8 @@ export declare namespace BitwiseTestsContract {
   };
 
   export type AllGTCastingValuesStructOutput = [
+    aBool_s: bigint,
+    bBool_s: bigint,
     a8_s: bigint,
     b8_s: bigint,
     a16_s: bigint,
@@ -104,6 +108,8 @@ export declare namespace BitwiseTestsContract {
     a64_s: bigint,
     b64_s: bigint
   ] & {
+    aBool_s: bigint;
+    bBool_s: bigint;
     a8_s: bigint;
     b8_s: bigint;
     a16_s: bigint;
