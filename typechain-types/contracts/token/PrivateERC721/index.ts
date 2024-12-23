@@ -3,4 +3,5 @@
 /* eslint-disable */
 import type * as extensions from "./extensions";
 export type { extensions };
+export type { IERC721Errors } from "./IERC721Errors";
 export type { PrivateERC721 } from "./PrivateERC721";
