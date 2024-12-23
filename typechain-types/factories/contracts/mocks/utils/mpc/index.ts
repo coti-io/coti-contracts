@@ -12,3 +12,9 @@ export { OffboardToUserKeyTestContract__factory } from "./OffboardToUserKeyTestC
 export { StringTestsContract__factory } from "./StringTestsContract__factory";
 export { TransferScalarTestsContract__factory } from "./TransferScalarTestsContract__factory";
 export { TransferTestsContract__factory } from "./TransferTestsContract__factory";
+export { TransferWithAllowance64_16TestsContract__factory } from "./TransferWithAllowance64_16TestsContract__factory";
+export { TransferWithAllowance64_32TestsContract__factory } from "./TransferWithAllowance64_32TestsContract__factory";
+export { TransferWithAllowance64_64TestsContract__factory } from "./TransferWithAllowance64_64TestsContract__factory";
+export { TransferWithAllowance64_8TestsContract__factory } from "./TransferWithAllowance64_8TestsContract__factory";
+export { TransferWithAllowanceScalarTestsContract__factory } from "./TransferWithAllowanceScalarTestsContract__factory";
+export { TransferWithAllowanceTestsContract__factory } from "./TransferWithAllowanceTestsContract__factory";

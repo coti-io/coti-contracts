@@ -51,6 +51,9 @@ contract TransferTestsContract {
 
         (newA_s, newB_s, res_s) = MpcCore.transfer(allGTCastingValues.a16_s, allGTCastingValues.b8_s, allAmountValues.amount16_s);
         require(new_a == MpcCore.decrypt(newA_s) && new_b == MpcCore.decrypt(newB_s) && res == MpcCore.decrypt(res_s), "transferTest: cast 16 failed");
+
+        (newA_s, newB_s, res_s) = MpcCore.transfer(allGTCastingValues.a16_s, allGTCastingValues.b16_s, allAmountValues.amount8_s);
+        require(new_a == MpcCore.decrypt(newA_s) && new_b == MpcCore.decrypt(newB_s) && res == MpcCore.decrypt(res_s), "transferTest: cast 16 failed");
     }
 
     function computeAndCheckTransfer32(AllGTCastingValues memory allGTCastingValues, AllAmountValues memory allAmountValues, uint8 new_a, uint8 new_b, bool res) public {

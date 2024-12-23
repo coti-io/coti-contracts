@@ -34,11 +34,23 @@ contract Miscellaneous1TestsContract {
         return validateCiphertextRes;
     }
 
+    uint constant MAX_SIZE_1_BIT = 10;
     uint constant MAX_SIZE_8_BITS = 10;
     uint constant MAX_SIZE_16_BITS = 3;
     uint constant MAX_SIZE_32_BITS = 3;
     uint constant MAX_SIZE_64_BITS = 2;
     uint constant MAX_BOOL_SIZE = 40;
+
+    function checkNotAllEqual(bool[MAX_SIZE_1_BIT] memory randoms, uint size) private {
+        // Count how many randoms are equal
+        uint numEqual = 1;
+        for (uint i = 1; i < size; i++) {
+            if (randoms[0] == randoms[i]){
+                numEqual++;
+            }
+        }
+        require(numEqual != size, "randomTest: random failed, all values are the same");
+    }
 
     function checkNotAllEqual(uint64[MAX_SIZE_8_BITS] memory randoms, uint size) private {
         // Count how many randoms are equal
@@ -66,8 +78,28 @@ contract Miscellaneous1TestsContract {
     }
 
     function randTest_(bool isBounded, uint8 numBits) public returns (uint64) {
-        uint size = MAX_SIZE_8_BITS;
+        uint size = MAX_SIZE_1_BIT;
+        bool[MAX_SIZE_1_BIT] memory randomBools;
+        
+        if (!isBounded) {
+            // Generate gtBool randoms
+            for (uint i = 0; i < size; i++) {
+                randomBools[i] = MpcCore.decrypt(MpcCore.rand());
+            }
+
+            // Check that not all the generated random values are the same
+            checkNotAllEqual(randomBools, size);
+        }
+
         uint64[MAX_SIZE_8_BITS] memory randoms;
+
+        // In case of bounded random, the bit size does not matter because the bounded bits can be small.
+        // So the max size remain as in 8 bits.
+        // In case of unbounded random, max size can be reduced.
+        if (!isBounded){
+            size = MAX_SIZE_8_BITS;
+        }
+        
         // Generate gtUint8 randoms
         for (uint i = 0; i < size; i++) {
             if(!isBounded){
@@ -84,9 +116,6 @@ contract Miscellaneous1TestsContract {
         // Check that not all the generated random values are the same
         checkNotAllEqual(randoms, size);
 
-        // In case of bounded random, the bit size does not matter because the bounded bits can be small.
-        // So the max size remain as in 8 bits.
-        // In case of unbounded random, max size can be reduced.
         if (!isBounded){
             size = MAX_SIZE_16_BITS;
         }

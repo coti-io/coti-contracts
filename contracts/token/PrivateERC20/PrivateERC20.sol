@@ -85,7 +85,7 @@ abstract contract PrivateERC20 is Context, IPrivateERC20 {
      * {IPrivateERC20-balanceOf} and {IPrivateERC20-transfer}.
      */
     function decimals() public view virtual returns (uint8) {
-        return 2;
+        return 6;
     }
 
     /**

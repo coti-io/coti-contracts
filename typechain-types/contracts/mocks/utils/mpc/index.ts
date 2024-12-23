@@ -12,3 +12,9 @@ export type { OffboardToUserKeyTestContract } from "./OffboardToUserKeyTestContr
 export type { StringTestsContract } from "./StringTestsContract";
 export type { TransferScalarTestsContract } from "./TransferScalarTestsContract";
 export type { TransferTestsContract } from "./TransferTestsContract";
+export type { TransferWithAllowance64_16TestsContract } from "./TransferWithAllowance64_16TestsContract";
+export type { TransferWithAllowance64_32TestsContract } from "./TransferWithAllowance64_32TestsContract";
+export type { TransferWithAllowance64_64TestsContract } from "./TransferWithAllowance64_64TestsContract";
+export type { TransferWithAllowance64_8TestsContract } from "./TransferWithAllowance64_8TestsContract";
+export type { TransferWithAllowanceScalarTestsContract } from "./TransferWithAllowanceScalarTestsContract";
+export type { TransferWithAllowanceTestsContract } from "./TransferWithAllowanceTestsContract";

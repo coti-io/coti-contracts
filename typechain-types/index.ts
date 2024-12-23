@@ -54,6 +54,18 @@ export type { TransferScalarTestsContract } from "./contracts/mocks/utils/mpc/Tr
 export { TransferScalarTestsContract__factory } from "./factories/contracts/mocks/utils/mpc/TransferScalarTestsContract__factory";
 export type { TransferTestsContract } from "./contracts/mocks/utils/mpc/TransferTestsContract";
 export { TransferTestsContract__factory } from "./factories/contracts/mocks/utils/mpc/TransferTestsContract__factory";
+export type { TransferWithAllowance64_16TestsContract } from "./contracts/mocks/utils/mpc/TransferWithAllowance64_16TestsContract";
+export { TransferWithAllowance64_16TestsContract__factory } from "./factories/contracts/mocks/utils/mpc/TransferWithAllowance64_16TestsContract__factory";
+export type { TransferWithAllowance64_32TestsContract } from "./contracts/mocks/utils/mpc/TransferWithAllowance64_32TestsContract";
+export { TransferWithAllowance64_32TestsContract__factory } from "./factories/contracts/mocks/utils/mpc/TransferWithAllowance64_32TestsContract__factory";
+export type { TransferWithAllowance64_64TestsContract } from "./contracts/mocks/utils/mpc/TransferWithAllowance64_64TestsContract";
+export { TransferWithAllowance64_64TestsContract__factory } from "./factories/contracts/mocks/utils/mpc/TransferWithAllowance64_64TestsContract__factory";
+export type { TransferWithAllowance64_8TestsContract } from "./contracts/mocks/utils/mpc/TransferWithAllowance64_8TestsContract";
+export { TransferWithAllowance64_8TestsContract__factory } from "./factories/contracts/mocks/utils/mpc/TransferWithAllowance64_8TestsContract__factory";
+export type { TransferWithAllowanceScalarTestsContract } from "./contracts/mocks/utils/mpc/TransferWithAllowanceScalarTestsContract";
+export { TransferWithAllowanceScalarTestsContract__factory } from "./factories/contracts/mocks/utils/mpc/TransferWithAllowanceScalarTestsContract__factory";
+export type { TransferWithAllowanceTestsContract } from "./contracts/mocks/utils/mpc/TransferWithAllowanceTestsContract";
+export { TransferWithAllowanceTestsContract__factory } from "./factories/contracts/mocks/utils/mpc/TransferWithAllowanceTestsContract__factory";
 export type { PrivateERC20WalletMock } from "./contracts/mocks/wallet/PrivateERC20Wallet/PrivateERC20WalletMock";
 export { PrivateERC20WalletMock__factory } from "./factories/contracts/mocks/wallet/PrivateERC20Wallet/PrivateERC20WalletMock__factory";
 export type { AccountOnboard } from "./contracts/onboard/AccountOnboard";

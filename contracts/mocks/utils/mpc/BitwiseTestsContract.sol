@@ -6,6 +6,8 @@ import "../../../utils/mpc/MpcCore.sol";
 contract BitwiseTestsContract {
 
     struct AllGTCastingValues {
+        gtBool aBool_s;
+        gtBool bBool_s;
         gtUint8 a8_s;
         gtUint8 b8_s;
         gtUint16 a16_s;
@@ -54,7 +56,9 @@ contract BitwiseTestsContract {
         return xorResult;
     }
 
-    function setPublicValues(AllGTCastingValues memory castingValues, uint8 a, uint8 b) public{
+    function setPublicValues(AllGTCastingValues memory castingValues, uint8 a, uint8 b) public {
+        castingValues.aBool_s = MpcCore.setPublic(a > b);
+        castingValues.bBool_s = MpcCore.setPublic(b > a);
         castingValues.a8_s = MpcCore.setPublic8(a);
         castingValues.b8_s = MpcCore.setPublic8(b);
         castingValues.a16_s =  MpcCore.setPublic16(a);
@@ -108,6 +112,8 @@ contract BitwiseTestsContract {
         Check64 memory check64;
         setPublicValues(castingValues, a, b);
 
+        MpcCore.decrypt(MpcCore.and(castingValues.aBool_s, castingValues.bBool_s));
+        
         // Calculate the expected result
         uint8 result =  MpcCore.decrypt(MpcCore.and(castingValues.a8_s, castingValues.b8_s));
         andResult = result;
@@ -159,6 +165,8 @@ contract BitwiseTestsContract {
         Check64 memory check64;
         setPublicValues(castingValues, a, b);
 
+        MpcCore.decrypt(MpcCore.or(castingValues.aBool_s, castingValues.bBool_s));
+
         // Calculate the expected result
         uint8 result =  MpcCore.decrypt(MpcCore.or(castingValues.a8_s, castingValues.b8_s));
         orResult = result;
@@ -209,6 +217,8 @@ contract BitwiseTestsContract {
         Check32 memory check32;
         Check64 memory check64;
         setPublicValues(castingValues, a, b);
+
+        MpcCore.decrypt(MpcCore.xor(castingValues.aBool_s, castingValues.bBool_s));
 
         // Calculate the expected result
         uint8 result =  MpcCore.decrypt(MpcCore.xor(castingValues.a8_s, castingValues.b8_s));

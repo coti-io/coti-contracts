@@ -110,6 +110,30 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TransferTestsContract__factory>;
     getContractFactory(
+      name: "TransferWithAllowance64_16TestsContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TransferWithAllowance64_16TestsContract__factory>;
+    getContractFactory(
+      name: "TransferWithAllowance64_32TestsContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TransferWithAllowance64_32TestsContract__factory>;
+    getContractFactory(
+      name: "TransferWithAllowance64_64TestsContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TransferWithAllowance64_64TestsContract__factory>;
+    getContractFactory(
+      name: "TransferWithAllowance64_8TestsContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TransferWithAllowance64_8TestsContract__factory>;
+    getContractFactory(
+      name: "TransferWithAllowanceScalarTestsContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TransferWithAllowanceScalarTestsContract__factory>;
+    getContractFactory(
+      name: "TransferWithAllowanceTestsContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TransferWithAllowanceTestsContract__factory>;
+    getContractFactory(
       name: "PrivateERC20WalletMock",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PrivateERC20WalletMock__factory>;
@@ -263,6 +287,36 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.TransferTestsContract>;
     getContractAt(
+      name: "TransferWithAllowance64_16TestsContract",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TransferWithAllowance64_16TestsContract>;
+    getContractAt(
+      name: "TransferWithAllowance64_32TestsContract",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TransferWithAllowance64_32TestsContract>;
+    getContractAt(
+      name: "TransferWithAllowance64_64TestsContract",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TransferWithAllowance64_64TestsContract>;
+    getContractAt(
+      name: "TransferWithAllowance64_8TestsContract",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TransferWithAllowance64_8TestsContract>;
+    getContractAt(
+      name: "TransferWithAllowanceScalarTestsContract",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TransferWithAllowanceScalarTestsContract>;
+    getContractAt(
+      name: "TransferWithAllowanceTestsContract",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TransferWithAllowanceTestsContract>;
+    getContractAt(
       name: "PrivateERC20WalletMock",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -400,6 +454,30 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TransferTestsContract>;
     deployContract(
+      name: "TransferWithAllowance64_16TestsContract",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TransferWithAllowance64_16TestsContract>;
+    deployContract(
+      name: "TransferWithAllowance64_32TestsContract",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TransferWithAllowance64_32TestsContract>;
+    deployContract(
+      name: "TransferWithAllowance64_64TestsContract",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TransferWithAllowance64_64TestsContract>;
+    deployContract(
+      name: "TransferWithAllowance64_8TestsContract",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TransferWithAllowance64_8TestsContract>;
+    deployContract(
+      name: "TransferWithAllowanceScalarTestsContract",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TransferWithAllowanceScalarTestsContract>;
+    deployContract(
+      name: "TransferWithAllowanceTestsContract",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TransferWithAllowanceTestsContract>;
+    deployContract(
       name: "PrivateERC20WalletMock",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.PrivateERC20WalletMock>;
@@ -552,6 +630,36 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TransferTestsContract>;
+    deployContract(
+      name: "TransferWithAllowance64_16TestsContract",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TransferWithAllowance64_16TestsContract>;
+    deployContract(
+      name: "TransferWithAllowance64_32TestsContract",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TransferWithAllowance64_32TestsContract>;
+    deployContract(
+      name: "TransferWithAllowance64_64TestsContract",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TransferWithAllowance64_64TestsContract>;
+    deployContract(
+      name: "TransferWithAllowance64_8TestsContract",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TransferWithAllowance64_8TestsContract>;
+    deployContract(
+      name: "TransferWithAllowanceScalarTestsContract",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TransferWithAllowanceScalarTestsContract>;
+    deployContract(
+      name: "TransferWithAllowanceTestsContract",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TransferWithAllowanceTestsContract>;
     deployContract(
       name: "PrivateERC20WalletMock",
       args: any[],

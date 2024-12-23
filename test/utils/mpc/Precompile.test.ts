@@ -42,8 +42,12 @@ function buildTestWithUser(contractName: string, func: string, resFunc: string, 
 
     await (await contract.getFunction(func)(param, owner.address, { gasLimit: 12000000 })).wait()
     const results = await contract.getFunction(resFunc)()
-    for (const result of results) {
-      expect(await owner.decryptValue(result)).to.equal(param)
+    for (let i = 0; i < results.length; i++) {
+      if (i === 0) {
+        expect(Boolean(await owner.decryptValue(results[i]))).to.equal(true)
+      } else {
+        expect(await owner.decryptValue(results[i])).to.equal(param)
+      }
     }
   })
 }
@@ -57,8 +61,11 @@ const bool_b = false
 const [a, b] = params
 describe("Precompile", function () {
   buildTest("ArithmeticTestsContract", "addTest", "getAddResult", params, a + b)
+  buildTest("ArithmeticTestsContract", "checkedAddTest", "getAddResult", params, a + b)
   buildTest("ArithmeticTestsContract", "subTest", "getSubResult", params, a - b)
+  buildTest("ArithmeticTestsContract", "checkedSubTest", "getSubResult", params, a - b)
   buildTest("ArithmeticTestsContract", "mulTest", "getMulResult", params, a * b)
+  buildTest("ArithmeticTestsContract", "checkedMulTest", "getMulResult", params, a * b)
 
   buildTest("MiscellaneousTestsContract", "divTest", "getDivResult", params, a / b)
   buildTest("MiscellaneousTestsContract", "remTest", "getRemResult", params, a % b)
@@ -79,10 +86,17 @@ describe("Precompile", function () {
 
   buildTest("TransferTestsContract", "transferTest", "getResults", [a, b, b], a - b, b + b, true)
   buildTest("TransferScalarTestsContract", "transferScalarTest", "getResults", [a, b, b], a - b, b + b, true)
+  buildTest("TransferWithAllowanceTestsContract", "transferWithAllowanceTest", "getResults", [a, b, b, b], a - b, b + b, true, 0)
+  buildTest("TransferWithAllowance64_8TestsContract", "transferWithAllowance64Test", "getResults", [a, b, b, b], a - b, b + b, true, 0)
+  buildTest("TransferWithAllowance64_16TestsContract", "transferWithAllowance64Test", "getResults", [a, b, b, b], a - b, b + b, true, 0)
+  buildTest("TransferWithAllowance64_32TestsContract", "transferWithAllowance64Test", "getResults", [a, b, b, b], a - b, b + b, true, 0)
+  buildTest("TransferWithAllowance64_64TestsContract", "transferWithAllowance64Test", "getResults", [a, b, b, b], a - b, b + b, true, 0)
+  buildTest("TransferWithAllowanceScalarTestsContract", "transferWithAllowanceScalarTest", "getResults", [a, b, b, b], a - b, b + b, true, 0)
   buildTest("OffboardToUserKeyTestContract", "offboardOnboardTest", "getOnboardOffboardResult", [a, a, a, a], a)
   buildTest("MiscellaneousTestsContract", "notTest", "getBoolResult", [!!a], !a)
 
   buildTestWithUser("OffboardToUserKeyTestContract", "offboardToUserTest", "getCTs", a)
+  buildTestWithUser("OffboardToUserKeyTestContract", "offboardCombinedTest", "getCTs", a)
   buildTest("Miscellaneous1TestsContract", "randomTest", "getRandom", [], last_random_value)
   buildTest("Miscellaneous1TestsContract", "randomBoundedTest", "getRandomBounded", [numBits], last_random_value)
   buildTest(

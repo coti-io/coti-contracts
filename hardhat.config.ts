@@ -6,7 +6,15 @@ dotenv.config()
 
 const config: HardhatUserConfig = {
   defaultNetwork: "testnet",
-  solidity: "0.8.20",
+  solidity: {
+    version: "0.8.20",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 10000
+      }
+    }
+  },
   networks: {
     testnet: {
       url: "https://testnet.coti.io/rpc",
