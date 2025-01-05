@@ -24,9 +24,9 @@ describe("Account Onboard", function () {
   })
 
   it('Should successfully onboard the account', async function () {
-    const { owner } = deployment
+    const { owner, contractAddress } = deployment
 
-    await owner.generateOrRecoverAes()
+    await owner.generateOrRecoverAes(contractAddress)
 
     expect(owner.getUserOnboardInfo()?.aesKey).to.not.equal('')
   })
