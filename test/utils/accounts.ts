@@ -14,7 +14,7 @@ export async function setupAccounts() {
     setEnvValue("PUBLIC_KEYS", `${key1.address},${key2.address}`)
     setEnvValue("SIGNING_KEYS", `${key1.privateKey},${key2.privateKey}`)
 
-    throw new Error(`Created new random accounts ${key1.address} and ${key2.address}. Please use faucet to fund it.`)
+    throw new Error(`Created new random accounts ${key1.address} and ${key2.address}. Please use faucet to fund them.`)
   }
 
   const wallets = pks.map((pk) => new Wallet(pk, provider))
@@ -39,7 +39,7 @@ export async function setupAccounts() {
 
   let accounts: Wallet[] = []
   if (userKeys.length !== wallets.length) {
-    await (await wallets[0].sendTransaction({ to: wallets[1].address, value: parseEther("0.1") })).wait()
+    await (await wallets[0].sendTransaction({ to: wallets[1].address, value: parseEther("1.0") })).wait()
 
     accounts = await Promise.all(wallets.map(async (account, i) => await toAccount(account)))
     setEnvValue("USER_KEYS", accounts.map((a) => a.getUserOnboardInfo()?.aesKey).join(","))
