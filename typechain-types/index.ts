@@ -48,6 +48,8 @@ export type { MiscellaneousTestsContract } from "./contracts/mocks/utils/mpc/Mis
 export { MiscellaneousTestsContract__factory } from "./factories/contracts/mocks/utils/mpc/MiscellaneousTestsContract__factory";
 export type { OffboardToUserKeyTestContract } from "./contracts/mocks/utils/mpc/OffboardToUserKeyTestContract";
 export { OffboardToUserKeyTestContract__factory } from "./factories/contracts/mocks/utils/mpc/OffboardToUserKeyTestContract__factory";
+export type { ShiftTestsContract } from "./contracts/mocks/utils/mpc/ShiftTestsContract";
+export { ShiftTestsContract__factory } from "./factories/contracts/mocks/utils/mpc/ShiftTestsContract__factory";
 export type { StringTestsContract } from "./contracts/mocks/utils/mpc/StringTestsContract";
 export { StringTestsContract__factory } from "./factories/contracts/mocks/utils/mpc/StringTestsContract__factory";
 export type { TransferScalarTestsContract } from "./contracts/mocks/utils/mpc/TransferScalarTestsContract";

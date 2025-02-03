@@ -9,6 +9,7 @@ export type { MinMaxTestsContract } from "./MinMaxTestsContract";
 export type { Miscellaneous1TestsContract } from "./Miscellaneous1TestsContract";
 export type { MiscellaneousTestsContract } from "./MiscellaneousTestsContract";
 export type { OffboardToUserKeyTestContract } from "./OffboardToUserKeyTestContract";
+export type { ShiftTestsContract } from "./ShiftTestsContract";
 export type { StringTestsContract } from "./StringTestsContract";
 export type { TransferScalarTestsContract } from "./TransferScalarTestsContract";
 export type { TransferTestsContract } from "./TransferTestsContract";

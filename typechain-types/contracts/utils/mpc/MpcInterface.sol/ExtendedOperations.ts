@@ -51,6 +51,8 @@ export interface ExtendedOperationsInterface extends Interface {
       | "RandBoundedBits"
       | "Rem"
       | "SetPublic"
+      | "Shl"
+      | "Shr"
       | "Sub"
       | "Transfer"
       | "TransferWithAllowance"
@@ -168,6 +170,14 @@ export interface ExtendedOperationsInterface extends Interface {
     values: [BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "Shl",
+    values: [BytesLike, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "Shr",
+    values: [BytesLike, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "Sub",
     values: [BytesLike, BigNumberish, BigNumberish]
   ): string;
@@ -225,6 +235,8 @@ export interface ExtendedOperationsInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "Rem", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "SetPublic", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "Shl", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "Shr", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "Sub", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "Transfer", data: BytesLike): Result;
   decodeFunctionResult(
@@ -441,6 +453,18 @@ export interface ExtendedOperations extends BaseContract {
 
   SetPublic: TypedContractMethod<
     [metaData: BytesLike, ct: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+
+  Shl: TypedContractMethod<
+    [metaData: BytesLike, lhs: BigNumberish, rhs: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+
+  Shr: TypedContractMethod<
+    [metaData: BytesLike, lhs: BigNumberish, rhs: BigNumberish],
     [bigint],
     "nonpayable"
   >;
@@ -678,6 +702,20 @@ export interface ExtendedOperations extends BaseContract {
     nameOrSignature: "SetPublic"
   ): TypedContractMethod<
     [metaData: BytesLike, ct: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "Shl"
+  ): TypedContractMethod<
+    [metaData: BytesLike, lhs: BigNumberish, rhs: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "Shr"
+  ): TypedContractMethod<
+    [metaData: BytesLike, lhs: BigNumberish, rhs: BigNumberish],
     [bigint],
     "nonpayable"
   >;

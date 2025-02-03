@@ -799,6 +799,64 @@ const _abi = [
         type: "uint256",
       },
     ],
+    name: "Shl",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "result",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes3",
+        name: "metaData",
+        type: "bytes3",
+      },
+      {
+        internalType: "uint256",
+        name: "lhs",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "rhs",
+        type: "uint256",
+      },
+    ],
+    name: "Shr",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "result",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes3",
+        name: "metaData",
+        type: "bytes3",
+      },
+      {
+        internalType: "uint256",
+        name: "lhs",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "rhs",
+        type: "uint256",
+      },
+    ],
     name: "Sub",
     outputs: [
       {

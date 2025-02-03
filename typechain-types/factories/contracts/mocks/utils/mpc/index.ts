@@ -9,6 +9,7 @@ export { MinMaxTestsContract__factory } from "./MinMaxTestsContract__factory";
 export { Miscellaneous1TestsContract__factory } from "./Miscellaneous1TestsContract__factory";
 export { MiscellaneousTestsContract__factory } from "./MiscellaneousTestsContract__factory";
 export { OffboardToUserKeyTestContract__factory } from "./OffboardToUserKeyTestContract__factory";
+export { ShiftTestsContract__factory } from "./ShiftTestsContract__factory";
 export { StringTestsContract__factory } from "./StringTestsContract__factory";
 export { TransferScalarTestsContract__factory } from "./TransferScalarTestsContract__factory";
 export { TransferTestsContract__factory } from "./TransferTestsContract__factory";
