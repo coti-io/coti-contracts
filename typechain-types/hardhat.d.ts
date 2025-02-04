@@ -14,18 +14,6 @@ import * as Contracts from ".";
 declare module "hardhat/types/runtime" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
     getContractFactory(
-      name: "IERC1155Errors",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC1155Errors__factory>;
-    getContractFactory(
-      name: "IERC20Errors",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC20Errors__factory>;
-    getContractFactory(
-      name: "IERC721Errors",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC721Errors__factory>;
-    getContractFactory(
       name: "IERC4906",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC4906__factory>;
@@ -97,6 +85,10 @@ declare module "hardhat/types/runtime" {
       name: "OffboardToUserKeyTestContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.OffboardToUserKeyTestContract__factory>;
+    getContractFactory(
+      name: "ShiftTestsContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ShiftTestsContract__factory>;
     getContractFactory(
       name: "StringTestsContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -171,21 +163,6 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.ExtendedOperations__factory>;
 
     getContractAt(
-      name: "IERC1155Errors",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC1155Errors>;
-    getContractAt(
-      name: "IERC20Errors",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC20Errors>;
-    getContractAt(
-      name: "IERC721Errors",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC721Errors>;
-    getContractAt(
       name: "IERC4906",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -275,6 +252,11 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.OffboardToUserKeyTestContract>;
+    getContractAt(
+      name: "ShiftTestsContract",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ShiftTestsContract>;
     getContractAt(
       name: "StringTestsContract",
       address: string | ethers.Addressable,
@@ -367,18 +349,6 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.ExtendedOperations>;
 
     deployContract(
-      name: "IERC1155Errors",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC1155Errors>;
-    deployContract(
-      name: "IERC20Errors",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC20Errors>;
-    deployContract(
-      name: "IERC721Errors",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC721Errors>;
-    deployContract(
       name: "IERC4906",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IERC4906>;
@@ -450,6 +420,10 @@ declare module "hardhat/types/runtime" {
       name: "OffboardToUserKeyTestContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.OffboardToUserKeyTestContract>;
+    deployContract(
+      name: "ShiftTestsContract",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ShiftTestsContract>;
     deployContract(
       name: "StringTestsContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -524,21 +498,6 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.ExtendedOperations>;
 
     deployContract(
-      name: "IERC1155Errors",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC1155Errors>;
-    deployContract(
-      name: "IERC20Errors",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC20Errors>;
-    deployContract(
-      name: "IERC721Errors",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC721Errors>;
-    deployContract(
       name: "IERC4906",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -628,6 +587,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.OffboardToUserKeyTestContract>;
+    deployContract(
+      name: "ShiftTestsContract",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ShiftTestsContract>;
     deployContract(
       name: "StringTestsContract",
       args: any[],
