@@ -70,6 +70,8 @@ export type { IPrivateERC20 } from "./contracts/token/PrivateERC20/IPrivateERC20
 export { IPrivateERC20__factory } from "./factories/contracts/token/PrivateERC20/IPrivateERC20__factory";
 export type { PrivateERC20 } from "./contracts/token/PrivateERC20/PrivateERC20";
 export { PrivateERC20__factory } from "./factories/contracts/token/PrivateERC20/PrivateERC20__factory";
+export type { IPrivateERC721URIStorage } from "./contracts/token/PrivateERC721/extensions/IPrivateERC721URIStorage";
+export { IPrivateERC721URIStorage__factory } from "./factories/contracts/token/PrivateERC721/extensions/IPrivateERC721URIStorage__factory";
 export type { PrivateERC721URIStorage } from "./contracts/token/PrivateERC721/extensions/PrivateERC721URIStorage";
 export { PrivateERC721URIStorage__factory } from "./factories/contracts/token/PrivateERC721/extensions/PrivateERC721URIStorage__factory";
 export type { IERC721Errors } from "./contracts/token/PrivateERC721/IERC721Errors";

@@ -54,6 +54,32 @@ abstract contract PrivateERC721URIStorage is IERC4906, PrivateERC721 {
     function _setTokenURI(
         address to,
         uint256 tokenId,
+        ctString memory ctTokenURI
+    ) internal virtual {
+        gtString memory gtTokenURI = MpcCore.onBoard(ctTokenURI);
+
+        _setTokenURI(to, tokenId, gtTokenURI, true);
+    }
+
+    /**
+     * @dev Sets `_tokenURI` as the tokenURI of `tokenId`.
+     *
+     */
+    function _setTokenURI(
+        address to,
+        uint256 tokenId,
+        gtString memory gtTokenURI
+    ) internal virtual {
+        _setTokenURI(to, tokenId, gtTokenURI, true);
+    }
+
+    /**
+     * @dev Sets `_tokenURI` as the tokenURI of `tokenId`.
+     *
+     */
+    function _setTokenURI(
+        address to,
+        uint256 tokenId,
         gtString memory gtTokenURI,
         bool updateCiphertext
     ) private {
@@ -61,7 +87,7 @@ abstract contract PrivateERC721URIStorage is IERC4906, PrivateERC721 {
             revert ERC721URIStorageNonMintedToken(tokenId);
         }
 
-        utString memory utTokenURI =  MpcCore.offBoardCombined(gtTokenURI, to);
+        utString memory utTokenURI = MpcCore.offBoardCombined(gtTokenURI, to);
 
         if (updateCiphertext) {
             _tokenURIs[tokenId] = utTokenURI;

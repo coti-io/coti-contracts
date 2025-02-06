@@ -142,6 +142,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PrivateERC20__factory>;
     getContractFactory(
+      name: "IPrivateERC721URIStorage",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IPrivateERC721URIStorage__factory>;
+    getContractFactory(
       name: "PrivateERC721URIStorage",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PrivateERC721URIStorage__factory>;
@@ -323,6 +327,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.PrivateERC20>;
     getContractAt(
+      name: "IPrivateERC721URIStorage",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IPrivateERC721URIStorage>;
+    getContractAt(
       name: "PrivateERC721URIStorage",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -477,6 +486,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.PrivateERC20>;
     deployContract(
+      name: "IPrivateERC721URIStorage",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IPrivateERC721URIStorage>;
+    deployContract(
       name: "PrivateERC721URIStorage",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.PrivateERC721URIStorage>;
@@ -657,6 +670,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.PrivateERC20>;
+    deployContract(
+      name: "IPrivateERC721URIStorage",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IPrivateERC721URIStorage>;
     deployContract(
       name: "PrivateERC721URIStorage",
       args: any[],
