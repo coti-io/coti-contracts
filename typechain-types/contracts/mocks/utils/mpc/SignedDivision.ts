@@ -3,7 +3,10 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumberish,
+  BytesLike,
   FunctionFragment,
+  Result,
   Interface,
   ContractRunner,
   ContractMethod,
@@ -14,15 +17,34 @@ import type {
   TypedDeferredTopicFilter,
   TypedEventLog,
   TypedListener,
+  TypedContractMethod,
 } from "../../../../common";
 
-export interface IERC20ErrorsInterface extends Interface {}
+export interface SignedDivisionInterface extends Interface {
+  getFunction(
+    nameOrSignature: "boolResult" | "divResult" | "divTest"
+  ): FunctionFragment;
 
-export interface IERC20Errors extends BaseContract {
-  connect(runner?: ContractRunner | null): IERC20Errors;
+  encodeFunctionData(
+    functionFragment: "boolResult",
+    values?: undefined
+  ): string;
+  encodeFunctionData(functionFragment: "divResult", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "divTest",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+
+  decodeFunctionResult(functionFragment: "boolResult", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "divResult", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "divTest", data: BytesLike): Result;
+}
+
+export interface SignedDivision extends BaseContract {
+  connect(runner?: ContractRunner | null): SignedDivision;
   waitForDeployment(): Promise<this>;
 
-  interface: IERC20ErrorsInterface;
+  interface: SignedDivisionInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,
@@ -61,9 +83,33 @@ export interface IERC20Errors extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  boolResult: TypedContractMethod<[], [boolean], "view">;
+
+  divResult: TypedContractMethod<[], [bigint], "view">;
+
+  divTest: TypedContractMethod<
+    [a: BigNumberish, b: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
+
+  getFunction(
+    nameOrSignature: "boolResult"
+  ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "divResult"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "divTest"
+  ): TypedContractMethod<
+    [a: BigNumberish, b: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
   filters: {};
 }

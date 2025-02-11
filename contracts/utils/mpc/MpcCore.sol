@@ -3,9 +3,13 @@
 pragma solidity ^0.8.19;
 
 type gtBool is uint256;
+type gtInt8 is uint256;
 type gtUint8 is uint256;
+type gtInt16 is uint256;
 type gtUint16 is uint256;
+type gtInt32 is uint256;
 type gtUint32 is uint256;
+type gtInt64 is uint256;
 type gtUint64 is uint256;
 
 // we use a struct because user-defined value types can only be elementary value types
@@ -15,9 +19,13 @@ struct gtString {
 }
 
 type ctBool is uint256;
+type ctInt8 is uint256;
 type ctUint8 is uint256;
+type ctInt16 is uint256;
 type ctUint16 is uint256;
+type ctInt32 is uint256;
 type ctUint32 is uint256;
+type ctInt64 is uint256;
 type ctUint64 is uint256;
 
 // we use a struct because user-defined value types can only be elementary value types
@@ -30,16 +38,32 @@ struct itBool {
     ctBool ciphertext;
     bytes signature;
 }
+struct itInt8 {
+    ctInt8 ciphertext;
+    bytes signature;
+}
 struct itUint8 {
     ctUint8 ciphertext;
+    bytes signature;
+}
+struct itInt16 {
+    ctInt16 ciphertext;
     bytes signature;
 }
 struct itUint16 {
     ctUint16 ciphertext;
     bytes signature;
 }
+struct itInt32 {
+    ctInt32 ciphertext;
+    bytes signature;
+}
 struct itUint32 {
     ctUint32 ciphertext;
+    bytes signature;
+}
+struct itInt64 {
+    ctInt64 ciphertext;
     bytes signature;
 }
 struct itUint64 {
@@ -55,17 +79,33 @@ struct utBool {
     ctBool ciphertext;
     ctBool userCiphertext;
 }
+struct utInt8 {
+    ctInt8 ciphertext;
+    ctInt8 userCiphertext;
+}
 struct utUint8 {
     ctUint8 ciphertext;
     ctUint8 userCiphertext;
+}
+struct utInt16 {
+    ctInt16 ciphertext;
+    ctInt16 userCiphertext;
 }
 struct utUint16 {
     ctUint16 ciphertext;
     ctUint16 userCiphertext;
 }
+struct utInt32 {
+    ctInt32 ciphertext;
+    ctInt32 userCiphertext;
+}
 struct utUint32 {
     ctUint32 ciphertext;
     ctUint32 userCiphertext;
+}
+struct utInt64 {
+    ctInt64 ciphertext;
+    ctInt64 userCiphertext;
 }
 struct utUint64 {
     ctUint64 ciphertext;
@@ -236,25 +276,161 @@ library MpcCore {
         Ne(combineEnumsToBytes3(MPC_TYPE.SBOOL_T, MPC_TYPE.SBOOL_T, ARGS.BOTH_SECRET), gtBool.unwrap(a), gtBool.unwrap(b)));
     }
 
-    function decrypt(gtBool ct) internal returns (bool){
+    function decrypt(gtBool ct) internal returns (bool) {
         uint256 temp = ExtendedOperations(address(MPC_PRECOMPILE)).
             Decrypt(bytes1(uint8(MPC_TYPE.SBOOL_T)), gtBool.unwrap(ct));
         return temp != 0;
     }
 
-    function mux(gtBool bit, gtBool a, gtBool b) internal returns (gtBool){
+    function mux(gtBool bit, gtBool a, gtBool b) internal returns (gtBool) {
         return  gtBool.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
         Mux(combineEnumsToBytes3(MPC_TYPE.SBOOL_T, MPC_TYPE.SBOOL_T, ARGS.BOTH_SECRET), gtBool.unwrap(bit), gtBool.unwrap(a), gtBool.unwrap(b)));
     }
 
-    function not(gtBool a) internal returns (gtBool){
+    function not(gtBool a) internal returns (gtBool) {
         return  gtBool.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
         Not(bytes1(uint8(MPC_TYPE.SBOOL_T)), gtBool.unwrap(a)));
     }
 
 
     // =========== Operations with BOTH_SECRET parameter ===========
-    // =========== 8 bit operations ==============
+    // =========== signed 8 bit operations ==============
+
+    function validateCiphertext(itInt8 memory input) internal returns (gtInt8) {
+        return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        ValidateCiphertext(bytes1(uint8(MPC_TYPE.SUINT8_T)), ctInt8.unwrap(input.ciphertext), input.signature));
+    }
+
+    function onBoard(ctInt8 ct) internal returns (gtInt8) {
+        return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        OnBoard(bytes1(uint8(MPC_TYPE.SUINT8_T)), ctInt8.unwrap(ct)));
+    }
+
+    function offBoard(gtInt8 pt) internal returns (ctInt8) {
+        return ctInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        OffBoard(bytes1(uint8(MPC_TYPE.SUINT8_T)), gtInt8.unwrap(pt)));
+    }
+
+    function offBoardToUser(gtInt8 pt, address addr) internal returns (ctInt8) {
+        return ctInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        OffBoardToUser(bytes1(uint8(MPC_TYPE.SUINT8_T)), gtInt8.unwrap(pt), abi.encodePacked(addr)));
+    }
+
+    function offBoardCombined(gtInt8 pt, address addr) internal returns (utInt8 memory ut) {
+        ut.ciphertext = offBoard(pt);
+        ut.userCiphertext = offBoardToUser(pt, addr);
+    }
+
+    function setPublic8(int8 pt) internal returns (gtInt8) {
+        return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        SetPublic(bytes1(uint8(MPC_TYPE.SUINT8_T)), uint256(uint8(pt))));
+    }
+
+    function add(gtInt8 a, gtInt8 b) internal returns (gtInt8) {
+        return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Add(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtInt8.unwrap(a), gtInt8.unwrap(b)));
+    }
+
+    function sub(gtInt8 a, gtInt8 b) internal returns (gtInt8) {
+        return MpcCore.add(
+            a,
+            MpcCore.add(
+                MpcCore.xor(b, MpcCore.setPublic8(int8(-1))),
+                MpcCore.setPublic8(int8(1))
+            )
+        );
+    }
+
+    function mul(gtInt8 a, gtInt8 b) internal returns (gtInt8) {
+        return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Mul(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtInt8.unwrap(a), gtInt8.unwrap(b)));
+    }
+    
+    function div(gtInt8 a, gtInt8 b) internal returns (gtInt8) {
+        gtBool aPositive = MpcCore.eq(
+            MpcCore.and(a, MpcCore.setPublic8(int8(-128))),
+            MpcCore.setPublic8(int8(0))
+        );
+
+        gtBool bPositive = MpcCore.eq(
+            MpcCore.and(b, MpcCore.setPublic8(int8(-128))),
+            MpcCore.setPublic8(int8(0))
+        );
+
+        gtInt8 aAbsoluteValue = MpcCore.mux(
+            aPositive,
+            MpcCore.add(
+                MpcCore.xor(a, MpcCore.setPublic8(int8(-1))),
+                MpcCore.setPublic8(int8(1))
+            ),
+            a
+        );
+
+        gtInt8 bAbsoluteValue = MpcCore.mux(
+            bPositive,
+            MpcCore.add(
+                MpcCore.xor(b, MpcCore.setPublic8(int8(-1))),
+                MpcCore.setPublic8(int8(1))
+            ),
+            b
+        );
+
+        gtInt8 divResult = gtInt8.wrap(gtUint8.unwrap(
+            MpcCore.div(
+                gtUint8.wrap(gtInt8.unwrap(aAbsoluteValue)),
+                gtUint8.wrap(gtInt8.unwrap(bAbsoluteValue))
+            )
+        ));
+
+        gtBool outputNegative = MpcCore.xor(aPositive, bPositive);
+
+        return MpcCore.mux(
+            outputNegative,
+            divResult,
+            MpcCore.add(
+                MpcCore.xor(divResult, MpcCore.setPublic8(int8(-1))),
+                MpcCore.setPublic8(int8(1))
+            )
+        );
+    }
+
+    function and(gtInt8 a, gtInt8 b) internal returns (gtInt8) {
+        return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        And(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtInt8.unwrap(a), gtInt8.unwrap(b)));
+    }
+
+    function or(gtInt8 a, gtInt8 b) internal returns (gtInt8) {
+        return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Or(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtInt8.unwrap(a), gtInt8.unwrap(b)));
+    }
+
+    function xor(gtInt8 a, gtInt8 b) internal returns (gtInt8) {
+        return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Xor(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtInt8.unwrap(a), gtInt8.unwrap(b)));
+    }
+
+    function eq(gtInt8 a, gtInt8 b) internal returns (gtBool) {
+        return gtBool.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Eq(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtInt8.unwrap(a), gtInt8.unwrap(b)));
+    }
+
+    function ne(gtInt8 a, gtInt8 b) internal returns (gtBool) {
+        return gtBool.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Ne(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtInt8.unwrap(a), gtInt8.unwrap(b)));
+    }
+
+    function decrypt(gtInt8 ct) internal returns (int8) {
+        return int8(uint8(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Decrypt(bytes1(uint8(MPC_TYPE.SUINT8_T)), gtInt8.unwrap(ct))));
+    }
+
+    function mux(gtBool bit, gtInt8 a, gtInt8 b) internal returns (gtInt8) {
+        return  gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Mux(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtBool.unwrap(bit), gtInt8.unwrap(a), gtInt8.unwrap(b)));
+    }
+
+
+    // =========== unsigned 8 bit operations ==============
 
     function validateCiphertext(itUint8 memory input) internal returns (gtUint8) {
         return gtUint8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
@@ -280,6 +456,7 @@ library MpcCore {
         ut.ciphertext = offBoard(pt);
         ut.userCiphertext = offBoardToUser(pt, addr);
     }
+
     function setPublic8(uint8 pt) internal returns (gtUint8) {
         return gtUint8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
         SetPublic(bytes1(uint8(MPC_TYPE.SUINT8_T)), uint256(pt)));
@@ -393,30 +570,166 @@ library MpcCore {
         Max(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtUint8.unwrap(a), gtUint8.unwrap(b)));
     }
 
-    function decrypt(gtUint8 ct) internal returns (uint8){
+    function decrypt(gtUint8 ct) internal returns (uint8) {
         return uint8(ExtendedOperations(address(MPC_PRECOMPILE)).
         Decrypt(bytes1(uint8(MPC_TYPE.SUINT8_T)), gtUint8.unwrap(ct)));
     }
 
-    function mux(gtBool bit, gtUint8 a, gtUint8 b) internal returns (gtUint8){
+    function mux(gtBool bit, gtUint8 a, gtUint8 b) internal returns (gtUint8) {
         return  gtUint8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
         Mux(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtBool.unwrap(bit), gtUint8.unwrap(a), gtUint8.unwrap(b)));
     }
 
-    function transfer(gtUint8 a, gtUint8 b, gtUint8 amount) internal returns (gtUint8, gtUint8, gtBool){
+    function transfer(gtUint8 a, gtUint8 b, gtUint8 amount) internal returns (gtUint8, gtUint8, gtBool) {
         (uint256 new_a, uint256 new_b, uint256 res) = ExtendedOperations(address(MPC_PRECOMPILE)).
             Transfer(combineEnumsToBytes4(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtUint8.unwrap(a), gtUint8.unwrap(b), gtUint8.unwrap(amount));
         return (gtUint8.wrap(new_a), gtUint8.wrap(new_b), gtBool.wrap(res));
     }
 
-    function transferWithAllowance(gtUint8 a, gtUint8 b, gtUint8 amount, gtUint8 allowance) internal returns (gtUint8, gtUint8, gtBool, gtUint8){
+    function transferWithAllowance(gtUint8 a, gtUint8 b, gtUint8 amount, gtUint8 allowance) internal returns (gtUint8, gtUint8, gtBool, gtUint8) {
         (uint256 new_a, uint256 new_b, uint256 res, uint256 new_allowance) = ExtendedOperations(address(MPC_PRECOMPILE)).
             TransferWithAllowance(combineEnumsToBytes5(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtUint8.unwrap(a), gtUint8.unwrap(b), gtUint8.unwrap(amount), gtUint8.unwrap(allowance));
         return (gtUint8.wrap(new_a), gtUint8.wrap(new_b), gtBool.wrap(res), gtUint8.wrap(new_allowance));
     }
 
 
-    // =========== 16 bit operations ==============
+    // =========== signed 16 bit operations ==============
+
+    function validateCiphertext(itInt16 memory input) internal returns (gtInt16) {
+        return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        ValidateCiphertext(bytes1(uint8(MPC_TYPE.SUINT16_T)), ctInt16.unwrap(input.ciphertext), input.signature));
+    }
+
+    function onBoard(ctInt16 ct) internal returns (gtInt16) {
+        return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        OnBoard(bytes1(uint8(MPC_TYPE.SUINT16_T)), ctInt16.unwrap(ct)));
+    }
+
+    function offBoard(gtInt16 pt) internal returns (ctInt16) {
+        return ctInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        OffBoard(bytes1(uint8(MPC_TYPE.SUINT16_T)), gtInt16.unwrap(pt)));
+    }
+
+    function offBoardToUser(gtInt16 pt, address addr) internal returns (ctInt16) {
+        return ctInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        OffBoardToUser(bytes1(uint8(MPC_TYPE.SUINT16_T)), gtInt16.unwrap(pt), abi.encodePacked(addr)));
+    }
+
+    function offBoardCombined(gtInt16 pt, address addr) internal returns (utInt16 memory ut) {
+        ut.ciphertext = offBoard(pt);
+        ut.userCiphertext = offBoardToUser(pt, addr);
+    }
+
+    function setPublic16(int16 pt) internal returns (gtInt16) {
+        return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        SetPublic(bytes1(uint8(MPC_TYPE.SUINT16_T)), uint256(uint16(pt))));
+    }
+
+    function add(gtInt16 a, gtInt16 b) internal returns (gtInt16) {
+        return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Add(combineEnumsToBytes3(MPC_TYPE.SUINT16_T, MPC_TYPE.SUINT16_T, ARGS.BOTH_SECRET), gtInt16.unwrap(a), gtInt16.unwrap(b)));
+    }
+
+    function sub(gtInt16 a, gtInt16 b) internal returns (gtInt16) {
+        return MpcCore.add(
+            a,
+            MpcCore.add(
+                MpcCore.xor(b, MpcCore.setPublic16(int16(-1))),
+                MpcCore.setPublic16(int16(1))
+            )
+        );
+    }
+
+    function mul(gtInt16 a, gtInt16 b) internal returns (gtInt16) {
+        return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Mul(combineEnumsToBytes3(MPC_TYPE.SUINT16_T, MPC_TYPE.SUINT16_T, ARGS.BOTH_SECRET), gtInt16.unwrap(a), gtInt16.unwrap(b)));
+    }
+
+    function div(gtInt16 a, gtInt16 b) internal returns (gtInt16) {
+        gtBool aPositive = MpcCore.eq(
+            MpcCore.and(a, MpcCore.setPublic16(int16(-32768))),
+            MpcCore.setPublic16(int16(0))
+        );
+
+        gtBool bPositive = MpcCore.eq(
+            MpcCore.and(b, MpcCore.setPublic16(int16(-32768))),
+            MpcCore.setPublic16(int16(0))
+        );
+
+        gtInt16 aAbsoluteValue = MpcCore.mux(
+            aPositive,
+            MpcCore.add(
+                MpcCore.xor(a, MpcCore.setPublic16(int16(-1))),
+                MpcCore.setPublic16(int16(1))
+            ),
+            a
+        );
+
+        gtInt16 bAbsoluteValue = MpcCore.mux(
+            bPositive,
+            MpcCore.add(
+                MpcCore.xor(b, MpcCore.setPublic16(int16(-1))),
+                MpcCore.setPublic16(int16(1))
+            ),
+            b
+        );
+
+        gtInt16 divResult = gtInt16.wrap(gtUint16.unwrap(
+            MpcCore.div(
+                gtUint16.wrap(gtInt16.unwrap(aAbsoluteValue)),
+                gtUint16.wrap(gtInt16.unwrap(bAbsoluteValue))
+            )
+        ));
+
+        gtBool outputNegative = MpcCore.xor(aPositive, bPositive);
+
+        return MpcCore.mux(
+            outputNegative,
+            divResult,
+            MpcCore.add(
+                MpcCore.xor(divResult, MpcCore.setPublic16(int16(-1))),
+                MpcCore.setPublic16(int16(1))
+            )
+        );
+    }
+
+    function and(gtInt16 a, gtInt16 b) internal returns (gtInt16) {
+        return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        And(combineEnumsToBytes3(MPC_TYPE.SUINT16_T, MPC_TYPE.SUINT16_T, ARGS.BOTH_SECRET), gtInt16.unwrap(a), gtInt16.unwrap(b)));
+    }
+
+    function or(gtInt16 a, gtInt16 b) internal returns (gtInt16) {
+        return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Or(combineEnumsToBytes3(MPC_TYPE.SUINT16_T, MPC_TYPE.SUINT16_T, ARGS.BOTH_SECRET), gtInt16.unwrap(a), gtInt16.unwrap(b)));
+    }
+
+    function xor(gtInt16 a, gtInt16 b) internal returns (gtInt16) {
+        return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Xor(combineEnumsToBytes3(MPC_TYPE.SUINT16_T, MPC_TYPE.SUINT16_T, ARGS.BOTH_SECRET), gtInt16.unwrap(a), gtInt16.unwrap(b)));
+    }
+
+    function eq(gtInt16 a, gtInt16 b) internal returns (gtBool) {
+        return gtBool.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Eq(combineEnumsToBytes3(MPC_TYPE.SUINT16_T, MPC_TYPE.SUINT16_T, ARGS.BOTH_SECRET), gtInt16.unwrap(a), gtInt16.unwrap(b)));
+    }
+
+    function ne(gtInt16 a, gtInt16 b) internal returns (gtBool) {
+        return gtBool.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Ne(combineEnumsToBytes3(MPC_TYPE.SUINT16_T, MPC_TYPE.SUINT16_T, ARGS.BOTH_SECRET), gtInt16.unwrap(a), gtInt16.unwrap(b)));
+    }
+
+    function decrypt(gtInt16 ct) internal returns (int16) {
+        return int16(uint16(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Decrypt(bytes1(uint8(MPC_TYPE.SUINT16_T)), gtInt16.unwrap(ct))));
+    }
+
+    function mux(gtBool bit, gtInt16 a, gtInt16 b) internal returns (gtInt16) {
+        return  gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Mux(combineEnumsToBytes3(MPC_TYPE.SUINT16_T, MPC_TYPE.SUINT16_T, ARGS.BOTH_SECRET), gtBool.unwrap(bit), gtInt16.unwrap(a), gtInt16.unwrap(b)));
+    }
+
+
+    // =========== unsigned 16 bit operations ==============
 
     function validateCiphertext(itUint16 memory input) internal returns (gtUint16) {
         return gtUint16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
@@ -579,8 +892,143 @@ library MpcCore {
     }
 
 
+    // =========== signed 32 bit operations ==============
 
-    // =========== 32 bit operations ==============
+    function validateCiphertext(itInt32 memory input) internal returns (gtInt32) {
+        return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        ValidateCiphertext(bytes1(uint8(MPC_TYPE.SUINT32_T)), ctInt32.unwrap(input.ciphertext), input.signature));
+    }
+
+    function onBoard(ctInt32 ct) internal returns (gtInt32) {
+        return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        OnBoard(bytes1(uint8(MPC_TYPE.SUINT32_T)), ctInt32.unwrap(ct)));
+    }
+
+    function offBoard(gtInt32 pt) internal returns (ctInt32) {
+        return ctInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        OffBoard(bytes1(uint8(MPC_TYPE.SUINT32_T)), gtInt32.unwrap(pt)));
+    }
+
+    function offBoardToUser(gtInt32 pt, address addr) internal returns (ctInt32) {
+        return ctInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        OffBoardToUser(bytes1(uint8(MPC_TYPE.SUINT32_T)), gtInt32.unwrap(pt), abi.encodePacked(addr)));
+    }
+
+    function offBoardCombined(gtInt32 pt, address addr) internal returns (utInt32 memory ut) {
+        ut.ciphertext = offBoard(pt);
+        ut.userCiphertext = offBoardToUser(pt, addr);
+    }
+
+    function setPublic32(int32 pt) internal returns (gtInt32) {
+        return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        SetPublic(bytes1(uint8(MPC_TYPE.SUINT32_T)), uint256(uint32(pt))));
+    }
+
+    function add(gtInt32 a, gtInt32 b) internal returns (gtInt32) {
+        return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Add(combineEnumsToBytes3(MPC_TYPE.SUINT32_T, MPC_TYPE.SUINT32_T, ARGS.BOTH_SECRET), gtInt32.unwrap(a), gtInt32.unwrap(b)));
+    }
+
+    function sub(gtInt32 a, gtInt32 b) internal returns (gtInt32) {
+        return MpcCore.add(
+            a,
+            MpcCore.add(
+                MpcCore.xor(b, MpcCore.setPublic32(int32(-1))),
+                MpcCore.setPublic32(int32(1))
+            )
+        );
+    }
+
+    function mul(gtInt32 a, gtInt32 b) internal returns (gtInt32) {
+        return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Mul(combineEnumsToBytes3(MPC_TYPE.SUINT32_T, MPC_TYPE.SUINT32_T, ARGS.BOTH_SECRET), gtInt32.unwrap(a), gtInt32.unwrap(b)));
+    }
+
+    function div(gtInt32 a, gtInt32 b) internal returns (gtInt32) {
+        gtBool aPositive = MpcCore.eq(
+            MpcCore.and(a, MpcCore.setPublic32(int32(-2147483648))),
+            MpcCore.setPublic32(int32(0))
+        );
+
+        gtBool bPositive = MpcCore.eq(
+            MpcCore.and(b, MpcCore.setPublic32(int32(-2147483648))),
+            MpcCore.setPublic32(int32(0))
+        );
+
+        gtInt32 aAbsoluteValue = MpcCore.mux(
+            aPositive,
+            MpcCore.add(
+                MpcCore.xor(a, MpcCore.setPublic32(int32(-1))),
+                MpcCore.setPublic32(int32(1))
+            ),
+            a
+        );
+
+        gtInt32 bAbsoluteValue = MpcCore.mux(
+            bPositive,
+            MpcCore.add(
+                MpcCore.xor(b, MpcCore.setPublic32(int32(-1))),
+                MpcCore.setPublic32(int32(1))
+            ),
+            b
+        );
+
+        gtInt32 divResult = gtInt32.wrap(gtUint32.unwrap(
+            MpcCore.div(
+                gtUint32.wrap(gtInt32.unwrap(aAbsoluteValue)),
+                gtUint32.wrap(gtInt32.unwrap(bAbsoluteValue))
+            )
+        ));
+
+        gtBool outputNegative = MpcCore.xor(aPositive, bPositive);
+
+        return MpcCore.mux(
+            outputNegative,
+            divResult,
+            MpcCore.add(
+                MpcCore.xor(divResult, MpcCore.setPublic32(int32(-1))),
+                MpcCore.setPublic32(int32(1))
+            )
+        );
+    }
+
+    function and(gtInt32 a, gtInt32 b) internal returns (gtInt32) {
+        return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        And(combineEnumsToBytes3(MPC_TYPE.SUINT32_T, MPC_TYPE.SUINT32_T, ARGS.BOTH_SECRET), gtInt32.unwrap(a), gtInt32.unwrap(b)));
+    }
+
+    function or(gtInt32 a, gtInt32 b) internal returns (gtInt32) {
+        return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Or(combineEnumsToBytes3(MPC_TYPE.SUINT32_T, MPC_TYPE.SUINT32_T, ARGS.BOTH_SECRET), gtInt32.unwrap(a), gtInt32.unwrap(b)));
+    }
+
+    function xor(gtInt32 a, gtInt32 b) internal returns (gtInt32) {
+        return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Xor(combineEnumsToBytes3(MPC_TYPE.SUINT32_T, MPC_TYPE.SUINT32_T, ARGS.BOTH_SECRET), gtInt32.unwrap(a), gtInt32.unwrap(b)));
+    }
+
+    function eq(gtInt32 a, gtInt32 b) internal returns (gtBool) {
+        return gtBool.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Eq(combineEnumsToBytes3(MPC_TYPE.SUINT32_T, MPC_TYPE.SUINT32_T, ARGS.BOTH_SECRET), gtInt32.unwrap(a), gtInt32.unwrap(b)));
+    }
+
+    function ne(gtInt32 a, gtInt32 b) internal returns (gtBool) {
+        return gtBool.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Ne(combineEnumsToBytes3(MPC_TYPE.SUINT32_T, MPC_TYPE.SUINT32_T, ARGS.BOTH_SECRET), gtInt32.unwrap(a), gtInt32.unwrap(b)));
+    }
+
+    function decrypt(gtInt32 ct) internal returns (int32) {
+        return int32(uint32(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Decrypt(bytes1(uint8(MPC_TYPE.SUINT32_T)), gtInt32.unwrap(ct))));
+    }
+
+    function mux(gtBool bit, gtInt32 a, gtInt32 b) internal returns (gtInt32) {
+        return  gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Mux(combineEnumsToBytes3(MPC_TYPE.SUINT32_T, MPC_TYPE.SUINT32_T, ARGS.BOTH_SECRET), gtBool.unwrap(bit), gtInt32.unwrap(a), gtInt32.unwrap(b)));
+    }
+
+
+    // =========== unsigned 32 bit operations ==============
 
     function validateCiphertext(itUint32 memory input) internal returns (gtUint32) {
         return gtUint32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
@@ -744,8 +1192,143 @@ library MpcCore {
     }
 
 
+    // =========== signed 64 bit operations ==============
 
-    // =========== 64 bit operations ==============
+    function validateCiphertext(itInt64 memory input) internal returns (gtInt64) {
+        return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        ValidateCiphertext(bytes1(uint8(MPC_TYPE.SUINT64_T)), ctInt64.unwrap(input.ciphertext), input.signature));
+    }
+
+    function onBoard(ctInt64 ct) internal returns (gtInt64) {
+        return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        OnBoard(bytes1(uint8(MPC_TYPE.SUINT64_T)), ctInt64.unwrap(ct)));
+    }
+
+    function offBoard(gtInt64 pt) internal returns (ctInt64) {
+        return ctInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        OffBoard(bytes1(uint8(MPC_TYPE.SUINT64_T)), gtInt64.unwrap(pt)));
+    }
+
+    function offBoardToUser(gtInt64 pt, address addr) internal returns (ctInt64) {
+        return ctInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        OffBoardToUser(bytes1(uint8(MPC_TYPE.SUINT64_T)), gtInt64.unwrap(pt), abi.encodePacked(addr)));
+    }
+
+    function offBoardCombined(gtInt64 pt, address addr) internal returns (utInt64 memory ut) {
+        ut.ciphertext = offBoard(pt);
+        ut.userCiphertext = offBoardToUser(pt, addr);
+    }
+
+    function setPublic64(int64 pt) internal returns (gtInt64) {
+        return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        SetPublic(bytes1(uint8(MPC_TYPE.SUINT64_T)), uint256(uint64(pt))));
+    }
+
+    function add(gtInt64 a, gtInt64 b) internal returns (gtInt64) {
+        return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Add(combineEnumsToBytes3(MPC_TYPE.SUINT64_T, MPC_TYPE.SUINT64_T, ARGS.BOTH_SECRET), gtInt64.unwrap(a), gtInt64.unwrap(b)));
+    }
+
+    function sub(gtInt64 a, gtInt64 b) internal returns (gtInt64) {
+        return MpcCore.add(
+            a,
+            MpcCore.add(
+                MpcCore.xor(b, MpcCore.setPublic64(int64(-1))),
+                MpcCore.setPublic64(int64(1))
+            )
+        );
+    }
+
+    function mul(gtInt64 a, gtInt64 b) internal returns (gtInt64) {
+        return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Mul(combineEnumsToBytes3(MPC_TYPE.SUINT64_T, MPC_TYPE.SUINT64_T, ARGS.BOTH_SECRET), gtInt64.unwrap(a), gtInt64.unwrap(b)));
+    }
+
+    function div(gtInt64 a, gtInt64 b) internal returns (gtInt64) {
+        gtBool aPositive = MpcCore.eq(
+            MpcCore.and(a, MpcCore.setPublic64(int64(-9223372036854775808))),
+            MpcCore.setPublic64(int64(0))
+        );
+
+        gtBool bPositive = MpcCore.eq(
+            MpcCore.and(b, MpcCore.setPublic64(int64(-9223372036854775808))),
+            MpcCore.setPublic64(int64(0))
+        );
+
+        gtInt64 aAbsoluteValue = MpcCore.mux(
+            aPositive,
+            MpcCore.add(
+                MpcCore.xor(a, MpcCore.setPublic64(int64(-1))),
+                MpcCore.setPublic64(int64(1))
+            ),
+            a
+        );
+
+        gtInt64 bAbsoluteValue = MpcCore.mux(
+            bPositive,
+            MpcCore.add(
+                MpcCore.xor(b, MpcCore.setPublic64(int64(-1))),
+                MpcCore.setPublic64(int64(1))
+            ),
+            b
+        );
+
+        gtInt64 divResult = gtInt64.wrap(gtUint64.unwrap(
+            MpcCore.div(
+                gtUint64.wrap(gtInt64.unwrap(aAbsoluteValue)),
+                gtUint64.wrap(gtInt64.unwrap(bAbsoluteValue))
+            )
+        ));
+
+        gtBool outputNegative = MpcCore.xor(aPositive, bPositive);
+
+        return MpcCore.mux(
+            outputNegative,
+            divResult,
+            MpcCore.add(
+                MpcCore.xor(divResult, MpcCore.setPublic64(int64(-1))),
+                MpcCore.setPublic64(int64(1))
+            )
+        );
+    }
+
+    function and(gtInt64 a, gtInt64 b) internal returns (gtInt64) {
+        return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        And(combineEnumsToBytes3(MPC_TYPE.SUINT64_T, MPC_TYPE.SUINT64_T, ARGS.BOTH_SECRET), gtInt64.unwrap(a), gtInt64.unwrap(b)));
+    }
+
+    function or(gtInt64 a, gtInt64 b) internal returns (gtInt64) {
+        return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Or(combineEnumsToBytes3(MPC_TYPE.SUINT64_T, MPC_TYPE.SUINT64_T, ARGS.BOTH_SECRET), gtInt64.unwrap(a), gtInt64.unwrap(b)));
+    }
+
+    function xor(gtInt64 a, gtInt64 b) internal returns (gtInt64) {
+        return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Xor(combineEnumsToBytes3(MPC_TYPE.SUINT64_T, MPC_TYPE.SUINT64_T, ARGS.BOTH_SECRET), gtInt64.unwrap(a), gtInt64.unwrap(b)));
+    }
+
+    function eq(gtInt64 a, gtInt64 b) internal returns (gtBool) {
+        return gtBool.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Eq(combineEnumsToBytes3(MPC_TYPE.SUINT64_T, MPC_TYPE.SUINT64_T, ARGS.BOTH_SECRET), gtInt64.unwrap(a), gtInt64.unwrap(b)));
+    }
+
+    function ne(gtInt64 a, gtInt64 b) internal returns (gtBool) {
+        return gtBool.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Ne(combineEnumsToBytes3(MPC_TYPE.SUINT64_T, MPC_TYPE.SUINT64_T, ARGS.BOTH_SECRET), gtInt64.unwrap(a), gtInt64.unwrap(b)));
+    }
+
+    function decrypt(gtInt64 ct) internal returns (int64) {
+        return int64(uint64(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Decrypt(bytes1(uint8(MPC_TYPE.SUINT64_T)), gtInt64.unwrap(ct))));
+    }
+
+    function mux(gtBool bit, gtInt64 a, gtInt64 b) internal returns (gtInt64) {
+        return  gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+        Mux(combineEnumsToBytes3(MPC_TYPE.SUINT64_T, MPC_TYPE.SUINT64_T, ARGS.BOTH_SECRET), gtBool.unwrap(bit), gtInt64.unwrap(a), gtInt64.unwrap(b)));
+    }
+
+
+    // =========== unsigned 64 bit operations ==============
 
     function validateCiphertext(itUint64 memory input) internal returns (gtUint64) {
         return gtUint64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).

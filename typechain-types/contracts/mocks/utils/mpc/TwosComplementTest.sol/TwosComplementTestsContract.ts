@@ -20,32 +20,50 @@ import type {
   TypedContractMethod,
 } from "../../../../../common";
 
-export interface TransferTestsContractInterface extends Interface {
-  getFunction(
-    nameOrSignature: "getResults" | "transferWithAllowanceTest"
-  ): FunctionFragment;
+export declare namespace TwosComplementTestsContract {
+  export type AllGTCastingValuesStruct = {
+    a8_s: BigNumberish;
+    b8_s: BigNumberish;
+  };
 
-  encodeFunctionData(
-    functionFragment: "getResults",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "transferWithAllowanceTest",
-    values: [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
-  ): string;
-
-  decodeFunctionResult(functionFragment: "getResults", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "transferWithAllowanceTest",
-    data: BytesLike
-  ): Result;
+  export type AllGTCastingValuesStructOutput = [a8_s: bigint, b8_s: bigint] & {
+    a8_s: bigint;
+    b8_s: bigint;
+  };
 }
 
-export interface TransferTestsContract extends BaseContract {
-  connect(runner?: ContractRunner | null): TransferTestsContract;
+export interface TwosComplementTestsContractInterface extends Interface {
+  getFunction(
+    nameOrSignature: "result" | "setPublicValues" | "test"
+  ): FunctionFragment;
+
+  encodeFunctionData(functionFragment: "result", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "setPublicValues",
+    values: [
+      TwosComplementTestsContract.AllGTCastingValuesStruct,
+      BigNumberish,
+      BigNumberish
+    ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "test",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+
+  decodeFunctionResult(functionFragment: "result", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "setPublicValues",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "test", data: BytesLike): Result;
+}
+
+export interface TwosComplementTestsContract extends BaseContract {
+  connect(runner?: ContractRunner | null): TwosComplementTestsContract;
   waitForDeployment(): Promise<this>;
 
-  interface: TransferTestsContractInterface;
+  interface: TwosComplementTestsContractInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,
@@ -84,20 +102,21 @@ export interface TransferTestsContract extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  getResults: TypedContractMethod<
-    [],
-    [[bigint, bigint, boolean, bigint]],
-    "view"
+  result: TypedContractMethod<[], [bigint], "view">;
+
+  setPublicValues: TypedContractMethod<
+    [
+      castingValues: TwosComplementTestsContract.AllGTCastingValuesStruct,
+      a: BigNumberish,
+      b: BigNumberish
+    ],
+    [void],
+    "nonpayable"
   >;
 
-  transferWithAllowanceTest: TypedContractMethod<
-    [
-      a: BigNumberish,
-      b: BigNumberish,
-      amount: BigNumberish,
-      allowance: BigNumberish
-    ],
-    [[bigint, bigint, boolean, bigint]],
+  test: TypedContractMethod<
+    [a: BigNumberish, b: BigNumberish],
+    [void],
     "nonpayable"
   >;
 
@@ -106,18 +125,24 @@ export interface TransferTestsContract extends BaseContract {
   ): T;
 
   getFunction(
-    nameOrSignature: "getResults"
-  ): TypedContractMethod<[], [[bigint, bigint, boolean, bigint]], "view">;
+    nameOrSignature: "result"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "transferWithAllowanceTest"
+    nameOrSignature: "setPublicValues"
   ): TypedContractMethod<
     [
+      castingValues: TwosComplementTestsContract.AllGTCastingValuesStruct,
       a: BigNumberish,
-      b: BigNumberish,
-      amount: BigNumberish,
-      allowance: BigNumberish
+      b: BigNumberish
     ],
-    [[bigint, bigint, boolean, bigint]],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "test"
+  ): TypedContractMethod<
+    [a: BigNumberish, b: BigNumberish],
+    [void],
     "nonpayable"
   >;
 

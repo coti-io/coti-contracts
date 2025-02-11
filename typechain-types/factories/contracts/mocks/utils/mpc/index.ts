@@ -10,6 +10,8 @@ export { Miscellaneous1TestsContract__factory } from "./Miscellaneous1TestsContr
 export { MiscellaneousTestsContract__factory } from "./MiscellaneousTestsContract__factory";
 export { OffboardToUserKeyTestContract__factory } from "./OffboardToUserKeyTestContract__factory";
 export { ShiftTestsContract__factory } from "./ShiftTestsContract__factory";
+export { SignedDivision__factory } from "./SignedDivision__factory";
+export { SignedIntegerTestsContract__factory } from "./SignedIntegerTestsContract__factory";
 export { StringTestsContract__factory } from "./StringTestsContract__factory";
 export { TransferScalarTestsContract__factory } from "./TransferScalarTestsContract__factory";
 export { TransferTestsContract__factory } from "./TransferTestsContract__factory";

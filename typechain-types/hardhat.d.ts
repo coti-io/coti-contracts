@@ -90,6 +90,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ShiftTestsContract__factory>;
     getContractFactory(
+      name: "SignedDivision",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.SignedDivision__factory>;
+    getContractFactory(
+      name: "SignedIntegerTestsContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.SignedIntegerTestsContract__factory>;
+    getContractFactory(
       name: "StringTestsContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.StringTestsContract__factory>;
@@ -262,6 +270,16 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.ShiftTestsContract>;
     getContractAt(
+      name: "SignedDivision",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.SignedDivision>;
+    getContractAt(
+      name: "SignedIntegerTestsContract",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.SignedIntegerTestsContract>;
+    getContractAt(
       name: "StringTestsContract",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -434,6 +452,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ShiftTestsContract>;
     deployContract(
+      name: "SignedDivision",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.SignedDivision>;
+    deployContract(
+      name: "SignedIntegerTestsContract",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.SignedIntegerTestsContract>;
+    deployContract(
       name: "StringTestsContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.StringTestsContract>;
@@ -605,6 +631,16 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ShiftTestsContract>;
+    deployContract(
+      name: "SignedDivision",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.SignedDivision>;
+    deployContract(
+      name: "SignedIntegerTestsContract",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.SignedIntegerTestsContract>;
     deployContract(
       name: "StringTestsContract",
       args: any[],
