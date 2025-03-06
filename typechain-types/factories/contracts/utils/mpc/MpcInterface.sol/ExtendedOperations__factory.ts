@@ -196,25 +196,6 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes",
-        name: "signature",
-        type: "bytes",
-      },
-    ],
-    name: "DeleteUserKey",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         internalType: "bytes3",
         name: "metaData",
         type: "bytes3",
@@ -752,6 +733,50 @@ const _abi = [
         internalType: "uint256",
         name: "result",
         type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "seed1",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "seed2",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "padding1",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "padding2",
+        type: "uint256",
+      },
+      {
+        internalType: "bytes",
+        name: "addr",
+        type: "bytes",
+      },
+    ],
+    name: "SHA256Fixed432BitInput",
+    outputs: [
+      {
+        internalType: "bytes",
+        name: "result",
+        type: "bytes",
       },
     ],
     stateMutability: "nonpayable",

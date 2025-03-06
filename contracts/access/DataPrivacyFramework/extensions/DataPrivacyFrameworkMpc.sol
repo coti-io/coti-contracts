@@ -407,7 +407,7 @@ abstract contract DataPrivacyFrameworkMpc is DataPrivacyFramework {
 
     function shl(
         gtUint16 a,
-        uint16 b,
+        uint8 b,
         uint256 uintParameter,
         address addressParameter,
         string calldata stringParameter
@@ -421,7 +421,7 @@ abstract contract DataPrivacyFrameworkMpc is DataPrivacyFramework {
 
     function shr(
         gtUint16 a,
-        uint16 b,
+        uint8 b,
         uint256 uintParameter,
         address addressParameter,
         string calldata stringParameter
@@ -689,7 +689,7 @@ abstract contract DataPrivacyFrameworkMpc is DataPrivacyFramework {
 
     function shl(
         gtUint32 a,
-        uint32 b,
+        uint8 b,
         uint256 uintParameter,
         address addressParameter,
         string calldata stringParameter
@@ -703,7 +703,7 @@ abstract contract DataPrivacyFrameworkMpc is DataPrivacyFramework {
 
     function shr(
         gtUint32 a,
-        uint32 b,
+        uint8 b,
         uint256 uintParameter,
         address addressParameter,
         string calldata stringParameter
@@ -971,7 +971,7 @@ abstract contract DataPrivacyFrameworkMpc is DataPrivacyFramework {
 
     function shl(
         gtUint64 a,
-        uint64 b,
+        uint8 b,
         uint256 uintParameter,
         address addressParameter,
         string calldata stringParameter
@@ -985,7 +985,7 @@ abstract contract DataPrivacyFrameworkMpc is DataPrivacyFramework {
 
     function shr(
         gtUint64 a,
-        uint64 b,
+        uint8 b,
         uint256 uintParameter,
         address addressParameter,
         string calldata stringParameter

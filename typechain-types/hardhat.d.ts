@@ -58,9 +58,17 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ArithmeticTestsContract__factory>;
     getContractFactory(
+      name: "ArithmeticTestsContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ArithmeticTestsContract__factory>;
+    getContractFactory(
       name: "BitwiseTestsContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.BitwiseTestsContract__factory>;
+    getContractFactory(
+      name: "CheckedArithmeticWithOverflowBitTestsContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CheckedArithmeticWithOverflowBitTestsContract__factory>;
     getContractFactory(
       name: "Comparison1TestsContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -222,10 +230,20 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.ArithmeticTestsContract>;
     getContractAt(
+      name: "ArithmeticTestsContract",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ArithmeticTestsContract>;
+    getContractAt(
       name: "BitwiseTestsContract",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.BitwiseTestsContract>;
+    getContractAt(
+      name: "CheckedArithmeticWithOverflowBitTestsContract",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CheckedArithmeticWithOverflowBitTestsContract>;
     getContractAt(
       name: "Comparison1TestsContract",
       address: string | ethers.Addressable,
@@ -402,9 +420,17 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ArithmeticTestsContract>;
     deployContract(
+      name: "ArithmeticTestsContract",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ArithmeticTestsContract>;
+    deployContract(
       name: "BitwiseTestsContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BitwiseTestsContract>;
+    deployContract(
+      name: "CheckedArithmeticWithOverflowBitTestsContract",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.CheckedArithmeticWithOverflowBitTestsContract>;
     deployContract(
       name: "Comparison1TestsContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -566,10 +592,20 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ArithmeticTestsContract>;
     deployContract(
+      name: "ArithmeticTestsContract",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ArithmeticTestsContract>;
+    deployContract(
       name: "BitwiseTestsContract",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BitwiseTestsContract>;
+    deployContract(
+      name: "CheckedArithmeticWithOverflowBitTestsContract",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.CheckedArithmeticWithOverflowBitTestsContract>;
     deployContract(
       name: "Comparison1TestsContract",
       args: any[],

@@ -29,7 +29,6 @@ export interface ExtendedOperationsInterface extends Interface {
       | "CheckedMul"
       | "CheckedSub"
       | "Decrypt"
-      | "DeleteUserKey"
       | "Div"
       | "Eq"
       | "Ge"
@@ -50,6 +49,7 @@ export interface ExtendedOperationsInterface extends Interface {
       | "Rand"
       | "RandBoundedBits"
       | "Rem"
+      | "SHA256Fixed432BitInput"
       | "SetPublic"
       | "Shl"
       | "Shr"
@@ -83,10 +83,6 @@ export interface ExtendedOperationsInterface extends Interface {
   encodeFunctionData(
     functionFragment: "Decrypt",
     values: [BytesLike, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "DeleteUserKey",
-    values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "Div",
@@ -166,6 +162,17 @@ export interface ExtendedOperationsInterface extends Interface {
     values: [BytesLike, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "SHA256Fixed432BitInput",
+    values: [
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BytesLike
+    ]
+  ): string;
+  encodeFunctionData(
     functionFragment: "SetPublic",
     values: [BytesLike, BigNumberish]
   ): string;
@@ -204,10 +211,6 @@ export interface ExtendedOperationsInterface extends Interface {
   decodeFunctionResult(functionFragment: "CheckedMul", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "CheckedSub", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "Decrypt", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "DeleteUserKey",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "Div", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "Eq", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "Ge", data: BytesLike): Result;
@@ -234,6 +237,10 @@ export interface ExtendedOperationsInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "Rem", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "SHA256Fixed432BitInput",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "SetPublic", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "Shl", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "Shr", data: BytesLike): Result;
@@ -326,12 +333,6 @@ export interface ExtendedOperations extends BaseContract {
   Decrypt: TypedContractMethod<
     [metaData: BytesLike, a: BigNumberish],
     [bigint],
-    "nonpayable"
-  >;
-
-  DeleteUserKey: TypedContractMethod<
-    [signature: BytesLike],
-    [boolean],
     "nonpayable"
   >;
 
@@ -451,6 +452,19 @@ export interface ExtendedOperations extends BaseContract {
     "nonpayable"
   >;
 
+  SHA256Fixed432BitInput: TypedContractMethod<
+    [
+      amount: BigNumberish,
+      seed1: BigNumberish,
+      seed2: BigNumberish,
+      padding1: BigNumberish,
+      padding2: BigNumberish,
+      addr: BytesLike
+    ],
+    [string],
+    "nonpayable"
+  >;
+
   SetPublic: TypedContractMethod<
     [metaData: BytesLike, ct: BigNumberish],
     [bigint],
@@ -563,9 +577,6 @@ export interface ExtendedOperations extends BaseContract {
     [bigint],
     "nonpayable"
   >;
-  getFunction(
-    nameOrSignature: "DeleteUserKey"
-  ): TypedContractMethod<[signature: BytesLike], [boolean], "nonpayable">;
   getFunction(
     nameOrSignature: "Div"
   ): TypedContractMethod<
@@ -696,6 +707,20 @@ export interface ExtendedOperations extends BaseContract {
   ): TypedContractMethod<
     [metaData: BytesLike, lhs: BigNumberish, rhs: BigNumberish],
     [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "SHA256Fixed432BitInput"
+  ): TypedContractMethod<
+    [
+      amount: BigNumberish,
+      seed1: BigNumberish,
+      seed2: BigNumberish,
+      padding1: BigNumberish,
+      padding2: BigNumberish,
+      addr: BytesLike
+    ],
+    [string],
     "nonpayable"
   >;
   getFunction(

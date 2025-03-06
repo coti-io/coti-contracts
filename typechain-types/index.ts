@@ -30,6 +30,8 @@ export type { ArithmeticTestsContract } from "./contracts/mocks/utils/mpc/Arithm
 export { ArithmeticTestsContract__factory } from "./factories/contracts/mocks/utils/mpc/ArithmeticTestsContract__factory";
 export type { BitwiseTestsContract } from "./contracts/mocks/utils/mpc/BitwiseTestsContract";
 export { BitwiseTestsContract__factory } from "./factories/contracts/mocks/utils/mpc/BitwiseTestsContract__factory";
+export type { CheckedArithmeticWithOverflowBitTestsContract } from "./contracts/mocks/utils/mpc/CheckedArithmeticWIthOverflowBitTestsContract.sol/CheckedArithmeticWithOverflowBitTestsContract";
+export { CheckedArithmeticWithOverflowBitTestsContract__factory } from "./factories/contracts/mocks/utils/mpc/CheckedArithmeticWIthOverflowBitTestsContract.sol/CheckedArithmeticWithOverflowBitTestsContract__factory";
 export type { Comparison1TestsContract } from "./contracts/mocks/utils/mpc/Comparison1TestsContract";
 export { Comparison1TestsContract__factory } from "./factories/contracts/mocks/utils/mpc/Comparison1TestsContract__factory";
 export type { Comparison2TestsContract } from "./contracts/mocks/utils/mpc/Comparison2TestsContract";
