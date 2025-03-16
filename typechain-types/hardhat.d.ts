@@ -58,10 +58,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ArithmeticTestsContract__factory>;
     getContractFactory(
-      name: "ArithmeticTestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ArithmeticTestsContract__factory>;
-    getContractFactory(
       name: "BitwiseTestsContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.BitwiseTestsContract__factory>;
@@ -77,6 +73,22 @@ declare module "hardhat/types/runtime" {
       name: "Comparison2TestsContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Comparison2TestsContract__factory>;
+    getContractFactory(
+      name: "ExtendedArithmeticTestsContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ExtendedArithmeticTestsContract__factory>;
+    getContractFactory(
+      name: "ExtendedBitwiseTestsContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ExtendedBitwiseTestsContract__factory>;
+    getContractFactory(
+      name: "ExtendedComparisonTestsContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ExtendedComparisonTestsContract__factory>;
+    getContractFactory(
+      name: "ExtendedMiscellaneousTestsContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ExtendedMiscellaneousTestsContract__factory>;
     getContractFactory(
       name: "MinMaxTestsContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -230,11 +242,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.ArithmeticTestsContract>;
     getContractAt(
-      name: "ArithmeticTestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ArithmeticTestsContract>;
-    getContractAt(
       name: "BitwiseTestsContract",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -254,6 +261,26 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.Comparison2TestsContract>;
+    getContractAt(
+      name: "ExtendedArithmeticTestsContract",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ExtendedArithmeticTestsContract>;
+    getContractAt(
+      name: "ExtendedBitwiseTestsContract",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ExtendedBitwiseTestsContract>;
+    getContractAt(
+      name: "ExtendedComparisonTestsContract",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ExtendedComparisonTestsContract>;
+    getContractAt(
+      name: "ExtendedMiscellaneousTestsContract",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ExtendedMiscellaneousTestsContract>;
     getContractAt(
       name: "MinMaxTestsContract",
       address: string | ethers.Addressable,
@@ -420,10 +447,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ArithmeticTestsContract>;
     deployContract(
-      name: "ArithmeticTestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ArithmeticTestsContract>;
-    deployContract(
       name: "BitwiseTestsContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BitwiseTestsContract>;
@@ -439,6 +462,22 @@ declare module "hardhat/types/runtime" {
       name: "Comparison2TestsContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Comparison2TestsContract>;
+    deployContract(
+      name: "ExtendedArithmeticTestsContract",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ExtendedArithmeticTestsContract>;
+    deployContract(
+      name: "ExtendedBitwiseTestsContract",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ExtendedBitwiseTestsContract>;
+    deployContract(
+      name: "ExtendedComparisonTestsContract",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ExtendedComparisonTestsContract>;
+    deployContract(
+      name: "ExtendedMiscellaneousTestsContract",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ExtendedMiscellaneousTestsContract>;
     deployContract(
       name: "MinMaxTestsContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -592,11 +631,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ArithmeticTestsContract>;
     deployContract(
-      name: "ArithmeticTestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ArithmeticTestsContract>;
-    deployContract(
       name: "BitwiseTestsContract",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -616,6 +650,26 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Comparison2TestsContract>;
+    deployContract(
+      name: "ExtendedArithmeticTestsContract",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ExtendedArithmeticTestsContract>;
+    deployContract(
+      name: "ExtendedBitwiseTestsContract",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ExtendedBitwiseTestsContract>;
+    deployContract(
+      name: "ExtendedComparisonTestsContract",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ExtendedComparisonTestsContract>;
+    deployContract(
+      name: "ExtendedMiscellaneousTestsContract",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ExtendedMiscellaneousTestsContract>;
     deployContract(
       name: "MinMaxTestsContract",
       args: any[],

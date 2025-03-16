@@ -36,6 +36,14 @@ export type { Comparison1TestsContract } from "./contracts/mocks/utils/mpc/Compa
 export { Comparison1TestsContract__factory } from "./factories/contracts/mocks/utils/mpc/Comparison1TestsContract__factory";
 export type { Comparison2TestsContract } from "./contracts/mocks/utils/mpc/Comparison2TestsContract";
 export { Comparison2TestsContract__factory } from "./factories/contracts/mocks/utils/mpc/Comparison2TestsContract__factory";
+export type { ExtendedArithmeticTestsContract } from "./contracts/mocks/utils/mpc/ExtendedArithmeticTestsContract";
+export { ExtendedArithmeticTestsContract__factory } from "./factories/contracts/mocks/utils/mpc/ExtendedArithmeticTestsContract__factory";
+export type { ExtendedBitwiseTestsContract } from "./contracts/mocks/utils/mpc/ExtendedBitwiseTestsContract";
+export { ExtendedBitwiseTestsContract__factory } from "./factories/contracts/mocks/utils/mpc/ExtendedBitwiseTestsContract__factory";
+export type { ExtendedComparisonTestsContract } from "./contracts/mocks/utils/mpc/ExtendedComparisonTestsContract";
+export { ExtendedComparisonTestsContract__factory } from "./factories/contracts/mocks/utils/mpc/ExtendedComparisonTestsContract__factory";
+export type { ExtendedMiscellaneousTestsContract } from "./contracts/mocks/utils/mpc/ExtendedMiscellaneousTestsContract";
+export { ExtendedMiscellaneousTestsContract__factory } from "./factories/contracts/mocks/utils/mpc/ExtendedMiscellaneousTestsContract__factory";
 export type { MinMaxTestsContract } from "./contracts/mocks/utils/mpc/MinMaxTestsContract";
 export { MinMaxTestsContract__factory } from "./factories/contracts/mocks/utils/mpc/MinMaxTestsContract__factory";
 export type { Miscellaneous1TestsContract } from "./contracts/mocks/utils/mpc/Miscellaneous1TestsContract";
