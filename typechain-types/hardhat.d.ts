@@ -58,10 +58,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ArithmeticTestsContract__factory>;
     getContractFactory(
-      name: "ArithmeticTestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ArithmeticTestsContract__factory>;
-    getContractFactory(
       name: "BitwiseTestsContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.BitwiseTestsContract__factory>;
@@ -230,11 +226,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.ArithmeticTestsContract>;
     getContractAt(
-      name: "ArithmeticTestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ArithmeticTestsContract>;
-    getContractAt(
       name: "BitwiseTestsContract",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -420,10 +411,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ArithmeticTestsContract>;
     deployContract(
-      name: "ArithmeticTestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ArithmeticTestsContract>;
-    deployContract(
       name: "BitwiseTestsContract",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BitwiseTestsContract>;
@@ -586,11 +573,6 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.PrivateERC721URIStorageMock>;
-    deployContract(
-      name: "ArithmeticTestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ArithmeticTestsContract>;
     deployContract(
       name: "ArithmeticTestsContract",
       args: any[],
