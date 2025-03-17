@@ -14,7 +14,7 @@
     "hardhat": "^2.22.8"
   },
   "dependencies": {
-    "@coti-io/coti-ethers": "^1.0.3",
+    "@coti-io/coti-ethers": "^1.0.4",
     "@openzeppelin/contracts": "^4.9.6",
     "dotenv": "^16.4.5"
   }
