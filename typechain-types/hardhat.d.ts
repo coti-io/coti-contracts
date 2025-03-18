@@ -150,6 +150,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PrivateERC20WalletMock__factory>;
     getContractFactory(
+      name: "Mul128",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Mul128__factory>;
+    getContractFactory(
       name: "AccountOnboard",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.AccountOnboard__factory>;
@@ -357,6 +361,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.PrivateERC20WalletMock>;
     getContractAt(
+      name: "Mul128",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Mul128>;
+    getContractAt(
       name: "AccountOnboard",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -539,6 +548,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.PrivateERC20WalletMock>;
     deployContract(
+      name: "Mul128",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Mul128>;
+    deployContract(
       name: "AccountOnboard",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.AccountOnboard>;
@@ -745,6 +758,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.PrivateERC20WalletMock>;
+    deployContract(
+      name: "Mul128",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Mul128>;
     deployContract(
       name: "AccountOnboard",
       args: any[],

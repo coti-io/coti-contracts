@@ -23,38 +23,27 @@ import type {
 export interface ExtendedArithmeticTestsContractInterface extends Interface {
   getFunction(
     nameOrSignature:
-      | "addTest"
-      | "checkedAddTest"
-      | "checkedAddWithOverflowBitTest"
-      | "checkedSubTest"
-      | "checkedSubWithOverflowBitTest"
+      | "checkedMulTest"
+      | "checkedMulWithOverflowBitTest"
+      | "mulTest"
       | "numbers"
       | "numbersLHS"
       | "numbersRHS"
       | "overflows"
       | "overflowsLHS"
       | "overflowsRHS"
-      | "subTest"
   ): FunctionFragment;
 
   encodeFunctionData(
-    functionFragment: "addTest",
-    values: [BigNumberish[], BigNumberish[]]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "checkedAddTest",
+    functionFragment: "checkedMulTest",
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "checkedAddWithOverflowBitTest",
+    functionFragment: "checkedMulWithOverflowBitTest",
     values: [BigNumberish[], BigNumberish[]]
   ): string;
   encodeFunctionData(
-    functionFragment: "checkedSubTest",
-    values: [BigNumberish, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "checkedSubWithOverflowBitTest",
+    functionFragment: "mulTest",
     values: [BigNumberish[], BigNumberish[]]
   ): string;
   encodeFunctionData(
@@ -81,28 +70,16 @@ export interface ExtendedArithmeticTestsContractInterface extends Interface {
     functionFragment: "overflowsRHS",
     values: [BigNumberish]
   ): string;
-  encodeFunctionData(
-    functionFragment: "subTest",
-    values: [BigNumberish[], BigNumberish[]]
-  ): string;
 
-  decodeFunctionResult(functionFragment: "addTest", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "checkedAddTest",
+    functionFragment: "checkedMulTest",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "checkedAddWithOverflowBitTest",
+    functionFragment: "checkedMulWithOverflowBitTest",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "checkedSubTest",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "checkedSubWithOverflowBitTest",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "mulTest", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "numbers", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "numbersLHS", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "numbersRHS", data: BytesLike): Result;
@@ -115,7 +92,6 @@ export interface ExtendedArithmeticTestsContractInterface extends Interface {
     functionFragment: "overflowsRHS",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "subTest", data: BytesLike): Result;
 }
 
 export interface ExtendedArithmeticTestsContract extends BaseContract {
@@ -161,31 +137,19 @@ export interface ExtendedArithmeticTestsContract extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  addTest: TypedContractMethod<
-    [a: BigNumberish[], b: BigNumberish[]],
-    [void],
-    "nonpayable"
-  >;
-
-  checkedAddTest: TypedContractMethod<
+  checkedMulTest: TypedContractMethod<
     [a: BigNumberish, b: BigNumberish],
     [void],
     "nonpayable"
   >;
 
-  checkedAddWithOverflowBitTest: TypedContractMethod<
+  checkedMulWithOverflowBitTest: TypedContractMethod<
     [a: BigNumberish[], b: BigNumberish[]],
     [void],
     "nonpayable"
   >;
 
-  checkedSubTest: TypedContractMethod<
-    [a: BigNumberish, b: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
-
-  checkedSubWithOverflowBitTest: TypedContractMethod<
+  mulTest: TypedContractMethod<
     [a: BigNumberish[], b: BigNumberish[]],
     [void],
     "nonpayable"
@@ -203,46 +167,26 @@ export interface ExtendedArithmeticTestsContract extends BaseContract {
 
   overflowsRHS: TypedContractMethod<[arg0: BigNumberish], [boolean], "view">;
 
-  subTest: TypedContractMethod<
-    [a: BigNumberish[], b: BigNumberish[]],
-    [void],
-    "nonpayable"
-  >;
-
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
 
   getFunction(
-    nameOrSignature: "addTest"
-  ): TypedContractMethod<
-    [a: BigNumberish[], b: BigNumberish[]],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "checkedAddTest"
+    nameOrSignature: "checkedMulTest"
   ): TypedContractMethod<
     [a: BigNumberish, b: BigNumberish],
     [void],
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "checkedAddWithOverflowBitTest"
+    nameOrSignature: "checkedMulWithOverflowBitTest"
   ): TypedContractMethod<
     [a: BigNumberish[], b: BigNumberish[]],
     [void],
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "checkedSubTest"
-  ): TypedContractMethod<
-    [a: BigNumberish, b: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "checkedSubWithOverflowBitTest"
+    nameOrSignature: "mulTest"
   ): TypedContractMethod<
     [a: BigNumberish[], b: BigNumberish[]],
     [void],
@@ -266,13 +210,6 @@ export interface ExtendedArithmeticTestsContract extends BaseContract {
   getFunction(
     nameOrSignature: "overflowsRHS"
   ): TypedContractMethod<[arg0: BigNumberish], [boolean], "view">;
-  getFunction(
-    nameOrSignature: "subTest"
-  ): TypedContractMethod<
-    [a: BigNumberish[], b: BigNumberish[]],
-    [void],
-    "nonpayable"
-  >;
 
   filters: {};
 }

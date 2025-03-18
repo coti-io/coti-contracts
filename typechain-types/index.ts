@@ -74,6 +74,8 @@ export type { TransferWithAllowanceTestsContract } from "./contracts/mocks/utils
 export { TransferWithAllowanceTestsContract__factory } from "./factories/contracts/mocks/utils/mpc/TransferWithAllowanceTestsContract__factory";
 export type { PrivateERC20WalletMock } from "./contracts/mocks/wallet/PrivateERC20Wallet/PrivateERC20WalletMock";
 export { PrivateERC20WalletMock__factory } from "./factories/contracts/mocks/wallet/PrivateERC20Wallet/PrivateERC20WalletMock__factory";
+export type { Mul128 } from "./contracts/Mul128";
+export { Mul128__factory } from "./factories/contracts/Mul128__factory";
 export type { AccountOnboard } from "./contracts/onboard/AccountOnboard";
 export { AccountOnboard__factory } from "./factories/contracts/onboard/AccountOnboard__factory";
 export type { IPrivateERC20 } from "./contracts/token/PrivateERC20/IPrivateERC20";

@@ -1221,10 +1221,64 @@ library MpcCore {
         return (bit, result);
     }
 
+    function _mul64(gtUint64 a, gtUint64 b) private returns (gtUint64, gtUint64) {
+        gtUint64 MAX_UINT32 = setPublic64(type(uint32).max);
+
+        gtUint64 pp0;
+        gtUint64 pp1;
+        gtUint64 pp2;
+        gtUint64 pp3;
+
+        {
+            // Split the numbers into 32-bit parts
+            gtUint64 aLow = and(a, MAX_UINT32);
+            gtUint64 aHigh = shr(a, 32);
+            gtUint64 bLow = and(b, MAX_UINT32);
+            gtUint64 bHigh = shr(b, 32);
+
+            // Compute partial products
+            pp0 = mul(aLow, bLow);
+            pp1 = mul(aLow, bHigh);
+            pp2 = mul(aHigh, bLow);
+            pp3 = mul(aHigh, bHigh);
+        }
+
+        // Compute high and low parts
+        gtUint64 mid = add(
+            add(
+                shr(pp0, 32),
+                and(pp1, MAX_UINT32)
+            ),
+            and(pp2, MAX_UINT32)
+        );
+        gtUint64 carry = shr(mid, 32);
+
+        gtUint64 high = add(
+            add(pp3, shr(pp1, 32)),
+            add(shr(pp2, 32), carry)
+        );
+        gtUint64 low = or(
+            and(pp0, MAX_UINT32),
+            shl(and(mid, MAX_UINT32), 32)
+        );
+
+        return (high, low);
+    }
+
     function mul(gtUint128 memory a, gtUint128 memory b) internal returns (gtUint128 memory) {
         gtUint128 memory result;
 
-        // TODO: Implement
+        // Compute partial products
+        (gtUint64 pp0, gtUint64 low) = _mul64(a.low, b.low);
+        (, gtUint64 pp1) = _mul64(a.high, b.low);
+        (, gtUint64 pp2) = _mul64(a.low, b.high);
+
+        // Compute the high and low parts
+        result.high = add(
+            add(pp0, pp1),
+            pp2
+        );
+        result.low = low;
         
         return result;
     }
@@ -1232,7 +1286,17 @@ library MpcCore {
     function checkedMul(gtUint128 memory a, gtUint128 memory b) internal returns (gtUint128 memory) {
         gtUint128 memory result;
 
-        // TODO: Implement
+        // Compute partial products
+        (gtUint64 pp0, gtUint64 low) = _mul64(a.low, b.low);
+        (, gtUint64 pp1) = _mul64(a.high, b.low);
+        (, gtUint64 pp2) = _mul64(a.low, b.high);
+
+        // Compute the high and low parts
+        result.high = checkedAdd(
+            checkedAdd(pp0, pp1),
+            pp2
+        );
+        result.low = low;
         
         return result;
     }
@@ -1240,9 +1304,20 @@ library MpcCore {
     function checkedMulWithOverflowBit(gtUint128 memory a, gtUint128 memory b) internal returns (gtBool, gtUint128 memory) {
         gtUint128 memory result;
 
-        // TODO: Implement
+        // Compute partial products
+        (gtUint64 pp0, gtUint64 low) = _mul64(a.low, b.low);
+        (, gtUint64 pp1) = _mul64(a.high, b.low);
+        (, gtUint64 pp2) = _mul64(a.low, b.high);
+
+        // Compute the high and low parts
+        gtBool overflow1;
+
+        (gtBool overflow0, gtUint64 high) = checkedAddWithOverflowBit(pp0, pp1);
+        (overflow1, result.high) = checkedAddWithOverflowBit(high, pp2);
+
+        result.low = low;
         
-        return (setPublic(false), result);
+        return (or(overflow0, overflow1), result);
     }
 
     function div(gtUint128 memory a, gtUint128 memory b) internal returns (gtUint128 memory) {

@@ -11,3 +11,4 @@ import type * as token from "./token";
 export type { token };
 import type * as utils from "./utils";
 export type { utils };
+export type { Mul128 } from "./Mul128";
