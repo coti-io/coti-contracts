@@ -5,7 +5,7 @@ import dotenv from "dotenv"
 dotenv.config()
 
 const config: HardhatUserConfig = {
-  defaultNetwork: "testnet",
+  defaultNetwork: "coti-testnet",
   solidity: {
     version: "0.8.19",
     settings: {
@@ -22,9 +22,13 @@ const config: HardhatUserConfig = {
     }
   },
   networks: {
-    testnet: {
+    "coti-testnet": {
       url: "https://testnet.coti.io/rpc",
       chainId: 7082400,
+    },
+    "coti-mainnet": {
+      url: "https://mainnet.coti.io/rpc",
+      chainId: 2632500,
     },
   },
   mocha: {
