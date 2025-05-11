@@ -2,12 +2,20 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as checkedArithmeticWIthOverflowBitTestsContractSol from "./CheckedArithmeticWIthOverflowBitTestsContract.sol";
+export { Arithmetic128BitTestsContract__factory } from "./Arithmetic128BitTestsContract__factory";
+export { Arithmetic256BitTestsContract__factory } from "./Arithmetic256BitTestsContract__factory";
 export { ArithmeticTestsContract__factory } from "./ArithmeticTestsContract__factory";
+export { Bitwise128BitTestsContract__factory } from "./Bitwise128BitTestsContract__factory";
+export { Bitwise256BitTestsContract__factory } from "./Bitwise256BitTestsContract__factory";
 export { BitwiseTestsContract__factory } from "./BitwiseTestsContract__factory";
+export { Comparison128BitTestsContract__factory } from "./Comparison128BitTestsContract__factory";
 export { Comparison1TestsContract__factory } from "./Comparison1TestsContract__factory";
+export { Comparison256BitTestsContract__factory } from "./Comparison256BitTestsContract__factory";
 export { Comparison2TestsContract__factory } from "./Comparison2TestsContract__factory";
 export { MinMaxTestsContract__factory } from "./MinMaxTestsContract__factory";
+export { Miscellaneous128BitTestsContract__factory } from "./Miscellaneous128BitTestsContract__factory";
 export { Miscellaneous1TestsContract__factory } from "./Miscellaneous1TestsContract__factory";
+export { Miscellaneous256BitTestsContract__factory } from "./Miscellaneous256BitTestsContract__factory";
 export { MiscellaneousTestsContract__factory } from "./MiscellaneousTestsContract__factory";
 export { OffboardToUserKeyTestContract__factory } from "./OffboardToUserKeyTestContract__factory";
 export { ShiftTestsContract__factory } from "./ShiftTestsContract__factory";
