@@ -9,6 +9,18 @@ type gtUint32 is uint256;
 type gtUint64 is uint256;
 
 // we use a struct because user-defined value types can only be elementary value types
+struct gtUint128 {
+    gtUint64 high;
+    gtUint64 low;
+}
+
+// we use a struct because user-defined value types can only be elementary value types
+struct gtUint256 {
+    gtUint128 high;
+    gtUint128 low;
+}
+
+// we use a struct because user-defined value types can only be elementary value types
 // 8 characters (in byte form) per cell and the final cell padded with zeroes if needed
 struct gtString {
     gtUint64[] value;
@@ -19,6 +31,18 @@ type ctUint8 is uint256;
 type ctUint16 is uint256;
 type ctUint32 is uint256;
 type ctUint64 is uint256;
+
+// we use a struct because user-defined value types can only be elementary value types
+struct ctUint128 {
+    ctUint64 high;
+    ctUint64 low;
+}
+
+// we use a struct because user-defined value types can only be elementary value types
+struct ctUint256 {
+    ctUint128 high;
+    ctUint128 low;
+}
 
 // we use a struct because user-defined value types can only be elementary value types
 // 8 characters (in byte form) per cell and the final cell padded with zeroes if needed
@@ -46,6 +70,14 @@ struct itUint64 {
     ctUint64 ciphertext;
     bytes signature;
 }
+struct itUint128 {
+    ctUint128 ciphertext;
+    bytes[2] signature;
+}
+struct itUint256 {
+    ctUint256 ciphertext;
+    bytes[2][2] signature;
+}
 struct itString {
     ctString ciphertext;
     bytes[] signature;
@@ -70,6 +102,14 @@ struct utUint32 {
 struct utUint64 {
     ctUint64 ciphertext;
     ctUint64 userCiphertext;
+}
+struct utUint128 {
+    ctUint128 ciphertext;
+    ctUint128 userCiphertext;
+}
+struct utUint256 {
+    ctUint256 ciphertext;
+    ctUint256 userCiphertext;
 }
 struct utString {
     ctString ciphertext;
@@ -998,6 +1038,920 @@ library MpcCore {
     }
 
 
+    // =========== 128 bit operations ============
+
+    function _splitUint128(uint128 number) private returns (uint64, uint64) {
+        return (uint64(number >> 64), uint64(number));
+    }
+
+    function validateCiphertext(itUint128 memory input) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+        
+        itUint64 memory highInput;
+        highInput.ciphertext = input.ciphertext.high;
+        highInput.signature = input.signature[0];
+        
+        itUint64 memory lowInput;
+        lowInput.ciphertext = input.ciphertext.low;
+        lowInput.signature = input.signature[1];
+        
+        result.high = validateCiphertext(highInput);
+        result.low = validateCiphertext(lowInput);
+        
+        return result;
+    }
+
+    function onBoard(ctUint128 memory ct) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        result.high = onBoard(ct.high);
+        result.low = onBoard(ct.low);
+
+        return result;
+    }
+
+    function offBoard(gtUint128 memory pt) internal returns (ctUint128 memory) {
+        ctUint128 memory result;
+
+        result.high = offBoard(pt.high);
+        result.low = offBoard(pt.low);
+
+        return result;
+    }
+
+    function offBoardToUser(gtUint128 memory pt, address addr) internal returns (ctUint128 memory) {
+        ctUint128 memory result;
+
+        result.high = offBoardToUser(pt.high, addr);
+        result.low = offBoardToUser(pt.low, addr);
+
+        return result;
+    }
+
+    function offBoardCombined(gtUint128 memory pt, address addr) internal returns (utUint128 memory) {
+        utUint128 memory result;
+
+        result.ciphertext = offBoard(pt);
+        result.userCiphertext = offBoardToUser(pt, addr);
+
+        return result;
+    }
+
+    function setPublic128(uint128 pt) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        // Split the 128-bit value into high and low 64-bit parts
+        uint64 low = uint64(pt);
+        uint64 high = uint64(pt >> 64);
+        
+        result.high = setPublic64(high);
+        result.low = setPublic64(low);
+        
+        return result;
+    }
+
+    function rand128() internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        result.high = rand64();
+        result.low = rand64();
+
+        return result;
+    }
+
+    function randBoundedBits128(uint8 numBits) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        uint8 numBits_ = numBits > 64 ? 64 : numBits;
+
+        result.low = randBoundedBits64(numBits_);
+
+        numBits_ = numBits > 64 ? numBits - 64 : 0;
+
+        result.high = randBoundedBits64(numBits_);
+        
+        return result;
+    }
+
+    function add(gtUint128 memory a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+        
+        // Add low parts
+        result.low = add(a.low, b.low);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, a.low);
+        
+        // Add high parts with carry if needed
+        result.high = add(a.high, b.high);
+        
+        // Add carry to high part if needed
+        result.high = mux(carry, result.high, add(result.high, uint64(1)));
+        
+        return result;
+    }
+
+    function checkedAdd(gtUint128 memory a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+        
+        // Add low parts
+        result.low = add(a.low, b.low);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, a.low);
+        
+        // Add high parts with carry if needed
+        result.high = checkedAdd(a.high, b.high);
+        
+        // Add carry to high part if needed
+        result.high = mux(carry, result.high, checkedAdd(result.high, uint64(1)));
+        
+        return result;
+    }
+
+    function checkedAddWithOverflowBit(gtUint128 memory a, gtUint128 memory b) internal returns (gtBool, gtUint128 memory) {
+        gtBool bit = setPublic(false);
+        gtUint128 memory result;
+        
+        // Add low parts
+        result.low = add(a.low, b.low);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, a.low);
+        
+        // Add high parts with carry if needed
+        (gtBool overflow, gtUint64 high) = checkedAddWithOverflowBit(a.high, b.high);
+        (gtBool overflowWithCarry, gtUint64 highWithCarry) = checkedAddWithOverflowBit(high, uint64(1));
+
+        // Handle carry if needed
+        bit = mux(carry, overflow, or(overflow, overflowWithCarry));
+        result.high = mux(carry, high, highWithCarry);
+        
+        return (bit, result);
+    }
+
+    function sub(gtUint128 memory a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+        
+        // Subtract low parts
+        result.low = sub(a.low, b.low);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(a.low, b.low);
+        
+        // Subtract high parts with borrow if needed
+        result.high = sub(a.high, b.high);
+        
+        // Subtract borrow from high part if needed
+        result.high = mux(borrow, result.high, sub(result.high, uint64(1)));
+        
+        return result;
+    }
+
+    function checkedSub(gtUint128 memory a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+        
+        // Subtract low parts
+        result.low = sub(a.low, b.low);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(a.low, b.low);
+        
+        // Subtract high parts with borrow if needed
+        result.high = checkedSub(a.high, b.high);
+        
+        // Subtract borrow from high part if needed
+        result.high = mux(
+            borrow,
+            result.high,
+            checkedSub(
+                mux(borrow, add(result.high, uint64(1)), result.high),
+                uint64(1)
+            )
+        );
+        
+        return result;
+    }
+
+    function checkedSubWithOverflowBit(gtUint128 memory a, gtUint128 memory b) internal returns (gtBool, gtUint128 memory) {
+        gtBool bit = setPublic(false);
+        gtUint128 memory result;
+        
+        // Subtract low parts
+        result.low = sub(a.low, b.low);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(a.low, b.low);
+        
+        // Subtract high parts with borrow if needed
+        (gtBool overflow, gtUint64 high) = checkedSubWithOverflowBit(a.high, b.high);
+        (gtBool overflowWithCarry, gtUint64 highWithCarry) = checkedSubWithOverflowBit(high, uint64(1));
+
+        // Handle borrow if needed
+        bit = mux(borrow, overflow, or(overflow, overflowWithCarry));
+        result.high = mux(borrow, high, highWithCarry);
+        
+        return (bit, result);
+    }
+
+    function _mul64(gtUint64 a, gtUint64 b) private returns (gtUint64, gtUint64) {
+        uint64 MAX_UINT32 = uint64(type(uint32).max);
+
+        gtUint64 pp0;
+        gtUint64 pp1;
+        gtUint64 pp2;
+        gtUint64 pp3;
+
+        {
+            // Split the numbers into 32-bit parts
+            gtUint64 aLow = and(a, MAX_UINT32);
+            gtUint64 aHigh = shr(a, 32);
+            gtUint64 bLow = and(b, MAX_UINT32);
+            gtUint64 bHigh = shr(b, 32);
+
+            // Compute partial products
+            pp0 = mul(aLow, bLow);
+            pp1 = mul(aLow, bHigh);
+            pp2 = mul(aHigh, bLow);
+            pp3 = mul(aHigh, bHigh);
+        }
+
+        // Compute high and low parts
+        gtUint64 mid = add(
+            add(
+                shr(pp0, 32),
+                and(pp1, MAX_UINT32)
+            ),
+            and(pp2, MAX_UINT32)
+        );
+        gtUint64 carry = shr(mid, 32);
+
+        gtUint64 high = add(
+            add(pp3, shr(pp1, 32)),
+            add(shr(pp2, 32), carry)
+        );
+        gtUint64 low = or(
+            and(pp0, MAX_UINT32),
+            shl(and(mid, MAX_UINT32), 32)
+        );
+
+        return (high, low);
+    }
+
+    function mul(gtUint128 memory a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        // Compute partial products
+        (gtUint64 pp0, gtUint64 low) = _mul64(a.low, b.low);
+        (, gtUint64 pp1) = _mul64(a.high, b.low);
+        (, gtUint64 pp2) = _mul64(a.low, b.high);
+
+        // Compute the high and low parts
+        result.high = add(
+            add(pp0, pp1),
+            pp2
+        );
+        result.low = low;
+        
+        return result;
+    }
+
+    function checkedMul(gtUint128 memory a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        // Compute partial products
+        (gtUint64 pp0, gtUint64 low) = _mul64(a.low, b.low);
+        (gtUint64 pp2, gtUint64 pp1) = _mul64(a.high, b.low);
+        (gtUint64 pp4, gtUint64 pp3) = _mul64(a.low, b.high);
+        (gtUint64 pp6, gtUint64 pp5) = _mul64(a.high, b.high);
+
+        // Compute the high and low parts
+        result.high = checkedAdd(
+            checkedAdd(pp0, pp1),
+            pp3
+        );
+        result.low = low;
+
+        // Check for overflow
+        checkedSub(
+            uint64(0),
+            add(
+                add(pp2, pp4),
+                add(pp5, pp6)
+            )
+        );
+        
+        return result;
+    }
+
+    function checkedMulWithOverflowBit(gtUint128 memory a, gtUint128 memory b) internal returns (gtBool, gtUint128 memory) {
+        gtUint128 memory result;
+
+        // Compute partial products
+        (gtUint64 pp0, gtUint64 low) = _mul64(a.low, b.low);
+        (gtUint64 pp2, gtUint64 pp1) = _mul64(a.high, b.low);
+        (gtUint64 pp4, gtUint64 pp3) = _mul64(a.low, b.high);
+        (gtUint64 pp6, gtUint64 pp5) = _mul64(a.high, b.high);
+
+        // Compute the high and low parts
+        gtBool overflow1;
+
+        (gtBool overflow0, gtUint64 high) = checkedAddWithOverflowBit(pp0, pp1);
+        (overflow1, result.high) = checkedAddWithOverflowBit(high, pp3);
+
+        result.low = low;
+
+        // Check for overflow
+        gtBool bit = or(
+            or(overflow0, overflow1),
+            gt(
+                add(
+                    add(pp2, pp4),
+                    add(pp5, pp6)
+                ),
+                uint64(0)
+            )
+        );
+        
+        return (bit, result);
+    }
+
+    function and(gtUint128 memory a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        result.low = and(a.low, b.low);
+        result.high = and(a.high, b.high);
+        
+        return result;
+    }
+
+    function or(gtUint128 memory a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        result.low = or(a.low, b.low);
+        result.high = or(a.high, b.high);
+        
+        return result;
+    }
+
+    function xor(gtUint128 memory a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        result.low = xor(a.low, b.low);
+        result.high = xor(a.high, b.high);
+        
+        return result;
+    }
+
+    function eq(gtUint128 memory a, gtUint128 memory b) internal returns (gtBool) {
+        return and(eq(a.low, b.low), eq(a.high, b.high));
+    }
+
+    function ne(gtUint128 memory a, gtUint128 memory b) internal returns (gtBool) {
+        return or(ne(a.low, b.low), ne(a.high, b.high));
+    }
+
+    function ge(gtUint128 memory a, gtUint128 memory b) internal returns (gtBool) {
+        gtBool highEqual = eq(a.high, b.high);
+
+        return mux(highEqual, gt(a.high, b.high), ge(a.low, b.low));
+    }
+
+    function gt(gtUint128 memory a, gtUint128 memory b) internal returns (gtBool) {
+        gtBool highEqual = eq(a.high, b.high);
+
+        return mux(highEqual, gt(a.high, b.high), gt(a.low, b.low));
+    }
+
+    function le(gtUint128 memory a, gtUint128 memory b) internal returns (gtBool) {
+        gtBool highEqual = eq(a.high, b.high);
+
+        return mux(highEqual, lt(a.high, b.high), le(a.low, b.low));
+    }
+
+    function lt(gtUint128 memory a, gtUint128 memory b) internal returns (gtBool) {
+        gtBool highEqual = eq(a.high, b.high);
+
+        return mux(highEqual, lt(a.high, b.high), lt(a.low, b.low));
+    }
+
+    function min(gtUint128 memory a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtBool highEqual = eq(a.high, b.high);
+        gtBool aHighLessThan = lt(a.high, b.high);
+        gtBool aLowLessThan = lt(a.low, b.low);
+
+        return mux(
+            highEqual,
+            mux(aHighLessThan, b, a),
+            mux(aLowLessThan, b, a)
+        );
+    }
+
+    function max(gtUint128 memory a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtBool highEqual = eq(a.high, b.high);
+        gtBool aHighGreaterThan = gt(a.high, b.high);
+        gtBool aLowGreaterThan = gt(a.low, b.low);
+
+        return mux(
+            highEqual,
+            mux(aHighGreaterThan, b, a),
+            mux(aLowGreaterThan, b, a)
+        );
+    }
+
+    function decrypt(gtUint128 memory ct) internal returns (uint128) {
+        uint64 highPart = decrypt(ct.high);
+        uint64 lowPart = decrypt(ct.low);
+        
+        // Combine high and low parts
+        return uint128(highPart) << 64 | uint128(lowPart);
+    }
+
+    function mux(gtBool bit, gtUint128 memory a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        result.low = mux(bit, a.low, b.low);
+        result.high = mux(bit, a.high, b.high);
+        
+        return result;
+    }
+
+    function transfer(gtUint128 memory a, gtUint128 memory b, gtUint128 memory amount) internal returns (gtUint128 memory, gtUint128 memory, gtBool) {
+        gtBool success = MpcCore.ge(a, amount);
+
+        gtUint128 memory a_ = MpcCore.mux(success, a, MpcCore.sub(a, amount));
+        gtUint128 memory b_ = MpcCore.mux(success, b, MpcCore.add(b, amount));
+        
+        return (a_, b_, success);
+    }
+
+    function transferWithAllowance(gtUint128 memory a, gtUint128 memory b, gtUint128 memory amount, gtUint128 memory allowance) internal returns (gtUint128 memory, gtUint128 memory, gtBool, gtUint128 memory) {
+        gtBool success = MpcCore.and(MpcCore.ge(a, amount), MpcCore.le(amount, allowance));
+
+        gtUint128 memory a_ = MpcCore.mux(success, a, MpcCore.sub(a, amount));
+        gtUint128 memory b_ = MpcCore.mux(success, b, MpcCore.add(b, amount));
+        gtUint128 memory allowance_ = MpcCore.mux(success, allowance, MpcCore.sub(allowance, amount));
+        
+        return (a_, b_, success, allowance_);
+    }
+
+    // =========== 256 bit operations ============
+
+    function _splitUint256(uint256 number) private returns (uint128, uint128) {
+        return (uint128(number >> 128), uint128(number));
+    }
+
+    function validateCiphertext(itUint256 memory input) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+        
+        itUint128 memory highInput;
+        highInput.ciphertext = input.ciphertext.high;
+        highInput.signature = input.signature[0];
+        
+        itUint128 memory lowInput;
+        lowInput.ciphertext = input.ciphertext.low;
+        lowInput.signature = input.signature[1];
+        
+        result.high = validateCiphertext(highInput);
+        result.low = validateCiphertext(lowInput);
+        
+        return result;
+    }
+
+    function onBoard(ctUint256 memory ct) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        result.high = onBoard(ct.high);
+        result.low = onBoard(ct.low);
+
+        return result;
+    }
+
+    function offBoard(gtUint256 memory pt) internal returns (ctUint256 memory) {
+        ctUint256 memory result;
+
+        result.high = offBoard(pt.high);
+        result.low = offBoard(pt.low);
+
+        return result;
+    }
+
+    function offBoardToUser(gtUint256 memory pt, address addr) internal returns (ctUint256 memory) {
+        ctUint256 memory result;
+
+        result.high = offBoardToUser(pt.high, addr);
+        result.low = offBoardToUser(pt.low, addr);
+
+        return result;
+    }
+
+    function offBoardCombined(gtUint256 memory pt, address addr) internal returns (utUint256 memory) {
+        utUint256 memory result;
+
+        result.ciphertext = offBoard(pt);
+        result.userCiphertext = offBoardToUser(pt, addr);
+
+        return result;
+    }
+
+    function setPublic256(uint256 pt) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        // Split the 256-bit value into high and low 128-bit parts
+        uint128 low = uint128(pt);
+        uint128 high = uint128(pt >> 128);
+        
+        result.high = setPublic128(high);
+        result.low = setPublic128(low);
+        
+        return result;
+    }
+
+    function rand256() internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        result.high = rand128();
+        result.low = rand128();
+
+        return result;
+    }
+
+    function randBoundedBits256(uint8 numBits) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        uint8 numBits_ = numBits > 128 ? 128 : numBits;
+
+        result.low = randBoundedBits128(numBits_);
+
+        numBits_ = numBits > 128 ? numBits - 128 : 0;
+
+        result.high = randBoundedBits128(numBits_);
+        
+        return result;
+    }
+
+    function add(gtUint256 memory a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+        
+        // Add low parts
+        result.low = add(a.low, b.low);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, a.low);
+        
+        // Add high parts with carry if needed
+        result.high = add(a.high, b.high);
+        
+        // Add carry to high part if needed
+        result.high = mux(carry, result.high, add(result.high, uint128(1)));
+        
+        return result;
+    }
+
+    function checkedAdd(gtUint256 memory a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+        
+        // Add low parts
+        result.low = add(a.low, b.low);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, a.low);
+        
+        // Add high parts with carry if needed
+        result.high = checkedAdd(a.high, b.high);
+        
+        // Add carry to high part if needed
+        result.high = mux(carry, result.high, checkedAdd(result.high, uint128(1)));
+        
+        return result;
+    }
+
+    function checkedAddWithOverflowBit(gtUint256 memory a, gtUint256 memory b) internal returns (gtBool, gtUint256 memory) {
+        gtBool bit = setPublic(false);
+        gtUint256 memory result;
+        
+        // Add low parts
+        result.low = add(a.low, b.low);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, a.low);
+        
+        // Add high parts with carry if needed
+        (gtBool overflow, gtUint128 memory high) = checkedAddWithOverflowBit(a.high, b.high);
+        (gtBool overflowWithCarry, gtUint128 memory highWithCarry) = checkedAddWithOverflowBit(high, uint128(1));
+
+        // Handle carry if needed
+        bit = mux(carry, overflow, or(overflow, overflowWithCarry));
+        result.high = mux(carry, high, highWithCarry);
+        
+        return (bit, result);
+    }
+
+    function sub(gtUint256 memory a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+        
+        // Subtract low parts
+        result.low = sub(a.low, b.low);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(a.low, b.low);
+        
+        // Subtract high parts with borrow if needed
+        result.high = sub(a.high, b.high);
+        
+        // Subtract borrow from high part if needed
+        result.high = mux(borrow, result.high, sub(result.high, uint128(1)));
+        
+        return result;
+    }
+
+    function checkedSub(gtUint256 memory a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+        
+        // Subtract low parts
+        result.low = sub(a.low, b.low);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(a.low, b.low);
+        
+        // Subtract high parts with borrow if needed
+        result.high = checkedSub(a.high, b.high);
+        
+        // Subtract borrow from high part if needed
+        result.high = mux(
+            borrow,
+            result.high,
+            checkedSub(
+                mux(borrow, add(result.high, uint128(1)), result.high),
+                uint128(1)
+            )
+        );
+        
+        return result;
+    }
+
+    function checkedSubWithOverflowBit(gtUint256 memory a, gtUint256 memory b) internal returns (gtBool, gtUint256 memory) {
+        gtBool bit = setPublic(false);
+        gtUint256 memory result;
+        
+        // Subtract low parts
+        result.low = sub(a.low, b.low);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(a.low, b.low);
+        
+        // Subtract high parts with borrow if needed
+        (gtBool overflow, gtUint128 memory high) = checkedSubWithOverflowBit(a.high, b.high);
+        (gtBool overflowWithCarry, gtUint128 memory highWithCarry) = checkedSubWithOverflowBit(high, uint128(1));
+
+        // Handle borrow if needed
+        bit = mux(borrow, overflow, or(overflow, overflowWithCarry));
+        result.high = mux(borrow, high, highWithCarry);
+        
+        return (bit, result);
+    }
+
+    function _mul128(gtUint128 memory a, gtUint128 memory b) private returns (gtUint128 memory, gtUint128 memory) {
+        uint128 MAX_UINT64 = uint128(type(uint64).max);
+
+        gtUint128 memory pp0;
+        gtUint128 memory pp1;
+        gtUint128 memory pp2;
+        gtUint128 memory pp3;
+
+        {
+            // Split the numbers into 32-bit parts
+            gtUint128 memory aLow = and(a, MAX_UINT64);
+            gtUint128 memory aHigh = shr(a, 64);
+            gtUint128 memory bLow = and(b, MAX_UINT64);
+            gtUint128 memory bHigh = shr(b, 64);
+
+            // Compute partial products
+            pp0 = mul(aLow, bLow);
+            pp1 = mul(aLow, bHigh);
+            pp2 = mul(aHigh, bLow);
+            pp3 = mul(aHigh, bHigh);
+        }
+
+        // Compute high and low parts
+        gtUint128 memory mid = add(
+            add(
+                shr(pp0, 64),
+                and(pp1, MAX_UINT64)
+            ),
+            and(pp2, MAX_UINT64)
+        );
+        gtUint128 memory carry = shr(mid, 64);
+
+        gtUint128 memory high = add(
+            add(pp3, shr(pp1, 64)),
+            add(shr(pp2, 64), carry)
+        );
+        gtUint128 memory low = or(
+            and(pp0, MAX_UINT64),
+            shl(and(mid, MAX_UINT64), 64)
+        );
+
+        return (high, low);
+    }
+
+    function mul(gtUint256 memory a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        // Compute partial products
+        (gtUint128 memory pp0, gtUint128 memory low) = _mul128(a.low, b.low);
+        (, gtUint128 memory pp1) = _mul128(a.high, b.low);
+        (, gtUint128 memory pp2) = _mul128(a.low, b.high);
+
+        // Compute the high and low parts
+        result.high = add(
+            add(pp0, pp1),
+            pp2
+        );
+        result.low = low;
+        
+        return result;
+    }
+
+    function checkedMul(gtUint256 memory a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        // Compute partial products
+        (gtUint128 memory pp0, gtUint128 memory low) = _mul128(a.low, b.low);
+        (gtUint128 memory pp2, gtUint128 memory pp1) = _mul128(a.high, b.low);
+        (gtUint128 memory pp4, gtUint128 memory pp3) = _mul128(a.low, b.high);
+        (gtUint128 memory pp6, gtUint128 memory pp5) = _mul128(a.high, b.high);
+
+        // Compute the high and low parts
+        result.high = checkedAdd(
+            checkedAdd(pp0, pp1),
+            pp3
+        );
+        result.low = low;
+
+        // Check for overflow
+        checkedSub(
+            uint128(0),
+            add(
+                add(pp2, pp4),
+                add(pp5, pp6)
+            )
+        );
+        
+        return result;
+    }
+
+    function checkedMulWithOverflowBit(gtUint256 memory a, gtUint256 memory b) internal returns (gtBool, gtUint256 memory) {
+        gtUint256 memory result;
+
+        // Compute partial products
+        (gtUint128 memory pp0, gtUint128 memory low) = _mul128(a.low, b.low);
+        (gtUint128 memory pp2, gtUint128 memory pp1) = _mul128(a.high, b.low);
+        (gtUint128 memory pp4, gtUint128 memory pp3) = _mul128(a.low, b.high);
+        (gtUint128 memory pp6, gtUint128 memory pp5) = _mul128(a.high, b.high);
+
+        // Compute the high and low parts
+        gtBool overflow1;
+
+        (gtBool overflow0, gtUint128 memory high) = checkedAddWithOverflowBit(pp0, pp1);
+        (overflow1, result.high) = checkedAddWithOverflowBit(high, pp3);
+
+        result.low = low;
+
+        // Check for overflow
+        gtBool bit = or(
+            or(overflow0, overflow1),
+            gt(
+                add(
+                    add(pp2, pp4),
+                    add(pp5, pp6)
+                ),
+                uint128(0)
+            )
+        );
+        
+        return (bit, result);
+    }
+
+    function and(gtUint256 memory a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        result.low = and(a.low, b.low);
+        result.high = and(a.high, b.high);
+        
+        return result;
+    }
+
+    function or(gtUint256 memory a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        result.low = or(a.low, b.low);
+        result.high = or(a.high, b.high);
+        
+        return result;
+    }
+
+    function xor(gtUint256 memory a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        result.low = xor(a.low, b.low);
+        result.high = xor(a.high, b.high);
+        
+        return result;
+    }
+
+    function eq(gtUint256 memory a, gtUint256 memory b) internal returns (gtBool) {
+        return and(eq(a.low, b.low), eq(a.high, b.high));
+    }
+
+    function ne(gtUint256 memory a, gtUint256 memory b) internal returns (gtBool) {
+        return or(ne(a.low, b.low), ne(a.high, b.high));
+    }
+
+    function ge(gtUint256 memory a, gtUint256 memory b) internal returns (gtBool) {
+        gtBool highEqual = eq(a.high, b.high);
+
+        return mux(highEqual, gt(a.high, b.high), ge(a.low, b.low));
+    }
+
+    function gt(gtUint256 memory a, gtUint256 memory b) internal returns (gtBool) {
+        gtBool highEqual = eq(a.high, b.high);
+
+        return mux(highEqual, gt(a.high, b.high), gt(a.low, b.low));
+    }
+
+    function le(gtUint256 memory a, gtUint256 memory b) internal returns (gtBool) {
+        gtBool highEqual = eq(a.high, b.high);
+
+        return mux(highEqual, lt(a.high, b.high), le(a.low, b.low));
+    }
+
+    function lt(gtUint256 memory a, gtUint256 memory b) internal returns (gtBool) {
+        gtBool highEqual = eq(a.high, b.high);
+
+        return mux(highEqual, lt(a.high, b.high), lt(a.low, b.low));
+    }
+
+    function min(gtUint256 memory a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtBool highEqual = eq(a.high, b.high);
+        gtBool aHighLessThan = lt(a.high, b.high);
+        gtBool aLowLessThan = lt(a.low, b.low);
+
+        return mux(
+            highEqual,
+            mux(aHighLessThan, b, a),
+            mux(aLowLessThan, b, a)
+        );
+    }
+
+    function max(gtUint256 memory a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtBool highEqual = eq(a.high, b.high);
+        gtBool aHighGreaterThan = gt(a.high, b.high);
+        gtBool aLowGreaterThan = gt(a.low, b.low);
+
+        return mux(
+            highEqual,
+            mux(aHighGreaterThan, b, a),
+            mux(aLowGreaterThan, b, a)
+        );
+    }
+
+    function decrypt(gtUint256 memory ct) internal returns (uint256) {
+        uint128 highPart = decrypt(ct.high);
+        uint128 lowPart = decrypt(ct.low);
+        
+        // Combine high and low parts
+        return uint256(highPart) << 128 | uint256(lowPart);
+    }
+
+    function mux(gtBool bit, gtUint256 memory a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        result.low = mux(bit, a.low, b.low);
+        result.high = mux(bit, a.high, b.high);
+        
+        return result;
+    }
+
+    function transfer(gtUint256 memory a, gtUint256 memory b, gtUint256 memory amount) internal returns (gtUint256 memory, gtUint256 memory, gtBool) {
+        gtBool success = MpcCore.ge(a, amount);
+
+        gtUint256 memory a_ = MpcCore.mux(success, a, MpcCore.sub(a, amount));
+        gtUint256 memory b_ = MpcCore.mux(success, b, MpcCore.add(b, amount));
+        
+        return (a_, b_, success);
+    }
+
+    function transferWithAllowance(gtUint256 memory a, gtUint256 memory b, gtUint256 memory amount, gtUint256 memory allowance) internal returns (gtUint256 memory, gtUint256 memory, gtBool, gtUint256 memory) {
+        gtBool success = MpcCore.and(MpcCore.ge(a, amount), MpcCore.le(amount, allowance));
+
+        gtUint256 memory a_ = MpcCore.mux(success, a, MpcCore.sub(a, amount));
+        gtUint256 memory b_ = MpcCore.mux(success, b, MpcCore.add(b, amount));
+        gtUint256 memory allowance_ = MpcCore.mux(success, allowance, MpcCore.sub(allowance, amount));
+        
+        return (a_, b_, success, allowance_);
+    }
+
     // =========== String operations ============
 
     function validateCiphertext(itString memory input) internal returns (gtString memory) {
@@ -1662,6 +2616,791 @@ library MpcCore {
     }
 
 
+    // =========== 128 bit operations ===========
+
+    function add(uint128 a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+        
+        // Add low parts
+        result.low = add(aLow, b.low);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, aLow);
+        
+        // Add high parts with carry if needed
+        result.high = add(aHigh, b.high);
+        
+        // Add carry to high part if needed
+        result.high = mux(carry, result.high, add(result.high, uint64(1)));
+        
+        return result;
+    }
+
+    function checkedAdd(uint128 a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+        
+        // Add low parts
+        result.low = add(aLow, b.low);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, aLow);
+        
+        // Add high parts with carry if needed
+        result.high = checkedAdd(aHigh, b.high);
+        
+        // Add carry to high part if needed
+        result.high = mux(carry, result.high, checkedAdd(result.high, uint64(1)));
+        
+        return result;
+    }
+
+    function checkedAddWithOverflowBit(uint128 a, gtUint128 memory b) internal returns (gtBool, gtUint128 memory) {
+        gtBool bit = setPublic(false);
+        gtUint128 memory result;
+
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+        
+        // Add low parts
+        result.low = add(aLow, b.low);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, aLow);
+        
+        // Add high parts with carry if needed
+        (gtBool overflow, gtUint64 high) = checkedAddWithOverflowBit(aHigh, b.high);
+        (gtBool overflowWithCarry, gtUint64 highWithCarry) = checkedAddWithOverflowBit(high, uint64(1));
+
+        // Handle carry if needed
+        bit = mux(carry, overflow, or(overflow, overflowWithCarry));
+        result.high = mux(carry, high, highWithCarry);
+        
+        return (bit, result);
+    }
+
+    function sub(uint128 a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+        
+        // Subtract low parts
+        result.low = sub(aLow, b.low);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(aLow, b.low);
+        
+        // Subtract high parts with borrow if needed
+        result.high = sub(aHigh, b.high);
+        
+        // Subtract borrow from high part if needed
+        result.high = mux(borrow, result.high, sub(result.high, uint64(1)));
+        
+        return result;
+    }
+
+    function checkedSub(uint128 a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+        
+        // Subtract low parts
+        result.low = sub(aLow, b.low);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(aLow, b.low);
+        
+        // Subtract high parts with borrow if needed
+        result.high = checkedSub(aHigh, b.high);
+        
+        // Subtract borrow from high part if needed
+        result.high = mux(
+            borrow,
+            result.high,
+            checkedSub(
+                mux(borrow, add(result.high, uint64(1)), result.high),
+                uint64(1)
+            )
+        );
+        
+        return result;
+    }
+
+    function checkedSubWithOverflowBit(uint128 a, gtUint128 memory b) internal returns (gtBool, gtUint128 memory) {
+        gtBool bit = setPublic(false);
+        gtUint128 memory result;
+
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+        
+        // Subtract low parts
+        result.low = sub(aLow, b.low);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(aLow, b.low);
+        
+        // Subtract high parts with borrow if needed
+        (gtBool overflow, gtUint64 high) = checkedSubWithOverflowBit(aHigh, b.high);
+        (gtBool overflowWithCarry, gtUint64 highWithCarry) = checkedSubWithOverflowBit(high, uint64(1));
+
+        // Handle borrow if needed
+        bit = mux(borrow, overflow, or(overflow, overflowWithCarry));
+        result.high = mux(borrow, high, highWithCarry);
+        
+        return (bit, result);
+    }
+
+    function _mul64(uint64 a, gtUint64 b) private returns (gtUint64, gtUint64) {
+        uint64 MAX_UINT32 = uint64(type(uint32).max);
+
+        gtUint64 pp0;
+        gtUint64 pp1;
+        gtUint64 pp2;
+        gtUint64 pp3;
+
+        {
+            // Split the numbers into 32-bit parts
+            uint64 aLow = a & type(uint32).max;
+            uint64 aHigh = a >> 32;
+            gtUint64 bLow = and(b, MAX_UINT32);
+            gtUint64 bHigh = shr(b, 32);
+
+            // Compute partial products
+            pp0 = mul(aLow, bLow);
+            pp1 = mul(aLow, bHigh);
+            pp2 = mul(aHigh, bLow);
+            pp3 = mul(aHigh, bHigh);
+        }
+
+        // Compute high and low parts
+        gtUint64 mid = add(
+            add(
+                shr(pp0, 32),
+                and(pp1, MAX_UINT32)
+            ),
+            and(pp2, MAX_UINT32)
+        );
+        gtUint64 carry = shr(mid, 32);
+
+        gtUint64 high = add(
+            add(pp3, shr(pp1, 32)),
+            add(shr(pp2, 32), carry)
+        );
+        gtUint64 low = or(
+            and(pp0, MAX_UINT32),
+            shl(and(mid, MAX_UINT32), 32)
+        );
+
+        return (high, low);
+    }
+
+    function mul(uint128 a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        uint64 aLow = uint64(a & type(uint64).max);
+        uint64 aHigh = uint64(a >> 64);
+
+        // Compute partial products
+        (gtUint64 pp0, gtUint64 low) = _mul64(aLow, b.low);
+        (, gtUint64 pp1) = _mul64(aHigh, b.low);
+        (, gtUint64 pp2) = _mul64(aLow, b.high);
+
+        // Compute the high and low parts
+        result.high = add(
+            add(pp0, pp1),
+            pp2
+        );
+        result.low = low;
+        
+        return result;
+    }
+
+    function checkedMul(uint128 a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        uint64 aLow = uint64(a & type(uint64).max);
+        uint64 aHigh = uint64(a >> 64);
+
+        // Compute partial products
+        (gtUint64 pp0, gtUint64 low) = _mul64(aLow, b.low);
+        (gtUint64 pp2, gtUint64 pp1) = _mul64(aHigh, b.low);
+        (gtUint64 pp4, gtUint64 pp3) = _mul64(aLow, b.high);
+        (gtUint64 pp6, gtUint64 pp5) = _mul64(aHigh, b.high);
+
+        // Compute the high and low parts
+        result.high = checkedAdd(
+            checkedAdd(pp0, pp1),
+            pp3
+        );
+        result.low = low;
+
+        // Check for overflow
+        checkedSub(
+            uint64(0),
+            add(
+                add(pp2, pp4),
+                add(pp5, pp6)
+            )
+        );
+        
+        return result;
+    }
+
+    function checkedMulWithOverflowBit(uint128 a, gtUint128 memory b) internal returns (gtBool, gtUint128 memory) {
+        gtUint128 memory result;
+
+        gtUint64 low;
+        gtUint64 pp0;
+        gtUint64 pp1;
+        gtUint64 pp2;
+        gtUint64 pp3;
+        gtUint64 pp4;
+        gtUint64 pp5;
+        gtUint64 pp6;
+
+        {
+            uint64 aLow = uint64(a & type(uint64).max);
+            uint64 aHigh = uint64(a >> 64);
+
+            // Compute partial products
+            (pp0, low) = _mul64(aLow, b.low);
+            (pp2, pp1) = _mul64(aHigh, b.low);
+            (pp4, pp3) = _mul64(aLow, b.high);
+            (pp6, pp5) = _mul64(aHigh, b.high);
+        }
+
+        // Compute the high and low parts
+        gtBool overflow1;
+
+        (gtBool overflow0, gtUint64 high) = checkedAddWithOverflowBit(pp0, pp1);
+        (overflow1, result.high) = checkedAddWithOverflowBit(high, pp3);
+
+        result.low = low;
+
+        // Check for overflow
+        gtBool bit = or(
+            or(overflow0, overflow1),
+            gt(
+                add(
+                    add(pp2, pp4),
+                    add(pp5, pp6)
+                ),
+                uint64(0)
+            )
+        );
+        
+        return (bit, result);
+    }
+
+    function and(uint128 a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+
+        result.low = and(aLow, b.low);
+        result.high = and(aHigh, b.high);
+        
+        return result;
+    }
+
+    function or(uint128 a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+
+        result.low = or(aLow, b.low);
+        result.high = or(aHigh, b.high);
+        
+        return result;
+    }
+
+    function xor(uint128 a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+
+        result.low = xor(aLow, b.low);
+        result.high = xor(aHigh, b.high);
+        
+        return result;
+    }
+
+    function eq(uint128 a, gtUint128 memory b) internal returns (gtBool) {
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+
+        return and(eq(aLow, b.low), eq(aHigh, b.high));
+    }
+
+    function ne(uint128 a, gtUint128 memory b) internal returns (gtBool) {
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+
+        return or(ne(aLow, b.low), ne(aHigh, b.high));
+    }
+
+    function ge(uint128 a, gtUint128 memory b) internal returns (gtBool) {
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+
+        gtBool highEqual = eq(aHigh, b.high);
+
+        return mux(highEqual, gt(aHigh, b.high), ge(aLow, b.low));
+    }
+
+    function gt(uint128 a, gtUint128 memory b) internal returns (gtBool) {
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+
+        gtBool highEqual = eq(aHigh, b.high);
+
+        return mux(highEqual, gt(aHigh, b.high), gt(aLow, b.low));
+    }
+
+    function le(uint128 a, gtUint128 memory b) internal returns (gtBool) {
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+
+        gtBool highEqual = eq(aHigh, b.high);
+
+        return mux(highEqual, lt(aHigh, b.high), le(aLow, b.low));
+    }
+
+    function lt(uint128 a, gtUint128 memory b) internal returns (gtBool) {
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+
+        gtBool highEqual = eq(aHigh, b.high);
+
+        return mux(highEqual, lt(aHigh, b.high), lt(aLow, b.low));
+    }
+
+    function min(uint128 a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+
+        gtBool highEqual = eq(aHigh, b.high);
+        gtBool aHighLessThan = lt(aHigh, b.high);
+        gtBool aLowLessThan = lt(aLow, b.low);
+
+        return mux(
+            highEqual,
+            mux(aHighLessThan, b, a),
+            mux(aLowLessThan, b, a)
+        );
+    }
+
+    function max(uint128 a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+
+        gtBool highEqual = eq(aHigh, b.high);
+        gtBool aHighGreaterThan = gt(aHigh, b.high);
+        gtBool aLowGreaterThan = gt(aLow, b.low);
+
+        return mux(
+            highEqual,
+            mux(aHighGreaterThan, b, a),
+            mux(aLowGreaterThan, b, a)
+        );
+    }
+
+    function mux(gtBool bit, uint128 a, gtUint128 memory b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        (uint64 aHigh, uint64 aLow) = _splitUint128(a);
+
+        result.low = mux(bit, aLow, b.low);
+        result.high = mux(bit, aHigh, b.high);
+        
+        return result;
+    }
+
+
+    // =========== 256 bit operations ===========
+
+    function add(uint256 a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+        
+        // Add low parts
+        result.low = add(aLow, b.low);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, aLow);
+        
+        // Add high parts with carry if needed
+        result.high = add(aHigh, b.high);
+        
+        // Add carry to high part if needed
+        result.high = mux(carry, result.high, add(result.high, uint128(1)));
+        
+        return result;
+    }
+
+    function checkedAdd(uint256 a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+        
+        // Add low parts
+        result.low = add(aLow, b.low);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, aLow);
+        
+        // Add high parts with carry if needed
+        result.high = checkedAdd(aHigh, b.high);
+        
+        // Add carry to high part if needed
+        result.high = mux(carry, result.high, checkedAdd(result.high, uint128(1)));
+        
+        return result;
+    }
+
+    function checkedAddWithOverflowBit(uint256 a, gtUint256 memory b) internal returns (gtBool, gtUint256 memory) {
+        gtBool bit = setPublic(false);
+        gtUint256 memory result;
+
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+        
+        // Add low parts
+        result.low = add(aLow, b.low);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, aLow);
+        
+        // Add high parts with carry if needed
+        (gtBool overflow, gtUint128 memory high) = checkedAddWithOverflowBit(aHigh, b.high);
+        (gtBool overflowWithCarry, gtUint128 memory highWithCarry) = checkedAddWithOverflowBit(high, uint128(1));
+
+        // Handle carry if needed
+        bit = mux(carry, overflow, or(overflow, overflowWithCarry));
+        result.high = mux(carry, high, highWithCarry);
+        
+        return (bit, result);
+    }
+
+    function sub(uint256 a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+        
+        // Subtract low parts
+        result.low = sub(aLow, b.low);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(aLow, b.low);
+        
+        // Subtract high parts with borrow if needed
+        result.high = sub(aHigh, b.high);
+        
+        // Subtract borrow from high part if needed
+        result.high = mux(borrow, result.high, sub(result.high, uint128(1)));
+        
+        return result;
+    }
+
+    function checkedSub(uint256 a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+        
+        // Subtract low parts
+        result.low = sub(aLow, b.low);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(aLow, b.low);
+        
+        // Subtract high parts with borrow if needed
+        result.high = checkedSub(aHigh, b.high);
+        
+        // Subtract borrow from high part if needed
+        result.high = mux(
+            borrow,
+            result.high,
+            checkedSub(
+                mux(borrow, add(result.high, uint128(1)), result.high),
+                uint128(1)
+            )
+        );
+        
+        return result;
+    }
+
+    function checkedSubWithOverflowBit(uint256 a, gtUint256 memory b) internal returns (gtBool, gtUint256 memory) {
+        gtBool bit = setPublic(false);
+        gtUint256 memory result;
+
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+        
+        // Subtract low parts
+        result.low = sub(aLow, b.low);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(aLow, b.low);
+        
+        // Subtract high parts with borrow if needed
+        (gtBool overflow, gtUint128 memory high) = checkedSubWithOverflowBit(aHigh, b.high);
+        (gtBool overflowWithCarry, gtUint128 memory highWithCarry) = checkedSubWithOverflowBit(high, uint128(1));
+
+        // Handle borrow if needed
+        bit = mux(borrow, overflow, or(overflow, overflowWithCarry));
+        result.high = mux(borrow, high, highWithCarry);
+        
+        return (bit, result);
+    }
+
+    function _mul128(uint128 a, gtUint128 memory b) private returns (gtUint128 memory, gtUint128 memory) {
+        uint128 MAX_UINT64 = uint128(type(uint64).max);
+
+        gtUint128 memory pp0;
+        gtUint128 memory pp1;
+        gtUint128 memory pp2;
+        gtUint128 memory pp3;
+
+        {
+            // Split the numbers into 64-bit parts
+            uint128 aLow = a & type(uint64).max;
+            uint128 aHigh = a >> 64;
+            gtUint128 memory bLow = and(b, MAX_UINT64);
+            gtUint128 memory bHigh = shr(b, 64);
+
+            // Compute partial products
+            pp0 = mul(aLow, bLow);
+            pp1 = mul(aLow, bHigh);
+            pp2 = mul(aHigh, bLow);
+            pp3 = mul(aHigh, bHigh);
+        }
+
+        // Compute high and low parts
+        gtUint128 memory mid = add(
+            add(
+                shr(pp0, 64),
+                and(pp1, MAX_UINT64)
+            ),
+            and(pp2, MAX_UINT64)
+        );
+        gtUint128 memory carry = shr(mid, 64);
+
+        gtUint128 memory high = add(
+            add(pp3, shr(pp1, 64)),
+            add(shr(pp2, 64), carry)
+        );
+        gtUint128 memory low = or(
+            and(pp0, MAX_UINT64),
+            shl(and(mid, MAX_UINT64), 64)
+        );
+
+        return (high, low);
+    }
+
+    function mul(uint256 a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+
+        // Compute partial products
+        (gtUint128 memory pp0, gtUint128 memory low) = _mul128(aLow, b.low);
+        (, gtUint128 memory pp1) = _mul128(aHigh, b.low);
+        (, gtUint128 memory pp2) = _mul128(aLow, b.high);
+
+        // Compute the high and low parts
+        result.high = add(
+            add(pp0, pp1),
+            pp2
+        );
+        result.low = low;
+        
+        return result;
+    }
+
+    function checkedMul(uint256 a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+
+        // Compute partial products
+        (gtUint128 memory pp0, gtUint128 memory low) = _mul128(aLow, b.low);
+        (gtUint128 memory pp2, gtUint128 memory pp1) = _mul128(aHigh, b.low);
+        (gtUint128 memory pp4, gtUint128 memory pp3) = _mul128(aLow, b.high);
+        (gtUint128 memory pp6, gtUint128 memory pp5) = _mul128(aHigh, b.high);
+
+        // Compute the high and low parts
+        result.high = checkedAdd(
+            checkedAdd(pp0, pp1),
+            pp3
+        );
+        result.low = low;
+
+        // Check for overflow
+        checkedSub(
+            uint128(0),
+            add(
+                add(pp2, pp4),
+                add(pp5, pp6)
+            )
+        );
+        
+        return result;
+    }
+
+    function checkedMulWithOverflowBit(uint256 a, gtUint256 memory b) internal returns (gtBool, gtUint256 memory) {
+        gtUint256 memory result;
+
+        gtUint128 memory low;
+        gtUint128 memory pp0;
+        gtUint128 memory pp1;
+        gtUint128 memory pp2;
+        gtUint128 memory pp3;
+        gtUint128 memory pp4;
+        gtUint128 memory pp5;
+        gtUint128 memory pp6;
+
+        {
+            (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+
+            // Compute partial products
+            (pp0, low) = _mul128(aLow, b.low);
+            (pp2, pp1) = _mul128(aHigh, b.low);
+            (pp4, pp3) = _mul128(aLow, b.high);
+            (pp6, pp5) = _mul128(aHigh, b.high);
+        }
+
+        // Compute the high and low parts
+        gtBool overflow1;
+
+        (gtBool overflow0, gtUint128 memory high) = checkedAddWithOverflowBit(pp0, pp1);
+        (overflow1, result.high) = checkedAddWithOverflowBit(high, pp3);
+
+        result.low = low;
+
+        // Check for overflow
+        gtBool bit = or(
+            or(overflow0, overflow1),
+            gt(
+                add(
+                    add(pp2, pp4),
+                    add(pp5, pp6)
+                ),
+                uint128(0)
+            )
+        );
+        
+        return (bit, result);
+    }
+
+    function and(uint256 a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+
+        result.low = and(aLow, b.low);
+        result.high = and(aHigh, b.high);
+        
+        return result;
+    }
+
+    function or(uint256 a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+
+        result.low = or(aLow, b.low);
+        result.high = or(aHigh, b.high);
+        
+        return result;
+    }
+
+    function xor(uint256 a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+
+        result.low = xor(aLow, b.low);
+        result.high = xor(aHigh, b.high);
+        
+        return result;
+    }
+
+    function eq(uint256 a, gtUint256 memory b) internal returns (gtBool) {
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+
+        return and(eq(aLow, b.low), eq(aHigh, b.high));
+    }
+
+    function ne(uint256 a, gtUint256 memory b) internal returns (gtBool) {
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+
+        return or(ne(aLow, b.low), ne(aHigh, b.high));
+    }
+
+    function ge(uint256 a, gtUint256 memory b) internal returns (gtBool) {
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+
+        gtBool highEqual = eq(aHigh, b.high);
+
+        return mux(highEqual, gt(aHigh, b.high), ge(aLow, b.low));
+    }
+
+    function gt(uint256 a, gtUint256 memory b) internal returns (gtBool) {
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+
+        gtBool highEqual = eq(aHigh, b.high);
+
+        return mux(highEqual, gt(aHigh, b.high), gt(aLow, b.low));
+    }
+
+    function le(uint256 a, gtUint256 memory b) internal returns (gtBool) {
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+
+        gtBool highEqual = eq(aHigh, b.high);
+
+        return mux(highEqual, lt(aHigh, b.high), le(aLow, b.low));
+    }
+
+    function lt(uint256 a, gtUint256 memory b) internal returns (gtBool) {
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+
+        gtBool highEqual = eq(aHigh, b.high);
+
+        return mux(highEqual, lt(aHigh, b.high), lt(aLow, b.low));
+    }
+
+    function min(uint256 a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+
+        gtBool highEqual = eq(aHigh, b.high);
+        gtBool aHighLessThan = lt(aHigh, b.high);
+        gtBool aLowLessThan = lt(aLow, b.low);
+
+        return mux(
+            highEqual,
+            mux(aHighLessThan, b, a),
+            mux(aLowLessThan, b, a)
+        );
+    }
+
+    function max(uint256 a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+
+        gtBool highEqual = eq(aHigh, b.high);
+        gtBool aHighGreaterThan = gt(aHigh, b.high);
+        gtBool aLowGreaterThan = gt(aLow, b.low);
+
+        return mux(
+            highEqual,
+            mux(aHighGreaterThan, b, a),
+            mux(aLowGreaterThan, b, a)
+        );
+    }
+
+    function mux(gtBool bit, uint256 a, gtUint256 memory b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 aHigh, uint128 aLow) = _splitUint256(a);
+
+        result.low = mux(bit, aLow, b.low);
+        result.high = mux(bit, aHigh, b.high);
+        
+        return result;
+    }
+
+
     // =========== Operations with RHS_PUBLIC parameter ===========
     // =========== 8 bit operations ==============
 
@@ -2218,6 +3957,891 @@ library MpcCore {
     function mux(gtBool bit, gtUint64 a, uint64 b) internal returns (gtUint64){
         return gtUint64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
             Mux(combineEnumsToBytes3(MPC_TYPE.SUINT64_T, MPC_TYPE.SUINT64_T, ARGS.RHS_PUBLIC), gtBool.unwrap(bit), gtUint64.unwrap(a), uint256(b)));
+    }
+
+    // =========== 128 bit operations ==============
+
+    function add(gtUint128 memory a, uint128 b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+        
+        // Add low parts
+        result.low = add(a.low, bLow);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, a.low);
+        
+        // Add high parts with carry if needed
+        result.high = add(a.high, bHigh);
+        
+        // Add carry to high part if needed
+        result.high = mux(carry, result.high, add(result.high, uint64(1)));
+        
+        return result;
+    }
+
+    function checkedAdd(gtUint128 memory a, uint128 b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+        
+        // Add low parts
+        result.low = add(a.low, bLow);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, a.low);
+        
+        // Add high parts with carry if needed
+        result.high = checkedAdd(a.high, bHigh);
+        
+        // Add carry to high part if needed
+        result.high = mux(carry, result.high, checkedAdd(result.high, uint64(1)));
+        
+        return result;
+    }
+
+    function checkedAddWithOverflowBit(gtUint128 memory a, uint128 b) internal returns (gtBool, gtUint128 memory) {
+        gtBool bit = setPublic(false);
+        gtUint128 memory result;
+
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+        
+        // Add low parts
+        result.low = add(a.low, bLow);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, a.low);
+        
+        // Add high parts with carry if needed
+        (gtBool overflow, gtUint64 high) = checkedAddWithOverflowBit(a.high, bHigh);
+        (gtBool overflowWithCarry, gtUint64 highWithCarry) = checkedAddWithOverflowBit(high, uint64(1));
+
+        // Handle carry if needed
+        bit = mux(carry, overflow, or(overflow, overflowWithCarry));
+        result.high = mux(carry, high, highWithCarry);
+        
+        return (bit, result);
+    }
+
+    function sub(gtUint128 memory a, uint128 b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+        
+        // Subtract low parts
+        result.low = sub(a.low, bLow);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(a.low, bLow);
+        
+        // Subtract high parts with borrow if needed
+        result.high = sub(a.high, bHigh);
+        
+        // Subtract borrow from high part if needed
+        result.high = mux(borrow, result.high, sub(result.high, uint64(1)));
+        
+        return result;
+    }
+
+    function checkedSub(gtUint128 memory a, uint128 b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+        
+        // Subtract low parts
+        result.low = sub(a.low, bLow);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(a.low, bLow);
+        
+        // Subtract high parts with borrow if needed
+        result.high = checkedSub(a.high, bHigh);
+        
+        // Subtract borrow from high part if needed
+        result.high = mux(
+            borrow,
+            result.high,
+            checkedSub(
+                mux(borrow, add(result.high, uint64(1)), result.high),
+                uint64(1)
+            )
+        );
+        return result;
+    }
+
+    function checkedSubWithOverflowBit(gtUint128 memory a, uint128 b) internal returns (gtBool, gtUint128 memory) {
+        gtBool bit = setPublic(false);
+        gtUint128 memory result;
+
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+        
+        // Subtract low parts
+        result.low = sub(a.low, bLow);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(a.low, bLow);
+        
+        // Subtract high parts with borrow if needed
+        (gtBool overflow, gtUint64 high) = checkedSubWithOverflowBit(a.high, bHigh);
+        (gtBool overflowWithCarry, gtUint64 highWithCarry) = checkedSubWithOverflowBit(high, uint64(1));
+
+        // Handle borrow if needed
+        bit = mux(borrow, overflow, or(overflow, overflowWithCarry));
+        result.high = mux(borrow, high, highWithCarry);
+        
+        return (bit, result);
+    }
+
+    function _mul64(gtUint64 a, uint64 b) private returns (gtUint64, gtUint64) {
+        uint64 MAX_UINT32 = uint64(type(uint32).max);
+
+        gtUint64 pp0;
+        gtUint64 pp1;
+        gtUint64 pp2;
+        gtUint64 pp3;
+
+        {
+            // Split the numbers into 32-bit parts
+            gtUint64 aLow = and(a, MAX_UINT32);
+            gtUint64 aHigh = shr(a, 32);
+            uint64 bLow = b & type(uint32).max;
+            uint64 bHigh = b >> 32;
+
+            // Compute partial products
+            pp0 = mul(aLow, bLow);
+            pp1 = mul(aLow, bHigh);
+            pp2 = mul(aHigh, bLow);
+            pp3 = mul(aHigh, bHigh);
+        }
+
+        // Compute high and low parts
+        gtUint64 mid = add(
+            add(
+                shr(pp0, 32),
+                and(pp1, MAX_UINT32)
+            ),
+            and(pp2, MAX_UINT32)
+        );
+        gtUint64 carry = shr(mid, 32);
+
+        gtUint64 high = add(
+            add(pp3, shr(pp1, 32)),
+            add(shr(pp2, 32), carry)
+        );
+        gtUint64 low = or(
+            and(pp0, MAX_UINT32),
+            shl(and(mid, MAX_UINT32), 32)
+        );
+
+        return (high, low);
+    }
+
+    function mul(gtUint128 memory a, uint128 b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        uint64 bLow = uint64(b & type(uint64).max);
+        uint64 bHigh = uint64(b >> 64);
+
+        // Compute partial products
+        (gtUint64 pp0, gtUint64 low) = _mul64(a.low, bLow);
+        (, gtUint64 pp1) = _mul64(a.high, bLow);
+        (, gtUint64 pp2) = _mul64(a.low, bHigh);
+
+        // Compute the high and low parts
+        result.high = add(
+            add(pp0, pp1),
+            pp2
+        );
+        result.low = low;
+        
+        return result;
+    }
+
+    function checkedMul(gtUint128 memory a, uint128 b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        uint64 bLow = uint64(b & type(uint64).max);
+        uint64 bHigh = uint64(b >> 64);
+
+        // Compute partial products
+        (gtUint64 pp0, gtUint64 low) = _mul64(a.low, bLow);
+        (gtUint64 pp2, gtUint64 pp1) = _mul64(a.high, bLow);
+        (gtUint64 pp4, gtUint64 pp3) = _mul64(a.low, bHigh);
+        (gtUint64 pp6, gtUint64 pp5) = _mul64(a.high, bHigh);
+
+        // Compute the high and low parts
+        result.high = checkedAdd(
+            checkedAdd(pp0, pp1),
+            pp3
+        );
+        result.low = low;
+
+        // Check for overflow
+        checkedSub(
+            uint64(0),
+            add(
+                add(pp2, pp4),
+                add(pp5, pp6)
+            )
+        );
+        
+        return result;
+    }
+
+    function checkedMulWithOverflowBit(gtUint128 memory a, uint128 b) internal returns (gtBool, gtUint128 memory) {
+        gtUint128 memory result;
+
+        gtUint64 low;
+        gtUint64 pp0;
+        gtUint64 pp1;
+        gtUint64 pp2;
+        gtUint64 pp3;
+        gtUint64 pp4;
+        gtUint64 pp5;
+        gtUint64 pp6;
+
+        {
+            uint64 bLow = uint64(b & type(uint64).max);
+            uint64 bHigh = uint64(b >> 64);
+
+            // Compute partial products
+            (pp0, low) = _mul64(a.low, bLow);
+            (pp2, pp1) = _mul64(a.high, bLow);
+            (pp4, pp3) = _mul64(a.low, bHigh);
+            (pp6, pp5) = _mul64(a.high, bHigh);
+        }
+
+        // Compute the high and low parts
+        gtBool overflow1;
+
+        (gtBool overflow0, gtUint64 high) = checkedAddWithOverflowBit(pp0, pp1);
+        (overflow1, result.high) = checkedAddWithOverflowBit(high, pp3);
+
+        result.low = low;
+
+        // Check for overflow
+        gtBool bit = or(
+            or(overflow0, overflow1),
+            gt(
+                add(
+                    add(pp2, pp4),
+                    add(pp5, pp6)
+                ),
+                uint64(0)
+            )
+        );
+        
+        return (bit, result);
+    }
+
+    function and(gtUint128 memory a, uint128 b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+
+        result.low = and(a.low, bLow);
+        result.high = and(a.high, bHigh);
+        
+        return result;
+    }
+
+    function or(gtUint128 memory a, uint128 b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+
+        result.low = or(a.low, bLow);
+        result.high = or(a.high, bHigh);
+        
+        return result;
+    }
+
+    function xor(gtUint128 memory a, uint128 b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+
+        result.low = xor(a.low, bLow);
+        result.high = xor(a.high, bHigh);
+        
+        return result;
+    }
+
+    function shl(gtUint128 memory a, uint8 b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        if (b >= 64) {
+            shl(a.high, b); // check for overflow in high part
+
+            result.low = setPublic64(0);
+            result.high = shl(a.low, b - 64);
+        } else if (b > 0) {
+            // Mask to clear the bits of the low part that will be shifted out
+            uint64 mask = uint64(type(uint64).max >> b);
+
+            result.low = shl(and(a.low, mask), b);
+
+            // Mask to clear the bits of the low part that remain in the low part
+            mask = uint64(type(uint64).max << 64 - b);
+
+            result.high = or(shl(a.high, b), shr(and(a.low, mask), 64 - b));
+        } else {
+            result.low = a.low;
+            result.high = a.high;
+        }
+
+        return result;
+    }
+
+    function shr(gtUint128 memory a, uint8 b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        if (b >= 64) {
+            shr(a.low, b); // check for overflow in low part
+
+            result.low = shr(a.high, b - 64);
+            result.high = setPublic64(0);
+        } else if (b > 0) {
+            // Mask to clear the bits of the low part that will be shifted out
+            uint64 mask = uint64(type(uint64).max >> 64 - b);
+
+            result.low = or(shr(a.low, b), shl(and(a.high, mask), 64 - b));
+
+            // Mask to clear the bits of the low part that remain in the low part
+            mask = uint64(type(uint64).max << b);
+
+            result.high = shr(and(a.high, mask), b);
+        } else {
+            result.low = a.low;
+            result.high = a.high;
+        }
+
+        return result;
+    }
+
+    function eq(gtUint128 memory a, uint128 b) internal returns (gtBool) {
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+
+        return and(eq(a.low, bLow), eq(a.high, bHigh));
+    }
+
+    function ne(gtUint128 memory a, uint128 b) internal returns (gtBool) {
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+
+        return or(ne(a.low, bLow), ne(a.high, bHigh));
+    }
+
+    function ge(gtUint128 memory a, uint128 b) internal returns (gtBool) {
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+
+        gtBool highEqual = eq(a.high, bHigh);
+
+        return mux(highEqual, gt(a.high, bHigh), ge(a.low, bLow));
+    }
+
+    function gt(gtUint128 memory a, uint128 b) internal returns (gtBool) {
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+
+        gtBool highEqual = eq(a.high, bHigh);
+
+        return mux(highEqual, gt(a.high, bHigh), gt(a.low, bLow));
+    }
+
+    function le(gtUint128 memory a, uint128 b) internal returns (gtBool) {
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+
+        gtBool highEqual = eq(a.high, bHigh);
+
+        return mux(highEqual, lt(a.high, bHigh), le(a.low, bLow));
+    }
+
+    function lt(gtUint128 memory a, uint128 b) internal returns (gtBool) {
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+
+        gtBool highEqual = eq(a.high, bHigh);
+
+        return mux(highEqual, lt(a.high, bHigh), lt(a.low, bLow));
+    }
+
+    function min(gtUint128 memory a, uint128 b) internal returns (gtUint128 memory) {
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+
+        gtBool highEqual = eq(a.high, bHigh);
+        gtBool aHighLessThan = lt(a.high, bHigh);
+        gtBool aLowLessThan = lt(a.low, bLow);
+
+        return mux(
+            highEqual,
+            mux(aHighLessThan, b, a),
+            mux(aLowLessThan, b, a)
+        );
+    }
+
+    function max(gtUint128 memory a, uint128 b) internal returns (gtUint128 memory) {
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+
+        gtBool highEqual = eq(a.high, bHigh);
+        gtBool aHighGreaterThan = gt(a.high, bHigh);
+        gtBool aLowGreaterThan = gt(a.low, bLow);
+
+        return mux(
+            highEqual,
+            mux(aHighGreaterThan, b, a),
+            mux(aLowGreaterThan, b, a)
+        );
+    }
+
+    function mux(gtBool bit, gtUint128 memory a, uint128 b) internal returns (gtUint128 memory) {
+        gtUint128 memory result;
+
+        (uint64 bHigh, uint64 bLow) = _splitUint128(b);
+
+        result.low = mux(bit, a.low, bLow);
+        result.high = mux(bit, a.high, bHigh);
+        
+        return result;
+    }
+
+    // =========== 256 bit operations ==============
+
+    function add(gtUint256 memory a, uint256 b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+        
+        // Add low parts
+        result.low = add(a.low, bLow);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, a.low);
+        
+        // Add high parts with carry if needed
+        result.high = add(a.high, bHigh);
+        
+        // Add carry to high part if needed
+        result.high = mux(carry, result.high, add(result.high, uint128(1)));
+        
+        return result;
+    }
+
+    function checkedAdd(gtUint256 memory a, uint256 b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+        
+        // Add low parts
+        result.low = add(a.low, bLow);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, a.low);
+        
+        // Add high parts with carry if needed
+        result.high = checkedAdd(a.high, bHigh);
+        
+        // Add carry to high part if needed
+        result.high = mux(carry, result.high, checkedAdd(result.high, uint128(1)));
+        
+        return result;
+    }
+
+    function checkedAddWithOverflowBit(gtUint256 memory a, uint256 b) internal returns (gtBool, gtUint256 memory) {
+        gtBool bit = setPublic(false);
+        gtUint256 memory result;
+
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+        
+        // Add low parts
+        result.low = add(a.low, bLow);
+        
+        // Check if there's a carry from low addition
+        gtBool carry = lt(result.low, a.low);
+        
+        // Add high parts with carry if needed
+        (gtBool overflow, gtUint128 memory high) = checkedAddWithOverflowBit(a.high, bHigh);
+        (gtBool overflowWithCarry, gtUint128 memory highWithCarry) = checkedAddWithOverflowBit(high, uint128(1));
+
+        // Handle carry if needed
+        bit = mux(carry, overflow, or(overflow, overflowWithCarry));
+        result.high = mux(carry, high, highWithCarry);
+        
+        return (bit, result);
+    }
+
+    function sub(gtUint256 memory a, uint256 b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+        
+        // Subtract low parts
+        result.low = sub(a.low, bLow);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(a.low, bLow);
+        
+        // Subtract high parts with borrow if needed
+        result.high = sub(a.high, bHigh);
+        
+        // Subtract borrow from high part if needed
+        result.high = mux(borrow, result.high, sub(result.high, uint128(1)));
+        
+        return result;
+    }
+
+    function checkedSub(gtUint256 memory a, uint256 b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+        
+        // Subtract low parts
+        result.low = sub(a.low, bLow);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(a.low, bLow);
+        
+        // Subtract high parts with borrow if needed
+        result.high = checkedSub(a.high, bHigh);
+        
+        // Subtract borrow from high part if needed
+        result.high = mux(
+            borrow,
+            result.high,
+            checkedSub(
+                mux(borrow, add(result.high, uint128(1)), result.high),
+                uint128(1)
+            )
+        );
+        return result;
+    }
+
+    function checkedSubWithOverflowBit(gtUint256 memory a, uint256 b) internal returns (gtBool, gtUint256 memory) {
+        gtBool bit = setPublic(false);
+        gtUint256 memory result;
+
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+        
+        // Subtract low parts
+        result.low = sub(a.low, bLow);
+        
+        // Check if there's a borrow from low subtraction
+        gtBool borrow = lt(a.low, bLow);
+        
+        // Subtract high parts with borrow if needed
+        (gtBool overflow, gtUint128 memory high) = checkedSubWithOverflowBit(a.high, bHigh);
+        (gtBool overflowWithCarry, gtUint128 memory highWithCarry) = checkedSubWithOverflowBit(high, uint128(1));
+
+        // Handle borrow if needed
+        bit = mux(borrow, overflow, or(overflow, overflowWithCarry));
+        result.high = mux(borrow, high, highWithCarry);
+        
+        return (bit, result);
+    }
+
+    function _mul128(gtUint128 memory a, uint128 b) private returns (gtUint128 memory, gtUint128 memory) {
+        uint128 MAX_UINT64 = uint128(type(uint64).max);
+
+        gtUint128 memory pp0;
+        gtUint128 memory pp1;
+        gtUint128 memory pp2;
+        gtUint128 memory pp3;
+
+        {
+            // Split the numbers into 64-bit parts
+            gtUint128 memory aLow = and(a, MAX_UINT64);
+            gtUint128 memory aHigh = shr(a, 64);
+            uint128 bLow = b & type(uint64).max;
+            uint128 bHigh = b >> 64;
+
+            // Compute partial products
+            pp0 = mul(aLow, bLow);
+            pp1 = mul(aLow, bHigh);
+            pp2 = mul(aHigh, bLow);
+            pp3 = mul(aHigh, bHigh);
+        }
+
+        // Compute high and low parts
+        gtUint128 memory mid = add(
+            add(
+                shr(pp0, 64),
+                and(pp1, MAX_UINT64)
+            ),
+            and(pp2, MAX_UINT64)
+        );
+        gtUint128 memory carry = shr(mid, 64);
+
+        gtUint128 memory high = add(
+            add(pp3, shr(pp1, 64)),
+            add(shr(pp2, 64), carry)
+        );
+        gtUint128 memory low = or(
+            and(pp0, MAX_UINT64),
+            shl(and(mid, MAX_UINT64), 64)
+        );
+
+        return (high, low);
+    }
+
+    function mul(gtUint256 memory a, uint256 b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+
+        // Compute partial products
+        (gtUint128 memory pp0, gtUint128 memory low) = _mul128(a.low, bLow);
+        (, gtUint128 memory pp1) = _mul128(a.high, bLow);
+        (, gtUint128 memory pp2) = _mul128(a.low, bHigh);
+
+        // Compute the high and low parts
+        result.high = add(
+            add(pp0, pp1),
+            pp2
+        );
+        result.low = low;
+        
+        return result;
+    }
+
+    function checkedMul(gtUint256 memory a, uint256 b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+
+        // Compute partial products
+        (gtUint128 memory pp0, gtUint128 memory low) = _mul128(a.low, bLow);
+        (gtUint128 memory pp2, gtUint128 memory pp1) = _mul128(a.high, bLow);
+        (gtUint128 memory pp4, gtUint128 memory pp3) = _mul128(a.low, bHigh);
+        (gtUint128 memory pp6, gtUint128 memory pp5) = _mul128(a.high, bHigh);
+
+        // Compute the high and low parts
+        result.high = checkedAdd(
+            checkedAdd(pp0, pp1),
+            pp3
+        );
+        result.low = low;
+
+        // Check for overflow
+        checkedSub(
+            uint128(0),
+            add(
+                add(pp2, pp4),
+                add(pp5, pp6)
+            )
+        );
+        
+        return result;
+    }
+
+    function checkedMulWithOverflowBit(gtUint256 memory a, uint256 b) internal returns (gtBool, gtUint256 memory) {
+        gtUint256 memory result;
+
+        gtUint128 memory low;
+        gtUint128 memory pp0;
+        gtUint128 memory pp1;
+        gtUint128 memory pp2;
+        gtUint128 memory pp3;
+        gtUint128 memory pp4;
+        gtUint128 memory pp5;
+        gtUint128 memory pp6;
+
+        {
+            (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+
+            // Compute partial products
+            (pp0, low) = _mul128(a.low, bLow);
+            (pp2, pp1) = _mul128(a.high, bLow);
+            (pp4, pp3) = _mul128(a.low, bHigh);
+            (pp6, pp5) = _mul128(a.high, bHigh);
+        }
+
+        // Compute the high and low parts
+        gtBool overflow1;
+
+        (gtBool overflow0, gtUint128 memory high) = checkedAddWithOverflowBit(pp0, pp1);
+        (overflow1, result.high) = checkedAddWithOverflowBit(high, pp3);
+
+        result.low = low;
+
+        // Check for overflow
+        gtBool bit = or(
+            or(overflow0, overflow1),
+            gt(
+                add(
+                    add(pp2, pp4),
+                    add(pp5, pp6)
+                ),
+                uint128(0)
+            )
+        );
+        
+        return (bit, result);
+    }
+
+    function and(gtUint256 memory a, uint256 b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+
+        result.low = and(a.low, bLow);
+        result.high = and(a.high, bHigh);
+        
+        return result;
+    }
+
+    function or(gtUint256 memory a, uint256 b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+
+        result.low = or(a.low, bLow);
+        result.high = or(a.high, bHigh);
+        
+        return result;
+    }
+
+    function xor(gtUint256 memory a, uint256 b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+
+        result.low = xor(a.low, bLow);
+        result.high = xor(a.high, bHigh);
+        
+        return result;
+    }
+
+    function shl(gtUint256 memory a, uint8 b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        if (b >= 128) {
+            shl(a.high, b); // check for overflow in high part
+
+            result.low = setPublic128(0);
+            result.high = shl(a.low, b - 128);
+        } else if (b > 0) {
+            // Mask to clear the bits of the low part that will be shifted out
+            uint128 mask = uint128(type(uint128).max >> b);
+
+            result.low = shl(and(a.low, mask), b);
+
+            // Mask to clear the bits of the low part that remain in the low part
+            mask = uint128(type(uint128).max << 128 - b);
+
+            result.high = or(shl(a.high, b), shr(and(a.low, mask), 128 - b));
+        } else {
+            result.low = a.low;
+            result.high = a.high;
+        }
+
+        return result;
+    }
+
+    function shr(gtUint256 memory a, uint8 b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        if (b >= 128) {
+            shr(a.low, b); // check for overflow in low part
+
+            result.low = shr(a.high, b - 128);
+            result.high = setPublic128(0);
+        } else if (b > 0) {
+            // Mask to clear the bits of the low part that will be shifted out
+            uint128 mask = uint128(type(uint128).max >> 128 - b);
+
+            result.low = or(shr(a.low, b), shl(and(a.high, mask), 128 - b));
+
+            // Mask to clear the bits of the low part that remain in the low part
+            mask = uint128(type(uint128).max << b);
+
+            result.high = shr(and(a.high, mask), b);
+        } else {
+            result.low = a.low;
+            result.high = a.high;
+        }
+
+        return result;
+    }
+
+    function eq(gtUint256 memory a, uint256 b) internal returns (gtBool) {
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+
+        return and(eq(a.low, bLow), eq(a.high, bHigh));
+    }
+
+    function ne(gtUint256 memory a, uint256 b) internal returns (gtBool) {
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+
+        return or(ne(a.low, bLow), ne(a.high, bHigh));
+    }
+
+    function ge(gtUint256 memory a, uint256 b) internal returns (gtBool) {
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+
+        gtBool highEqual = eq(a.high, bHigh);
+
+        return mux(highEqual, gt(a.high, bHigh), ge(a.low, bLow));
+    }
+
+    function gt(gtUint256 memory a, uint256 b) internal returns (gtBool) {
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+
+        gtBool highEqual = eq(a.high, bHigh);
+
+        return mux(highEqual, gt(a.high, bHigh), gt(a.low, bLow));
+    }
+
+    function le(gtUint256 memory a, uint256 b) internal returns (gtBool) {
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+
+        gtBool highEqual = eq(a.high, bHigh);
+
+        return mux(highEqual, lt(a.high, bHigh), le(a.low, bLow));
+    }
+
+    function lt(gtUint256 memory a, uint256 b) internal returns (gtBool) {
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+
+        gtBool highEqual = eq(a.high, bHigh);
+
+        return mux(highEqual, lt(a.high, bHigh), lt(a.low, bLow));
+    }
+
+    function min(gtUint256 memory a, uint256 b) internal returns (gtUint256 memory) {
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+
+        gtBool highEqual = eq(a.high, bHigh);
+        gtBool aHighLessThan = lt(a.high, bHigh);
+        gtBool aLowLessThan = lt(a.low, bLow);
+
+        return mux(
+            highEqual,
+            mux(aHighLessThan, b, a),
+            mux(aLowLessThan, b, a)
+        );
+    }
+
+    function max(gtUint256 memory a, uint256 b) internal returns (gtUint256 memory) {
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+
+        gtBool highEqual = eq(a.high, bHigh);
+        gtBool aHighGreaterThan = gt(a.high, bHigh);
+        gtBool aLowGreaterThan = gt(a.low, bLow);
+
+        return mux(
+            highEqual,
+            mux(aHighGreaterThan, b, a),
+            mux(aLowGreaterThan, b, a)
+        );
+    }
+
+    function mux(gtBool bit, gtUint256 memory a, uint256 b) internal returns (gtUint256 memory) {
+        gtUint256 memory result;
+
+        (uint128 bHigh, uint128 bLow) = _splitUint256(b);
+
+        result.low = mux(bit, a.low, bLow);
+        result.high = mux(bit, a.high, bHigh);
+        
+        return result;
     }
 
     // In the context of a transfer, scalar balances are irrelevant;
