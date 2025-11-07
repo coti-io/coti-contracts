@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: MIT
-
-pragma solidity ^0.8.19;
+pragma solidity 0.8.19;
 
 interface ExtendedOperations {
 
     function OnBoard(bytes1 metaData, uint256 ct) external returns (uint256 result);
+    function OnBoard(bytes1 metaData, uint256 ctHigh, uint256 ctLow) external returns (uint256 result);
     function OffBoard(bytes1 metaData, uint256 ct) external returns (uint256 result);
+    function OffBoard256(bytes1 metaData, uint256 gt) external returns (uint256 ctHigh, uint256 ctLow);
     function OffBoardToUser(bytes1 metaData, uint256 ct, bytes calldata addr) external returns (uint256 result);
+    function OffBoardToUser256(bytes1 metaData, uint256 ct, bytes calldata addr) external returns (uint256 ctHigh, uint256 ctLow);
     function SetPublic(bytes1 metaData, uint256 ct) external returns (uint256 result);
     function Rand(bytes1 metaData) external returns (uint256 result);
     function RandBoundedBits(bytes1 metaData, uint8 numBits) external returns (uint256 result);
+
     function Add(bytes3 metaData, uint256 lhs, uint256 rhs) external returns (uint256 result);
     function CheckedAdd(bytes3 metaData, uint256 lhs, uint256 rhs) external returns (uint256 overflowBit, uint256 result);
     function Sub(bytes3 metaData, uint256 lhs, uint256 rhs) external returns (uint256 result);
@@ -37,8 +40,10 @@ interface ExtendedOperations {
     function Transfer(bytes4 metaData, uint256 a, uint256 b, uint256 amount) external returns (uint256 new_a, uint256 new_b, uint256 res);
     function TransferWithAllowance(bytes5 metaData, uint256 a, uint256 b, uint256 amount, uint256 allowance) external returns (uint256 new_a, uint256 new_b, uint256 res, uint256 new_allowance);
     function ValidateCiphertext(bytes1 metaData, uint256 ciphertext, bytes calldata signature) external returns (uint256 result);
+    function ValidateCiphertext(bytes1 metaData, uint256 ciphertextHigh, uint256 ciphertextLow, bytes calldata signature) external returns (uint256 result);
     function GetUserKey(bytes calldata signedEK) external returns (bytes memory encryptedKey);
     function SHA256Fixed432BitInput(uint256 amount, uint256 seed1, uint256 seed2, uint256 padding1, uint256 padding2, bytes calldata addr) external returns (bytes memory result);
 }
 
 address constant MPC_PRECOMPILE = address(0x0000000000000000000000000000000000000064);
+
