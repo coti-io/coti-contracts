@@ -10,18 +10,6 @@ type gtUint32 is uint256;
 type gtUint64 is uint256;
 
 // we use a struct because user-defined value types can only be elementary value types
-struct gtUint128 {
-    gtUint64 high;
-    gtUint64 low;
-}
-
-// we use a struct because user-defined value types can only be elementary value types
-struct gtUint256 {
-    gtUint128 high;
-    gtUint128 low;
-}
-
-// we use a struct because user-defined value types can only be elementary value types
 // 8 characters (in byte form) per cell and the final cell padded with zeroes if needed
 struct gtString {
     gtUint64[] value;
@@ -35,18 +23,6 @@ type ctUint8 is uint256;
 type ctUint16 is uint256;
 type ctUint32 is uint256;
 type ctUint64 is uint256;
-
-// we use a struct because user-defined value types can only be elementary value types
-struct ctUint128 {
-    ctUint64 high;
-    ctUint64 low;
-}
-
-// we use a struct because user-defined value types can only be elementary value types
-struct ctUint256 {
-    ctUint128 high;
-    ctUint128 low;
-}
 
 // we use a struct because user-defined value types can only be elementary value types
 // 8 characters (in byte form) per cell and the final cell padded with zeroes if needed
@@ -80,14 +56,6 @@ struct itUint64 {
     ctUint64 ciphertext;
     bytes signature;
 }
-struct itUint128 {
-    ctUint128 ciphertext;
-    bytes[2] signature;
-}
-struct itUint256 {
-    ctUint256 ciphertext;
-    bytes[2][2] signature;
-}
 struct itString {
     ctString ciphertext;
     bytes[] signature;
@@ -120,14 +88,6 @@ struct utUint32 {
 struct utUint64 {
     ctUint64 ciphertext;
     ctUint64 userCiphertext;
-}
-struct utUint128 {
-    ctUint128 ciphertext;
-    ctUint128 userCiphertext;
-}
-struct utUint256 {
-    ctUint256 ciphertext;
-    ctUint256 userCiphertext;
 }
 struct utUint128 {
     ctUint128 ciphertext;
