@@ -3,12 +3,20 @@
 /* eslint-disable */
 import type * as checkedArithmeticWIthOverflowBitTestsContractSol from "./CheckedArithmeticWIthOverflowBitTestsContract.sol";
 export type { checkedArithmeticWIthOverflowBitTestsContractSol };
+export type { Arithmetic128BitTestsContract } from "./Arithmetic128BitTestsContract";
+export type { Arithmetic256BitTestsContract } from "./Arithmetic256BitTestsContract";
 export type { ArithmeticTestsContract } from "./ArithmeticTestsContract";
+export type { Bitwise128BitTestsContract } from "./Bitwise128BitTestsContract";
+export type { Bitwise256BitTestsContract } from "./Bitwise256BitTestsContract";
 export type { BitwiseTestsContract } from "./BitwiseTestsContract";
+export type { Comparison128BitTestsContract } from "./Comparison128BitTestsContract";
 export type { Comparison1TestsContract } from "./Comparison1TestsContract";
+export type { Comparison256BitTestsContract } from "./Comparison256BitTestsContract";
 export type { Comparison2TestsContract } from "./Comparison2TestsContract";
 export type { MinMaxTestsContract } from "./MinMaxTestsContract";
+export type { Miscellaneous128BitTestsContract } from "./Miscellaneous128BitTestsContract";
 export type { Miscellaneous1TestsContract } from "./Miscellaneous1TestsContract";
+export type { Miscellaneous256BitTestsContract } from "./Miscellaneous256BitTestsContract";
 export type { MiscellaneousTestsContract } from "./MiscellaneousTestsContract";
 export type { OffboardToUserKeyTestContract } from "./OffboardToUserKeyTestContract";
 export type { ShiftTestsContract } from "./ShiftTestsContract";

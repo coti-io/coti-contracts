@@ -295,7 +295,7 @@ describe("Private ERC20", function () {
 
         describe('failed transferFrom', async function () {
             it('rejects transferring to the zero address', async function () {
-                const itValue = await otherAccount.encryptValue(value, contractAddress, contract["transferFrom(address,address,(uint256,bytes))"].fragment.selector)as itUint
+                const itValue = await otherAccount.encryptValue(value, contractAddress, contract["transferFrom(address,address,(uint256,bytes))"].fragment.selector) as itUint
     
                 await expect(
                     contract
@@ -309,7 +309,7 @@ describe("Private ERC20", function () {
 
             describe("transferring more than the owners balance", async function () {
                 before("transferring", async function () {
-                    const itValue = await otherAccount.encryptValue(2n * value, contractAddress, contract["transferFrom(address,address,(uint256,bytes))"].fragment.selector)as itUint
+                    const itValue = await otherAccount.encryptValue(2n * value, contractAddress, contract["transferFrom(address,address,(uint256,bytes))"].fragment.selector) as itUint
 
                     const tx = await contract
                         .connect(otherAccount)
@@ -339,7 +339,7 @@ describe("Private ERC20", function () {
 
         describe('successful transferFrom', async function () {
             before('transferring', async function () {
-                const itValue = await otherAccount.encryptValue(value, contractAddress, contract["transferFrom(address,address,(uint256,bytes))"].fragment.selector)as itUint
+                const itValue = await otherAccount.encryptValue(value, contractAddress, contract["transferFrom(address,address,(uint256,bytes))"].fragment.selector) as itUint
 
                 const tx = await contract
                     .connect(otherAccount)
