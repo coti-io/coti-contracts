@@ -91,8 +91,8 @@ describe("buildInputText 128-bit Full Cycle Test - coti-private", function () {
             console.log(`\n🔓 Step 3: Decrypting result...`)
             console.log(`   CT value: ${ctResult.toString()}`)
             
-            // Step 4: Decrypt using Wallet.decryptValue128
-            const decrypted = await owner.decryptValue128(ctResult)
+            // Step 4: Decrypt using Wallet.decryptValue
+            const decrypted = await owner.decryptValue(ctResult)
             
             console.log(`   ✅ Decrypted: ${decrypted.toString()}`)
             console.log(`   ✅ Original:  ${plaintext.toString()}`)
@@ -157,7 +157,7 @@ describe("buildInputText 128-bit Full Cycle Test - coti-private", function () {
             
             console.log(`\n🔓 Step 3: Decrypting...`)
             console.log(`   CT value: ${ctResult.toString()}`)
-            const decrypted = await owner.decryptValue128(ctResult)
+            const decrypted = await owner.decryptValue(ctResult)
             
             console.log(`   ✅ Decrypted: ${decrypted.toString()}`)
             console.log(`   ✅ Original:  ${plaintext.toString()}`)
@@ -198,7 +198,7 @@ describe("buildInputText 128-bit Full Cycle Test - coti-private", function () {
             
             console.log(`\n🔓 Decrypting...`)
             console.log(`   CT value: ${ctResult.toString()}`)
-            const decrypted = await owner.decryptValue128(ctResult)
+            const decrypted = await owner.decryptValue(ctResult)
             
             console.log(`   ✅ Decrypted: ${decrypted.toString()}`)
             console.log(`   ✅ Original:  ${plaintext.toString()}`)
@@ -260,7 +260,7 @@ describe("buildInputText 128-bit Full Cycle Test - coti-private", function () {
             
             console.log(`\n🔓 Decrypting...`)
             console.log(`   CT value: ${ctResult.toString()}`)
-            const decrypted = await owner.decryptValue128(ctResult)
+            const decrypted = await owner.decryptValue(ctResult)
             
             console.log(`   ✅ Decrypted: ${decrypted.toString()}`)
             console.log(`   ✅ Original:  ${plaintext.toString()}`)
@@ -311,7 +311,7 @@ describe("buildInputText 128-bit Full Cycle Test - coti-private", function () {
             
             console.log(`\n🔓 Decrypting result...`)
             console.log(`   CT value: ${ctResult.toString()}`)
-            const decrypted = await owner.decryptValue128(ctResult)
+            const decrypted = await owner.decryptValue(ctResult)
             
             console.log(`   ✅ Decrypted: ${decrypted.toString()}`)
             console.log(`   ✅ Expected:  ${expected.toString()}`)
@@ -372,7 +372,7 @@ describe("buildInputText 128-bit Full Cycle Test - coti-private", function () {
             
             console.log(`\n🔓 Decrypting result...`)
             console.log(`   CT value: ${ctResult.toString()}`)
-            const decrypted = await owner.decryptValue128(ctResult)
+            const decrypted = await owner.decryptValue(ctResult)
             
             console.log(`   ✅ Decrypted: ${decrypted.toString()}`)
             console.log(`   ✅ Expected:  ${expected.toString()}`)

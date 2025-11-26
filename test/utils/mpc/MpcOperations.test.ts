@@ -54,8 +54,8 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
             const expected = a + b
             console.log(`\n➕ Testing: ${a} + ${b} = ${expected}`)
             
-            const itA = await owner.encryptValue(a, contractAddress, contract.add256.fragment.selector) as itUint256
-            const itB = await owner.encryptValue(b, contractAddress, contract.add256.fragment.selector) as itUint256
+            const itA = await owner.encryptValue256(a, contractAddress, contract.add256.fragment.selector)
+            const itB = await owner.encryptValue256(b, contractAddress, contract.add256.fragment.selector)
             
             console.log("📝 Performing addition on contract...")
             const tx = await contract.add256(itA, itB, owner.address, { gasLimit: GAS_LIMIT })
@@ -76,7 +76,7 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
                 const ctResult: ctUint256 = parsedLog?.args.result
                 
                 console.log("📝 User decrypting result...")
-                const decrypted = await owner.decryptValue({
+                const decrypted = await owner.decryptValue256({
                     ciphertextHigh: ctResult.ciphertextHigh,
                     ciphertextLow: ctResult.ciphertextLow
                 })
@@ -94,8 +94,8 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
             const expected = a - b
             console.log(`\n➖ Testing: ${a} - ${b} = ${expected}`)
             
-            const itA = await owner.encryptValue(a, contractAddress, contract.sub256.fragment.selector) as itUint256
-            const itB = await owner.encryptValue(b, contractAddress, contract.sub256.fragment.selector) as itUint256
+            const itA = await owner.encryptValue256(a, contractAddress, contract.sub256.fragment.selector)
+            const itB = await owner.encryptValue256(b, contractAddress, contract.sub256.fragment.selector)
             
             const tx = await contract.sub256(itA, itB, owner.address, { gasLimit: GAS_LIMIT })
             const receipt = await tx.wait()
@@ -113,7 +113,7 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
                 const parsedLog = contract.interface.parseLog(resultEvent)
                 const ctResult: ctUint256 = parsedLog?.args.result
                 
-                const decrypted = await owner.decryptValue({
+                const decrypted = await owner.decryptValue256({
                     ciphertextHigh: ctResult.ciphertextHigh,
                     ciphertextLow: ctResult.ciphertextLow
                 })
@@ -131,8 +131,8 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
             const expected = a / b
             console.log(`\n➗ Testing: ${a} / ${b} = ${expected}`)
             
-            const itA = await owner.encryptValue(a, contractAddress, contract.div256.fragment.selector) as itUint256
-            const itB = await owner.encryptValue(b, contractAddress, contract.div256.fragment.selector) as itUint256
+            const itA = await owner.encryptValue256(a, contractAddress, contract.div256.fragment.selector)
+            const itB = await owner.encryptValue256(b, contractAddress, contract.div256.fragment.selector)
             
             const tx = await contract.div256(itA, itB, owner.address, { gasLimit: GAS_LIMIT })
             const receipt = await tx.wait()
@@ -150,7 +150,7 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
                 const parsedLog = contract.interface.parseLog(resultEvent)
                 const ctResult: ctUint256 = parsedLog?.args.result
                 
-                const decrypted = await owner.decryptValue({
+                const decrypted = await owner.decryptValue256({
                     ciphertextHigh: ctResult.ciphertextHigh,
                     ciphertextLow: ctResult.ciphertextLow
                 })
@@ -168,8 +168,8 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
             const expected = a % b
             console.log(`\n🔢 Testing: ${a} % ${b} = ${expected}`)
             
-            const itA = await owner.encryptValue(a, contractAddress, contract.rem256.fragment.selector) as itUint256
-            const itB = await owner.encryptValue(b, contractAddress, contract.rem256.fragment.selector) as itUint256
+            const itA = await owner.encryptValue256(a, contractAddress, contract.rem256.fragment.selector)
+            const itB = await owner.encryptValue256(b, contractAddress, contract.rem256.fragment.selector)
             
             const tx = await contract.rem256(itA, itB, owner.address, { gasLimit: GAS_LIMIT })
             const receipt = await tx.wait()
@@ -187,7 +187,7 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
                 const parsedLog = contract.interface.parseLog(resultEvent)
                 const ctResult: ctUint256 = parsedLog?.args.result
                 
-                const decrypted = await owner.decryptValue({
+                const decrypted = await owner.decryptValue256({
                     ciphertextHigh: ctResult.ciphertextHigh,
                     ciphertextLow: ctResult.ciphertextLow
                 })
@@ -207,8 +207,8 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
             const expected = a & b
             console.log(`\n& Testing: ${a} & ${b} = ${expected}`)
             
-            const itA = await owner.encryptValue(a, contractAddress, contract.and256.fragment.selector) as itUint256
-            const itB = await owner.encryptValue(b, contractAddress, contract.and256.fragment.selector) as itUint256
+            const itA = await owner.encryptValue256(a, contractAddress, contract.and256.fragment.selector)
+            const itB = await owner.encryptValue256(b, contractAddress, contract.and256.fragment.selector)
             
             const tx = await contract.and256(itA, itB, owner.address, { gasLimit: GAS_LIMIT })
             const receipt = await tx.wait()
@@ -226,7 +226,7 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
                 const parsedLog = contract.interface.parseLog(resultEvent)
                 const ctResult: ctUint256 = parsedLog?.args.result
                 
-                const decrypted = await owner.decryptValue({
+                const decrypted = await owner.decryptValue256({
                     ciphertextHigh: ctResult.ciphertextHigh,
                     ciphertextLow: ctResult.ciphertextLow
                 })
@@ -244,8 +244,8 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
             const expected = a | b
             console.log(`\n| Testing: ${a} | ${b} = ${expected}`)
             
-            const itA = await owner.encryptValue(a, contractAddress, contract.or256.fragment.selector) as itUint256
-            const itB = await owner.encryptValue(b, contractAddress, contract.or256.fragment.selector) as itUint256
+            const itA = await owner.encryptValue256(a, contractAddress, contract.or256.fragment.selector)
+            const itB = await owner.encryptValue256(b, contractAddress, contract.or256.fragment.selector)
             
             const tx = await contract.or256(itA, itB, owner.address, { gasLimit: GAS_LIMIT })
             const receipt = await tx.wait()
@@ -263,7 +263,7 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
                 const parsedLog = contract.interface.parseLog(resultEvent)
                 const ctResult: ctUint256 = parsedLog?.args.result
                 
-                const decrypted = await owner.decryptValue({
+                const decrypted = await owner.decryptValue256({
                     ciphertextHigh: ctResult.ciphertextHigh,
                     ciphertextLow: ctResult.ciphertextLow
                 })
@@ -281,8 +281,8 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
             const expected = a ^ b
             console.log(`\n^ Testing: ${a} ^ ${b} = ${expected}`)
             
-            const itA = await owner.encryptValue(a, contractAddress, contract.xor256.fragment.selector) as itUint256
-            const itB = await owner.encryptValue(b, contractAddress, contract.xor256.fragment.selector) as itUint256
+            const itA = await owner.encryptValue256(a, contractAddress, contract.xor256.fragment.selector)
+            const itB = await owner.encryptValue256(b, contractAddress, contract.xor256.fragment.selector)
             
             const tx = await contract.xor256(itA, itB, owner.address, { gasLimit: GAS_LIMIT })
             const receipt = await tx.wait()
@@ -300,7 +300,7 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
                 const parsedLog = contract.interface.parseLog(resultEvent)
                 const ctResult: ctUint256 = parsedLog?.args.result
                 
-                const decrypted = await owner.decryptValue({
+                const decrypted = await owner.decryptValue256({
                     ciphertextHigh: ctResult.ciphertextHigh,
                     ciphertextLow: ctResult.ciphertextLow
                 })
@@ -318,7 +318,7 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
             const expected = a << BigInt(bits)
             console.log(`\n<< Testing: ${a} << ${bits} = ${expected}`)
             
-            const itA = await owner.encryptValue(a, contractAddress, contract.shl256.fragment.selector) as itUint256
+            const itA = await owner.encryptValue256(a, contractAddress, contract.shl256.fragment.selector)
             
             const tx = await contract.shl256(itA, bits, owner.address, { gasLimit: GAS_LIMIT })
             const receipt = await tx.wait()
@@ -336,7 +336,7 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
                 const parsedLog = contract.interface.parseLog(resultEvent)
                 const ctResult: ctUint256 = parsedLog?.args.result
                 
-                const decrypted = await owner.decryptValue({
+                const decrypted = await owner.decryptValue256({
                     ciphertextHigh: ctResult.ciphertextHigh,
                     ciphertextLow: ctResult.ciphertextLow
                 })
@@ -354,7 +354,7 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
             const expected = a >> BigInt(bits)
             console.log(`\n>> Testing: ${a} >> ${bits} = ${expected}`)
             
-            const itA = await owner.encryptValue(a, contractAddress, contract.shr256.fragment.selector) as itUint256
+            const itA = await owner.encryptValue256(a, contractAddress, contract.shr256.fragment.selector)
             
             const tx = await contract.shr256(itA, bits, owner.address, { gasLimit: GAS_LIMIT })
             const receipt = await tx.wait()
@@ -372,7 +372,7 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
                 const parsedLog = contract.interface.parseLog(resultEvent)
                 const ctResult: ctUint256 = parsedLog?.args.result
                 
-                const decrypted = await owner.decryptValue({
+                const decrypted = await owner.decryptValue256({
                     ciphertextHigh: ctResult.ciphertextHigh,
                     ciphertextLow: ctResult.ciphertextLow
                 })
@@ -397,8 +397,8 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
             console.log(`\n➕ Testing BIG: ${a} + ${b}`)
             console.log(`   Expected: ${expected}`)
             
-            const itA = await owner.encryptValue(a, contractAddress, contract.add256.fragment.selector) as itUint256
-            const itB = await owner.encryptValue(b, contractAddress, contract.add256.fragment.selector) as itUint256
+            const itA = await owner.encryptValue256(a, contractAddress, contract.add256.fragment.selector)
+            const itB = await owner.encryptValue256(b, contractAddress, contract.add256.fragment.selector)
             
             console.log("📝 Performing addition on contract with 256-bit numbers...")
             const tx = await contract.add256(itA, itB, owner.address, { gasLimit: GAS_LIMIT })
@@ -418,7 +418,7 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
                 const ctResult: ctUint256 = parsedLog?.args.result
                 
                 console.log("📝 User decrypting 256-bit result...")
-                const decrypted = await owner.decryptValue({
+                const decrypted = await owner.decryptValue256({
                     ciphertextHigh: ctResult.ciphertextHigh,
                     ciphertextLow: ctResult.ciphertextLow
                 })
@@ -437,8 +437,8 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
             console.log(`\n➖ Testing BIG subtraction`)
             console.log(`   Result should be ~199-bit number`)
             
-            const itA = await owner.encryptValue(a, contractAddress, contract.sub256.fragment.selector) as itUint256
-            const itB = await owner.encryptValue(b, contractAddress, contract.sub256.fragment.selector) as itUint256
+            const itA = await owner.encryptValue256(a, contractAddress, contract.sub256.fragment.selector)
+            const itB = await owner.encryptValue256(b, contractAddress, contract.sub256.fragment.selector)
             
             const tx = await contract.sub256(itA, itB, owner.address, { gasLimit: GAS_LIMIT })
             const receipt = await tx.wait()
@@ -456,7 +456,7 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
                 const parsedLog = contract.interface.parseLog(resultEvent)
                 const ctResult: ctUint256 = parsedLog?.args.result
                 
-                const decrypted = await owner.decryptValue({
+                const decrypted = await owner.decryptValue256({
                     ciphertextHigh: ctResult.ciphertextHigh,
                     ciphertextLow: ctResult.ciphertextLow
                 })
@@ -478,8 +478,8 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
             console.log(`\n& Testing with near-max uint256`)
             console.log(`   Using number: ${largeNum}`)
             
-            const itA = await owner.encryptValue(largeNum, contractAddress, contract.and256.fragment.selector) as itUint256
-            const itB = await owner.encryptValue(mask, contractAddress, contract.and256.fragment.selector) as itUint256
+            const itA = await owner.encryptValue256(largeNum, contractAddress, contract.and256.fragment.selector)
+            const itB = await owner.encryptValue256(mask, contractAddress, contract.and256.fragment.selector)
             
             const tx = await contract.and256(itA, itB, owner.address, { gasLimit: GAS_LIMIT })
             const receipt = await tx.wait()
@@ -497,7 +497,7 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
                 const parsedLog = contract.interface.parseLog(resultEvent)
                 const ctResult: ctUint256 = parsedLog?.args.result
                 
-                const decrypted = await owner.decryptValue({
+                const decrypted = await owner.decryptValue256({
                     ciphertextHigh: ctResult.ciphertextHigh,
                     ciphertextLow: ctResult.ciphertextLow
                 })
@@ -517,8 +517,8 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
             const expected = a < b ? a : b
             console.log(`\nmin Testing: min(${a}, ${b}) = ${expected}`)
             
-            const itA = await owner.encryptValue(a, contractAddress, contract.min256.fragment.selector) as itUint256
-            const itB = await owner.encryptValue(b, contractAddress, contract.min256.fragment.selector) as itUint256
+            const itA = await owner.encryptValue256(a, contractAddress, contract.min256.fragment.selector)
+            const itB = await owner.encryptValue256(b, contractAddress, contract.min256.fragment.selector)
             
             const tx = await contract.min256(itA, itB, owner.address, { gasLimit: GAS_LIMIT })
             const receipt = await tx.wait()
@@ -536,7 +536,7 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
                 const parsedLog = contract.interface.parseLog(resultEvent)
                 const ctResult: ctUint256 = parsedLog?.args.result
                 
-                const decrypted = await owner.decryptValue({
+                const decrypted = await owner.decryptValue256({
                     ciphertextHigh: ctResult.ciphertextHigh,
                     ciphertextLow: ctResult.ciphertextLow
                 })
@@ -554,8 +554,8 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
             const expected = a > b ? a : b
             console.log(`\nmax Testing: max(${a}, ${b}) = ${expected}`)
             
-            const itA = await owner.encryptValue(a, contractAddress, contract.max256.fragment.selector) as itUint256
-            const itB = await owner.encryptValue(b, contractAddress, contract.max256.fragment.selector) as itUint256
+            const itA = await owner.encryptValue256(a, contractAddress, contract.max256.fragment.selector)
+            const itB = await owner.encryptValue256(b, contractAddress, contract.max256.fragment.selector)
             
             const tx = await contract.max256(itA, itB, owner.address, { gasLimit: GAS_LIMIT })
             const receipt = await tx.wait()
@@ -573,7 +573,7 @@ describe("MPC Operations with offBoardToUser - User Can Decrypt Results", functi
                 const parsedLog = contract.interface.parseLog(resultEvent)
                 const ctResult: ctUint256 = parsedLog?.args.result
                 
-                const decrypted = await owner.decryptValue({
+                const decrypted = await owner.decryptValue256({
                     ciphertextHigh: ctResult.ciphertextHigh,
                     ciphertextLow: ctResult.ciphertextLow
                 })

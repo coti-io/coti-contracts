@@ -91,8 +91,8 @@ describe("Proxy Validation - 200-bit Numbers Test", function () {
         
         // Encrypt values offchain
         console.log("Encrypting values offchain using coti-ethers...");
-        const encA = await owner.encryptValue(valueA, proxyAddress, selector);
-        const encB = await owner.encryptValue(valueB, proxyAddress, selector);
+        const encA = await owner.encryptValue256(valueA, proxyAddress, selector);
+        const encB = await owner.encryptValue256(valueB, proxyAddress, selector);
         console.log("✅ Encryption complete");
         console.log(`   encA.ciphertext.high: ${encA.ciphertext.ciphertextHigh.toString()}`);
         console.log(`   encA.ciphertext.low:  ${encA.ciphertext.ciphertextLow.toString()}`);
@@ -153,7 +153,7 @@ describe("Proxy Validation - 200-bit Numbers Test", function () {
         // Decrypt the result offchain
         console.log("Decrypting result offchain using coti-ethers...");
         // Explicitly format the struct to ensure correct format
-        const decrypted = await owner.decryptValue({
+        const decrypted = await owner.decryptValue256({
             ciphertextHigh: storedCt.ciphertextHigh,
             ciphertextLow: storedCt.ciphertextLow
         });
