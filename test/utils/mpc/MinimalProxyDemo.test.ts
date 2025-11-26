@@ -80,8 +80,8 @@ describe("Minimal Proxy Demo - IT-Type Validation Issue", function () {
         const valueB = (2n ** 128n) + 2000n;
         const expected = valueA + valueB;
         
-        const encA = await owner.encryptValue(valueA, proxyAddress, selector);
-        const encB = await owner.encryptValue(valueB, proxyAddress, selector);
+        const encA = await owner.encryptValue256(valueA, proxyAddress, selector);
+        const encB = await owner.encryptValue256(valueB, proxyAddress, selector);
         
         console.log(`  IT-type a: ciphertextHigh=${encA.ciphertext.ciphertextHigh.toString().slice(0, 20)}...`);
         console.log(`             ciphertextLow=${encA.ciphertext.ciphertextLow.toString().slice(0, 20)}...`);
@@ -120,7 +120,7 @@ describe("Minimal Proxy Demo - IT-Type Validation Issue", function () {
             const storedCt = await proxyAsImpl.getStoredResult();
             if (storedCt && storedCt.ciphertextHigh && storedCt.ciphertextLow) {
                 console.log(`  ✅ Encrypted result stored on contract`);
-                const decrypted = await owner.decryptValue({
+                const decrypted = await owner.decryptValue256({
                     ciphertextHigh: storedCt.ciphertextHigh,
                     ciphertextLow: storedCt.ciphertextLow
                 });
@@ -161,8 +161,8 @@ describe("Minimal Proxy Demo - IT-Type Validation Issue", function () {
         const valueB = (2n ** 128n) + 3000n;
         const expected = valueA + valueB;
         
-        const encA = await owner.encryptValue(valueA, proxyAddress, selector);
-        const encB = await owner.encryptValue(valueB, proxyAddress, selector);
+        const encA = await owner.encryptValue256(valueA, proxyAddress, selector);
+        const encB = await owner.encryptValue256(valueB, proxyAddress, selector);
         
         console.log(`  IT-type a: ciphertextHigh=${encA.ciphertext.ciphertextHigh.toString().slice(0, 20)}...`);
         console.log(`             ciphertextLow=${encA.ciphertext.ciphertextLow.toString().slice(0, 20)}...`);
@@ -196,7 +196,7 @@ describe("Minimal Proxy Demo - IT-Type Validation Issue", function () {
             // Get the stored encrypted value and decrypt
             const storedCt = await proxyAsImpl.getStoredResult();
             if (storedCt && storedCt.ciphertextHigh && storedCt.ciphertextLow) {
-                const decrypted = await owner.decryptValue({
+                const decrypted = await owner.decryptValue256({
                     ciphertextHigh: storedCt.ciphertextHigh,
                     ciphertextLow: storedCt.ciphertextLow
                 });
@@ -232,8 +232,8 @@ describe("Minimal Proxy Demo - IT-Type Validation Issue", function () {
         const valueB = (2n ** 128n) + 3000n;
         
         // Sign for implementation address (WRONG!)
-        const encA = await owner.encryptValue(valueA, implAddress, selector);
-        const encB = await owner.encryptValue(valueB, implAddress, selector);
+        const encA = await owner.encryptValue256(valueA, implAddress, selector);
+        const encB = await owner.encryptValue256(valueB, implAddress, selector);
         
         console.log(`  📍 Sending to: ${proxyAddress}`);
         console.log(`  ⚠️  But IT-types signed for: ${implAddress} (WRONG!)`);

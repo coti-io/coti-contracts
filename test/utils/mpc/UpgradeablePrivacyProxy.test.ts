@@ -161,7 +161,7 @@ describe("Upgradeable Privacy Proxy with Encrypted Data", function () {
             const proxyAddress = await proxy.getAddress();
             const selector = proxyAsV1.interface.getFunction("storeValue256")!.selector;
             
-            const encrypted = await owner.encryptValue(value, proxyAddress, selector);
+            const encrypted = await owner.encryptValue256(value, proxyAddress, selector);
             
             const tx = await proxyAsV1.connect(owner).storeValue256(encrypted, { gasLimit: GAS_LIMIT });
             const receipt = await tx.wait();
