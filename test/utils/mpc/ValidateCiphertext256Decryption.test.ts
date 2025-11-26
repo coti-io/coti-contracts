@@ -54,17 +54,17 @@ describe("ValidateCiphertext256 - Complete Encryption/Validation/Decryption Cycl
             
             // Step 1: User encrypts value
             console.log("📝 Step 1: User encrypts value...")
-            const itUint256Value = await owner.encryptValue(
+            const itUint256Value = await owner.encryptValue256(
                 testValue,
                 contractAddress,
                 contract.validateAndStore.fragment.selector
-            ) as itUint256
+            )
             
             console.log(`   ✓ Encrypted itUint256 created`)
 
             // Step 2: User decrypts their own encrypted value to verify
             console.log("📝 Step 2: User decrypts own itUint256 to verify...")
-            const userDecrypted = await owner.decryptValue({
+            const userDecrypted = await owner.decryptValue256({
                 ciphertextHigh: itUint256Value.ciphertext.ciphertextHigh,
                 ciphertextLow: itUint256Value.ciphertext.ciphertextLow
             })
@@ -94,13 +94,13 @@ describe("ValidateCiphertext256 - Complete Encryption/Validation/Decryption Cycl
             const testValue = (2n ** 128n) + BigInt("1000000000000000000") // > 128 bits
             console.log(`\n🔄 Testing 1 ether: ${testValue}`)
             
-            const itUint256Value = await owner.encryptValue(
+            const itUint256Value = await owner.encryptValue256(
                 testValue,
                 contractAddress,
                 contract.validateAndStore.fragment.selector
-            ) as itUint256
+            )
 
-            const userDecrypted = await owner.decryptValue({
+            const userDecrypted = await owner.decryptValue256({
                 ciphertextHigh: itUint256Value.ciphertext.ciphertextHigh,
                 ciphertextLow: itUint256Value.ciphertext.ciphertextLow
             })
@@ -122,13 +122,13 @@ describe("ValidateCiphertext256 - Complete Encryption/Validation/Decryption Cycl
             const testValue = (2n ** 128n) + (BigInt(2) ** BigInt(64) - BigInt(1)) // > 128 bits
             console.log(`\n🔄 Testing max uint64: ${testValue}`)
             
-            const itUint256Value = await owner.encryptValue(
+            const itUint256Value = await owner.encryptValue256(
                 testValue,
                 contractAddress,
                 contract.validateAndStore.fragment.selector
-            ) as itUint256
+            )
 
-            const userDecrypted = await owner.decryptValue({
+            const userDecrypted = await owner.decryptValue256({
                 ciphertextHigh: itUint256Value.ciphertext.ciphertextHigh,
                 ciphertextLow: itUint256Value.ciphertext.ciphertextLow
             })
@@ -150,13 +150,13 @@ describe("ValidateCiphertext256 - Complete Encryption/Validation/Decryption Cycl
             const testValue = (2n ** 128n) + BigInt(1) // > 128 bits (129 bits)
             console.log(`\n🔄 Testing max uint128: ${testValue}`)
             
-            const itUint256Value = await owner.encryptValue(
+            const itUint256Value = await owner.encryptValue256(
                 testValue,
                 contractAddress,
                 contract.validateAndStore.fragment.selector
-            ) as itUint256
+            )
 
-            const userDecrypted = await owner.decryptValue({
+            const userDecrypted = await owner.decryptValue256({
                 ciphertextHigh: itUint256Value.ciphertext.ciphertextHigh,
                 ciphertextLow: itUint256Value.ciphertext.ciphertextLow
             })
@@ -180,13 +180,13 @@ describe("ValidateCiphertext256 - Complete Encryption/Validation/Decryption Cycl
             const testValue = BigInt(2) ** BigInt(128) + BigInt(1) // 129 bits
             console.log(`\n🔄 Testing 128-bit boundary + 1: ${testValue}`)
             
-            const itUint256Value = await owner.encryptValue(
+            const itUint256Value = await owner.encryptValue256(
                 testValue,
                 contractAddress,
                 contract.validateAndStore.fragment.selector
-            ) as itUint256
+            )
 
-            const userDecrypted = await owner.decryptValue({
+            const userDecrypted = await owner.decryptValue256({
                 ciphertextHigh: itUint256Value.ciphertext.ciphertextHigh,
                 ciphertextLow: itUint256Value.ciphertext.ciphertextLow
             })
@@ -208,13 +208,13 @@ describe("ValidateCiphertext256 - Complete Encryption/Validation/Decryption Cycl
             const testValue = BigInt('0x123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0')
             console.log(`\n🔄 Testing large 256-bit value`)
             
-            const itUint256Value = await owner.encryptValue(
+            const itUint256Value = await owner.encryptValue256(
                 testValue,
                 contractAddress,
                 contract.validateAndStore.fragment.selector
-            ) as itUint256
+            )
 
-            const userDecrypted = await owner.decryptValue({
+            const userDecrypted = await owner.decryptValue256({
                 ciphertextHigh: itUint256Value.ciphertext.ciphertextHigh,
                 ciphertextLow: itUint256Value.ciphertext.ciphertextLow
             })
@@ -236,13 +236,13 @@ describe("ValidateCiphertext256 - Complete Encryption/Validation/Decryption Cycl
             const testValue = BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
             console.log(`\n🔄 Testing max uint256`)
             
-            const itUint256Value = await owner.encryptValue(
+            const itUint256Value = await owner.encryptValue256(
                 testValue,
                 contractAddress,
                 contract.validateAndStore.fragment.selector
-            ) as itUint256
+            )
 
-            const userDecrypted = await owner.decryptValue({
+            const userDecrypted = await owner.decryptValue256({
                 ciphertextHigh: itUint256Value.ciphertext.ciphertextHigh,
                 ciphertextLow: itUint256Value.ciphertext.ciphertextLow
             })
@@ -266,13 +266,13 @@ describe("ValidateCiphertext256 - Complete Encryption/Validation/Decryption Cycl
             const testValue = 2n ** 128n // > 128 bits (129 bits, minimum for itUint256)
             console.log(`\n🔄 Testing minimum 256-bit value: ${testValue}`)
             
-            const itUint256Value = await owner.encryptValue(
+            const itUint256Value = await owner.encryptValue256(
                 testValue,
                 contractAddress,
                 contract.validateAndStore.fragment.selector
-            ) as itUint256
+            )
 
-            const userDecrypted = await owner.decryptValue({
+            const userDecrypted = await owner.decryptValue256({
                 ciphertextHigh: itUint256Value.ciphertext.ciphertextHigh,
                 ciphertextLow: itUint256Value.ciphertext.ciphertextLow
             })
@@ -294,13 +294,13 @@ describe("ValidateCiphertext256 - Complete Encryption/Validation/Decryption Cycl
             const testValue = (2n ** 128n) + BigInt(1) // > 128 bits (129 bits)
             console.log(`\n🔄 Testing value of 1`)
             
-            const itUint256Value = await owner.encryptValue(
+            const itUint256Value = await owner.encryptValue256(
                 testValue,
                 contractAddress,
                 contract.validateAndStore.fragment.selector
-            ) as itUint256
+            )
 
-            const userDecrypted = await owner.decryptValue({
+            const userDecrypted = await owner.decryptValue256({
                 ciphertextHigh: itUint256Value.ciphertext.ciphertextHigh,
                 ciphertextLow: itUint256Value.ciphertext.ciphertextLow
             })
@@ -324,11 +324,11 @@ describe("ValidateCiphertext256 - Complete Encryption/Validation/Decryption Cycl
             const testValue = (2n ** 128n) + BigInt("1000000000000000000") // > 128 bits
             console.log(`\n🔄 Testing increment`)
             
-            const itUint256Value = await owner.encryptValue(
+            const itUint256Value = await owner.encryptValue256(
                 testValue,
                 contractAddress,
                 contract.validateAndIncrement.fragment.selector
-            ) as itUint256
+            )
 
             const tx = await contract
                 .connect(owner)
@@ -353,13 +353,13 @@ describe("ValidateCiphertext256 - Complete Encryption/Validation/Decryption Cycl
             for (let i = 0; i < testValues.length; i++) {
                 const testValue = testValues[i]
                 
-                const itUint256Value = await owner.encryptValue(
+                const itUint256Value = await owner.encryptValue256(
                     testValue,
                     contractAddress,
                     contract.validateAndStore.fragment.selector
-                ) as itUint256
+                )
 
-                const userDecrypted = await owner.decryptValue({
+                const userDecrypted = await owner.decryptValue256({
                     ciphertextHigh: itUint256Value.ciphertext.ciphertextHigh,
                     ciphertextLow: itUint256Value.ciphertext.ciphertextLow
                 })

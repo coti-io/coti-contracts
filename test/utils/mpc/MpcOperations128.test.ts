@@ -140,7 +140,7 @@ describe("MPC Operations uint128 with offBoardToUser - User Can Decrypt Results"
                 const parsedLog = contract.interface.parseLog(resultEvent)
                 const ctResult: ctUint = parsedLog?.args.result
                 
-                const decrypted = await owner.decryptValue128(ctResult)
+                const decrypted = await owner.decryptValue(ctResult)
                 
                 console.log(`✓ Decrypted result: ${decrypted}`)
                 expect(decrypted).to.equal(expected)
