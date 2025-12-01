@@ -9,9 +9,9 @@ import "../../utils/mpc/MpcCore.sol";
  */
 interface IPrivateERC20 {
     struct Allowance {
-        ctUint64 ciphertext;
-        ctUint64 ownerCiphertext;
-        ctUint64 spenderCiphertext;
+        ctUint256 ciphertext;
+        ctUint256 ownerCiphertext;
+        ctUint256 spenderCiphertext;
     }
     
     /**
@@ -20,13 +20,13 @@ interface IPrivateERC20 {
      *
      * Note that `senderValue/receiverValue` may be zero.
      */
-    event Transfer(address indexed from, address indexed to, ctUint64 senderValue, ctUint64 receiverValue);
+    event Transfer(address indexed from, address indexed to, ctUint256 senderValue, ctUint256 receiverValue);
 
     /**
      * @dev Emitted when the allowance of a `spender` for an `owner` is set by
      * a call to {approve}. `ownerValue` and `spenderValue` are the new allowance encrypted with the respective users AES key.
      */
-    event Approval(address indexed owner, address indexed spender, ctUint64 ownerValue, ctUint64 spenderValue);
+    event Approval(address indexed owner, address indexed spender, ctUint256 ownerValue, ctUint256 spenderValue);
 
     /**
      * @dev Returns the value of tokens in existence.
@@ -36,12 +36,12 @@ interface IPrivateERC20 {
     /**
      * @dev Returns the value of tokens owned by `account` encrypted with their AES key.
      */
-    function balanceOf(address account) external view returns (ctUint64);
+    function balanceOf(address account) external view returns (ctUint256 memory);
 
     /**
      * @dev Returns the value of tokens owned by the caller.
      */
-    function balanceOf() external returns (gtUint64);
+    function balanceOf() external returns (gtUint256);
 
     /**
      * @dev Reencrypts the caller's balance using the AES key of `addr`.
@@ -55,7 +55,7 @@ interface IPrivateERC20 {
      *
      * Emits a {Transfer} event.
      */
-    function transfer(address to, itUint64 calldata value) external returns (gtBool);
+    function transfer(address to, itUint256 calldata value) external returns (gtBool);
 
     /**
      * @dev Moves a `value` amount of tokens from the caller's account to `to`.
@@ -64,7 +64,7 @@ interface IPrivateERC20 {
      *
      * Emits a {Transfer} event.
      */
-    function transfer(address to, gtUint64 value) external returns (gtBool);
+    function transfer(address to, gtUint256 value) external returns (gtBool);
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
@@ -82,7 +82,7 @@ interface IPrivateERC20 {
      *
      * This value changes when {approve} or {transferFrom} are called.
      */
-    function allowance(address account, bool isSpender) external returns (gtUint64);
+    function allowance(address account, bool isSpender) external returns (gtUint256);
 
     /**
      * @dev Sets a `value` amount of tokens as the allowance of `spender` over the
@@ -99,7 +99,7 @@ interface IPrivateERC20 {
      *
      * Emits an {Approval} event.
      */
-    function approve(address spender, itUint64 calldata value) external returns (bool);
+    function approve(address spender, itUint256 calldata value) external returns (bool);
 
     /**
      * @dev Sets a `value` amount of tokens as the allowance of `spender` over the
@@ -116,7 +116,7 @@ interface IPrivateERC20 {
      *
      * Emits an {Approval} event.
      */
-    function approve(address spender, gtUint64 value) external returns (bool);
+    function approve(address spender, gtUint256 value) external returns (bool);
 
     /**
      * @dev Moves a `value` amount of tokens from `from` to `to` using the
@@ -127,7 +127,7 @@ interface IPrivateERC20 {
      *
      * Emits a {Transfer} event.
      */
-    function transferFrom(address from, address to, itUint64 calldata value) external returns (gtBool);
+    function transferFrom(address from, address to, itUint256 calldata value) external returns (gtBool);
 
     /**
      * @dev Moves a `value` amount of tokens from `from` to `to` using the
@@ -138,5 +138,5 @@ interface IPrivateERC20 {
      *
      * Emits a {Transfer} event.
      */
-    function transferFrom(address from, address to, gtUint64 value) external returns (gtBool);
+    function transferFrom(address from, address to, gtUint256 value) external returns (gtBool);
 }
