@@ -58,5 +58,8 @@ contract Bitwise128TestsContract {
         
         return result;
     }
+
+    // Note: NOT operation is not supported for 128-bit and 256-bit types in the MPC precompile
+    // It only supports NOT for boolean types
 }
 

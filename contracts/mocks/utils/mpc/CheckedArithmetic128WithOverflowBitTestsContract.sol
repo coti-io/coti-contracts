@@ -7,6 +7,7 @@ contract CheckedArithmetic128WithOverflowBitTestsContract {
     uint128 addResult;
     uint128 subResult;
     uint128 mulResult;
+    bool overflowBit;
 
     function getAddResult() public view returns (uint128) {
         return addResult;
@@ -20,12 +21,17 @@ contract CheckedArithmetic128WithOverflowBitTestsContract {
         return mulResult;
     }
 
+    function getOverflowBit() public view returns (bool) {
+        return overflowBit;
+    }
+
     function checkedAddWithOverflowBitTest(uint128 a, uint128 b) public returns (uint128) {
         gtUint128 a128 = MpcCore.setPublic128(a);
         gtUint128 b128 = MpcCore.setPublic128(b);
         
-        (, gtUint128 gtResult) = MpcCore.checkedAddWithOverflowBit(a128, b128);
+        (gtBool overflow, gtUint128 gtResult) = MpcCore.checkedAddWithOverflowBit(a128, b128);
         uint128 result = uint128(MpcCore.decrypt(gtResult));
+        overflowBit = MpcCore.decrypt(overflow);
         addResult = result;
         
         return result;
@@ -35,8 +41,9 @@ contract CheckedArithmetic128WithOverflowBitTestsContract {
         gtUint128 a128 = MpcCore.setPublic128(a);
         gtUint128 b128 = MpcCore.setPublic128(b);
         
-        (, gtUint128 gtResult) = MpcCore.checkedSubWithOverflowBit(a128, b128);
+        (gtBool overflow, gtUint128 gtResult) = MpcCore.checkedSubWithOverflowBit(a128, b128);
         uint128 result = uint128(MpcCore.decrypt(gtResult));
+        overflowBit = MpcCore.decrypt(overflow);
         subResult = result;
         
         return result;
@@ -46,8 +53,9 @@ contract CheckedArithmetic128WithOverflowBitTestsContract {
         gtUint128 a128 = MpcCore.setPublic128(a);
         gtUint128 b128 = MpcCore.setPublic128(b);
         
-        (, gtUint128 gtResult) = MpcCore.checkedMulWithOverflowBit(a128, b128);
+        (gtBool overflow, gtUint128 gtResult) = MpcCore.checkedMulWithOverflowBit(a128, b128);
         uint128 result = uint128(MpcCore.decrypt(gtResult));
+        overflowBit = MpcCore.decrypt(overflow);
         mulResult = result;
         
         return result;

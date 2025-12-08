@@ -23,28 +23,41 @@ import type {
   TypedContractMethod,
 } from "../../../common";
 
-export type ItUint64Struct = { ciphertext: BigNumberish; signature: BytesLike };
-
-export type ItUint64StructOutput = [ciphertext: bigint, signature: string] & {
-  ciphertext: bigint;
-  signature: string;
+export type CtUint256Struct = {
+  ciphertextHigh: BigNumberish;
+  ciphertextLow: BigNumberish;
 };
+
+export type CtUint256StructOutput = [
+  ciphertextHigh: bigint,
+  ciphertextLow: bigint
+] & { ciphertextHigh: bigint; ciphertextLow: bigint };
+
+export type ItUint256Struct = {
+  ciphertext: CtUint256Struct;
+  signature: BytesLike;
+};
+
+export type ItUint256StructOutput = [
+  ciphertext: CtUint256StructOutput,
+  signature: string
+] & { ciphertext: CtUint256StructOutput; signature: string };
 
 export declare namespace IPrivateERC20 {
   export type AllowanceStruct = {
-    ciphertext: BigNumberish;
-    ownerCiphertext: BigNumberish;
-    spenderCiphertext: BigNumberish;
+    ciphertext: CtUint256Struct;
+    ownerCiphertext: CtUint256Struct;
+    spenderCiphertext: CtUint256Struct;
   };
 
   export type AllowanceStructOutput = [
-    ciphertext: bigint,
-    ownerCiphertext: bigint,
-    spenderCiphertext: bigint
+    ciphertext: CtUint256StructOutput,
+    ownerCiphertext: CtUint256StructOutput,
+    spenderCiphertext: CtUint256StructOutput
   ] & {
-    ciphertext: bigint;
-    ownerCiphertext: bigint;
-    spenderCiphertext: bigint;
+    ciphertext: CtUint256StructOutput;
+    ownerCiphertext: CtUint256StructOutput;
+    spenderCiphertext: CtUint256StructOutput;
   };
 }
 
@@ -55,7 +68,7 @@ export interface PrivateERC20Interface extends Interface {
       | "allowance(address,bool)"
       | "allowance(address,address)"
       | "approve(address,uint256)"
-      | "approve(address,(uint256,bytes))"
+      | "approve(address,((uint256,uint256),bytes))"
       | "balanceOf(address)"
       | "balanceOf()"
       | "decimals"
@@ -64,10 +77,10 @@ export interface PrivateERC20Interface extends Interface {
       | "setAccountEncryptionAddress"
       | "symbol"
       | "totalSupply"
-      | "transfer(address,(uint256,bytes))"
+      | "transfer(address,((uint256,uint256),bytes))"
       | "transfer(address,uint256)"
-      | "transferFrom(address,address,(uint256,bytes))"
       | "transferFrom(address,address,uint256)"
+      | "transferFrom(address,address,((uint256,uint256),bytes))"
   ): FunctionFragment;
 
   getEvent(nameOrSignatureOrTopic: "Approval" | "Transfer"): EventFragment;
@@ -89,8 +102,8 @@ export interface PrivateERC20Interface extends Interface {
     values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "approve(address,(uint256,bytes))",
-    values: [AddressLike, ItUint64Struct]
+    functionFragment: "approve(address,((uint256,uint256),bytes))",
+    values: [AddressLike, ItUint256Struct]
   ): string;
   encodeFunctionData(
     functionFragment: "balanceOf(address)",
@@ -116,20 +129,20 @@ export interface PrivateERC20Interface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "transfer(address,(uint256,bytes))",
-    values: [AddressLike, ItUint64Struct]
+    functionFragment: "transfer(address,((uint256,uint256),bytes))",
+    values: [AddressLike, ItUint256Struct]
   ): string;
   encodeFunctionData(
     functionFragment: "transfer(address,uint256)",
     values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "transferFrom(address,address,(uint256,bytes))",
-    values: [AddressLike, AddressLike, ItUint64Struct]
-  ): string;
-  encodeFunctionData(
     functionFragment: "transferFrom(address,address,uint256)",
     values: [AddressLike, AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "transferFrom(address,address,((uint256,uint256),bytes))",
+    values: [AddressLike, AddressLike, ItUint256Struct]
   ): string;
 
   decodeFunctionResult(
@@ -149,7 +162,7 @@ export interface PrivateERC20Interface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "approve(address,(uint256,bytes))",
+    functionFragment: "approve(address,((uint256,uint256),bytes))",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -176,7 +189,7 @@ export interface PrivateERC20Interface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "transfer(address,(uint256,bytes))",
+    functionFragment: "transfer(address,((uint256,uint256),bytes))",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -184,11 +197,11 @@ export interface PrivateERC20Interface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "transferFrom(address,address,(uint256,bytes))",
+    functionFragment: "transferFrom(address,address,uint256)",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "transferFrom(address,address,uint256)",
+    functionFragment: "transferFrom(address,address,((uint256,uint256),bytes))",
     data: BytesLike
   ): Result;
 }
@@ -197,20 +210,20 @@ export namespace ApprovalEvent {
   export type InputTuple = [
     owner: AddressLike,
     spender: AddressLike,
-    ownerValue: BigNumberish,
-    spenderValue: BigNumberish
+    ownerValue: CtUint256Struct,
+    spenderValue: CtUint256Struct
   ];
   export type OutputTuple = [
     owner: string,
     spender: string,
-    ownerValue: bigint,
-    spenderValue: bigint
+    ownerValue: CtUint256StructOutput,
+    spenderValue: CtUint256StructOutput
   ];
   export interface OutputObject {
     owner: string;
     spender: string;
-    ownerValue: bigint;
-    spenderValue: bigint;
+    ownerValue: CtUint256StructOutput;
+    spenderValue: CtUint256StructOutput;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -222,20 +235,20 @@ export namespace TransferEvent {
   export type InputTuple = [
     from: AddressLike,
     to: AddressLike,
-    senderValue: BigNumberish,
-    receiverValue: BigNumberish
+    senderValue: CtUint256Struct,
+    receiverValue: CtUint256Struct
   ];
   export type OutputTuple = [
     from: string,
     to: string,
-    senderValue: bigint,
-    receiverValue: bigint
+    senderValue: CtUint256StructOutput,
+    receiverValue: CtUint256StructOutput
   ];
   export interface OutputObject {
     from: string;
     to: string;
-    senderValue: bigint;
-    receiverValue: bigint;
+    senderValue: CtUint256StructOutput;
+    receiverValue: CtUint256StructOutput;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -310,15 +323,15 @@ export interface PrivateERC20 extends BaseContract {
     "nonpayable"
   >;
 
-  "approve(address,(uint256,bytes))": TypedContractMethod<
-    [spender: AddressLike, value: ItUint64Struct],
+  "approve(address,((uint256,uint256),bytes))": TypedContractMethod<
+    [spender: AddressLike, value: ItUint256Struct],
     [boolean],
     "nonpayable"
   >;
 
   "balanceOf(address)": TypedContractMethod<
     [account: AddressLike],
-    [bigint],
+    [CtUint256StructOutput],
     "view"
   >;
 
@@ -344,8 +357,8 @@ export interface PrivateERC20 extends BaseContract {
 
   totalSupply: TypedContractMethod<[], [bigint], "view">;
 
-  "transfer(address,(uint256,bytes))": TypedContractMethod<
-    [to: AddressLike, value: ItUint64Struct],
+  "transfer(address,((uint256,uint256),bytes))": TypedContractMethod<
+    [to: AddressLike, value: ItUint256Struct],
     [bigint],
     "nonpayable"
   >;
@@ -356,14 +369,14 @@ export interface PrivateERC20 extends BaseContract {
     "nonpayable"
   >;
 
-  "transferFrom(address,address,(uint256,bytes))": TypedContractMethod<
-    [from: AddressLike, to: AddressLike, value: ItUint64Struct],
+  "transferFrom(address,address,uint256)": TypedContractMethod<
+    [from: AddressLike, to: AddressLike, value: BigNumberish],
     [bigint],
     "nonpayable"
   >;
 
-  "transferFrom(address,address,uint256)": TypedContractMethod<
-    [from: AddressLike, to: AddressLike, value: BigNumberish],
+  "transferFrom(address,address,((uint256,uint256),bytes))": TypedContractMethod<
+    [from: AddressLike, to: AddressLike, value: ItUint256Struct],
     [bigint],
     "nonpayable"
   >;
@@ -397,15 +410,19 @@ export interface PrivateERC20 extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "approve(address,(uint256,bytes))"
+    nameOrSignature: "approve(address,((uint256,uint256),bytes))"
   ): TypedContractMethod<
-    [spender: AddressLike, value: ItUint64Struct],
+    [spender: AddressLike, value: ItUint256Struct],
     [boolean],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "balanceOf(address)"
-  ): TypedContractMethod<[account: AddressLike], [bigint], "view">;
+  ): TypedContractMethod<
+    [account: AddressLike],
+    [CtUint256StructOutput],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "balanceOf()"
   ): TypedContractMethod<[], [bigint], "nonpayable">;
@@ -436,9 +453,9 @@ export interface PrivateERC20 extends BaseContract {
     nameOrSignature: "totalSupply"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "transfer(address,(uint256,bytes))"
+    nameOrSignature: "transfer(address,((uint256,uint256),bytes))"
   ): TypedContractMethod<
-    [to: AddressLike, value: ItUint64Struct],
+    [to: AddressLike, value: ItUint256Struct],
     [bigint],
     "nonpayable"
   >;
@@ -450,16 +467,16 @@ export interface PrivateERC20 extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "transferFrom(address,address,(uint256,bytes))"
+    nameOrSignature: "transferFrom(address,address,uint256)"
   ): TypedContractMethod<
-    [from: AddressLike, to: AddressLike, value: ItUint64Struct],
+    [from: AddressLike, to: AddressLike, value: BigNumberish],
     [bigint],
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "transferFrom(address,address,uint256)"
+    nameOrSignature: "transferFrom(address,address,((uint256,uint256),bytes))"
   ): TypedContractMethod<
-    [from: AddressLike, to: AddressLike, value: BigNumberish],
+    [from: AddressLike, to: AddressLike, value: ItUint256Struct],
     [bigint],
     "nonpayable"
   >;
@@ -480,7 +497,7 @@ export interface PrivateERC20 extends BaseContract {
   >;
 
   filters: {
-    "Approval(address,address,uint256,uint256)": TypedContractEvent<
+    "Approval(address,address,tuple,tuple)": TypedContractEvent<
       ApprovalEvent.InputTuple,
       ApprovalEvent.OutputTuple,
       ApprovalEvent.OutputObject
@@ -491,7 +508,7 @@ export interface PrivateERC20 extends BaseContract {
       ApprovalEvent.OutputObject
     >;
 
-    "Transfer(address,address,uint256,uint256)": TypedContractEvent<
+    "Transfer(address,address,tuple,tuple)": TypedContractEvent<
       TransferEvent.InputTuple,
       TransferEvent.OutputTuple,
       TransferEvent.OutputObject
