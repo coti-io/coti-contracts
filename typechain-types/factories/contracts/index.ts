@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as access from "./access";
+export * as disperse from "./disperse";
 export * as mocks from "./mocks";
 export * as onboard from "./onboard";
 export * as token from "./token";

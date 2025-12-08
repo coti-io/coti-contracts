@@ -1181,6 +1181,11 @@ library MpcCore {
             Xor(combineEnumsToBytes3(MPC_TYPE.SUINT128_T, MPC_TYPE.SUINT128_T, ARGS.BOTH_SECRET), gtUint128.unwrap(a), gtUint128.unwrap(b)));
     }
 
+    function not(gtUint128 a) internal returns (gtUint128) {
+         return gtUint128.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+            Not(bytes1(uint8(MPC_TYPE.SUINT128_T)), gtUint128.unwrap(a)));
+    }
+
     function eq(gtUint128 a, gtUint128 b) internal returns (gtBool) {
         return gtBool.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
             Eq(combineEnumsToBytes3(MPC_TYPE.SUINT128_T, MPC_TYPE.SUINT128_T, ARGS.BOTH_SECRET), gtUint128.unwrap(a), gtUint128.unwrap(b)));
@@ -1369,6 +1374,11 @@ library MpcCore {
     function xor(gtUint256 a, gtUint256 b) internal returns (gtUint256) {
          return gtUint256.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
             Xor(combineEnumsToBytes3(MPC_TYPE.SUINT256_T, MPC_TYPE.SUINT256_T, ARGS.BOTH_SECRET), gtUint256.unwrap(a), gtUint256.unwrap(b)));
+    }
+
+    function not(gtUint256 a) internal returns (gtUint256) {
+         return gtUint256.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).
+            Not(bytes1(uint8(MPC_TYPE.SUINT256_T)), gtUint256.unwrap(a)));
     }
 
     function eq(gtUint256 a, gtUint256 b) internal returns (gtBool) {

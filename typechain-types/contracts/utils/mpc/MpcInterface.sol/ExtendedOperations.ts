@@ -43,8 +43,11 @@ export interface ExtendedOperationsInterface extends Interface {
       | "Ne"
       | "Not"
       | "OffBoard"
+      | "OffBoard256"
       | "OffBoardToUser"
-      | "OnBoard"
+      | "OffBoardToUser256"
+      | "OnBoard(bytes1,uint256,uint256)"
+      | "OnBoard(bytes1,uint256)"
       | "Or"
       | "Rand"
       | "RandBoundedBits"
@@ -56,7 +59,8 @@ export interface ExtendedOperationsInterface extends Interface {
       | "Sub"
       | "Transfer"
       | "TransferWithAllowance"
-      | "ValidateCiphertext"
+      | "ValidateCiphertext(bytes1,uint256,uint256,bytes)"
+      | "ValidateCiphertext(bytes1,uint256,bytes)"
       | "Xor"
   ): FunctionFragment;
 
@@ -141,11 +145,23 @@ export interface ExtendedOperationsInterface extends Interface {
     values: [BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "OffBoard256",
+    values: [BytesLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "OffBoardToUser",
     values: [BytesLike, BigNumberish, BytesLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "OnBoard",
+    functionFragment: "OffBoardToUser256",
+    values: [BytesLike, BigNumberish, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "OnBoard(bytes1,uint256,uint256)",
+    values: [BytesLike, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "OnBoard(bytes1,uint256)",
     values: [BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
@@ -197,7 +213,11 @@ export interface ExtendedOperationsInterface extends Interface {
     values: [BytesLike, BigNumberish, BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "ValidateCiphertext",
+    functionFragment: "ValidateCiphertext(bytes1,uint256,uint256,bytes)",
+    values: [BytesLike, BigNumberish, BigNumberish, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "ValidateCiphertext(bytes1,uint256,bytes)",
     values: [BytesLike, BigNumberish, BytesLike]
   ): string;
   encodeFunctionData(
@@ -226,10 +246,25 @@ export interface ExtendedOperationsInterface extends Interface {
   decodeFunctionResult(functionFragment: "Not", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "OffBoard", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "OffBoard256",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "OffBoardToUser",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "OnBoard", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "OffBoardToUser256",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "OnBoard(bytes1,uint256,uint256)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "OnBoard(bytes1,uint256)",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "Or", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "Rand", data: BytesLike): Result;
   decodeFunctionResult(
@@ -251,7 +286,11 @@ export interface ExtendedOperationsInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "ValidateCiphertext",
+    functionFragment: "ValidateCiphertext(bytes1,uint256,uint256,bytes)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "ValidateCiphertext(bytes1,uint256,bytes)",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "Xor", data: BytesLike): Result;
@@ -420,13 +459,31 @@ export interface ExtendedOperations extends BaseContract {
     "nonpayable"
   >;
 
+  OffBoard256: TypedContractMethod<
+    [metaData: BytesLike, gt: BigNumberish],
+    [[bigint, bigint] & { ctHigh: bigint; ctLow: bigint }],
+    "nonpayable"
+  >;
+
   OffBoardToUser: TypedContractMethod<
     [metaData: BytesLike, ct: BigNumberish, addr: BytesLike],
     [bigint],
     "nonpayable"
   >;
 
-  OnBoard: TypedContractMethod<
+  OffBoardToUser256: TypedContractMethod<
+    [metaData: BytesLike, ct: BigNumberish, addr: BytesLike],
+    [[bigint, bigint] & { ctHigh: bigint; ctLow: bigint }],
+    "nonpayable"
+  >;
+
+  "OnBoard(bytes1,uint256,uint256)": TypedContractMethod<
+    [metaData: BytesLike, ctHigh: BigNumberish, ctLow: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+
+  "OnBoard(bytes1,uint256)": TypedContractMethod<
     [metaData: BytesLike, ct: BigNumberish],
     [bigint],
     "nonpayable"
@@ -519,7 +576,18 @@ export interface ExtendedOperations extends BaseContract {
     "nonpayable"
   >;
 
-  ValidateCiphertext: TypedContractMethod<
+  "ValidateCiphertext(bytes1,uint256,uint256,bytes)": TypedContractMethod<
+    [
+      metaData: BytesLike,
+      ciphertextHigh: BigNumberish,
+      ciphertextLow: BigNumberish,
+      signature: BytesLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
+
+  "ValidateCiphertext(bytes1,uint256,bytes)": TypedContractMethod<
     [metaData: BytesLike, ciphertext: BigNumberish, signature: BytesLike],
     [bigint],
     "nonpayable"
@@ -672,6 +740,13 @@ export interface ExtendedOperations extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "OffBoard256"
+  ): TypedContractMethod<
+    [metaData: BytesLike, gt: BigNumberish],
+    [[bigint, bigint] & { ctHigh: bigint; ctLow: bigint }],
+    "nonpayable"
+  >;
+  getFunction(
     nameOrSignature: "OffBoardToUser"
   ): TypedContractMethod<
     [metaData: BytesLike, ct: BigNumberish, addr: BytesLike],
@@ -679,7 +754,21 @@ export interface ExtendedOperations extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "OnBoard"
+    nameOrSignature: "OffBoardToUser256"
+  ): TypedContractMethod<
+    [metaData: BytesLike, ct: BigNumberish, addr: BytesLike],
+    [[bigint, bigint] & { ctHigh: bigint; ctLow: bigint }],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "OnBoard(bytes1,uint256,uint256)"
+  ): TypedContractMethod<
+    [metaData: BytesLike, ctHigh: BigNumberish, ctLow: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "OnBoard(bytes1,uint256)"
   ): TypedContractMethod<
     [metaData: BytesLike, ct: BigNumberish],
     [bigint],
@@ -784,7 +873,19 @@ export interface ExtendedOperations extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "ValidateCiphertext"
+    nameOrSignature: "ValidateCiphertext(bytes1,uint256,uint256,bytes)"
+  ): TypedContractMethod<
+    [
+      metaData: BytesLike,
+      ciphertextHigh: BigNumberish,
+      ciphertextLow: BigNumberish,
+      signature: BytesLike
+    ],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "ValidateCiphertext(bytes1,uint256,bytes)"
   ): TypedContractMethod<
     [metaData: BytesLike, ciphertext: BigNumberish, signature: BytesLike],
     [bigint],
