@@ -18,14 +18,14 @@ abstract contract ReentrancyGuard {
 }
 
 /**
- * @title FixedRatioCoinDisperser
+ * @title FixedRatioCoinDisperserLeftoverS1
  * @notice Redeem ERC20 "points" for native ETH payout pool
  *         - Order-independent fixed-index redemption
  *         - Pull-based withdrawals (DoS safe)
  *         - Optional push for EOAs only
  *         - Native ETH payouts
  */
-contract FixedRatioCoinDisperser is ReentrancyGuard {
+contract FixedRatioCoinDisperserLeftoverS1 is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     // --- Custom Errors ---
