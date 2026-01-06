@@ -59,15 +59,19 @@ export interface PrivateERC20MockInterface extends Interface {
       | "balanceOf(address)"
       | "balanceOf()"
       | "burn"
+      | "confidentialTotalSupply"
       | "decimals"
       | "mint"
       | "name"
       | "reencryptAllowance"
       | "setAccountEncryptionAddress"
+      | "supportsInterface"
       | "symbol"
       | "totalSupply"
       | "transfer(address,(uint256,bytes))"
       | "transfer(address,uint256)"
+      | "transferAndCall(address,uint64,bytes)"
+      | "transferAndCall(address,(uint256,bytes),bytes)"
       | "transferFrom(address,address,(uint256,bytes))"
       | "transferFrom(address,address,uint256)"
   ): FunctionFragment;
@@ -106,6 +110,10 @@ export interface PrivateERC20MockInterface extends Interface {
     functionFragment: "burn",
     values: [AddressLike, BigNumberish]
   ): string;
+  encodeFunctionData(
+    functionFragment: "confidentialTotalSupply",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "decimals", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "mint",
@@ -120,6 +128,10 @@ export interface PrivateERC20MockInterface extends Interface {
     functionFragment: "setAccountEncryptionAddress",
     values: [AddressLike]
   ): string;
+  encodeFunctionData(
+    functionFragment: "supportsInterface",
+    values: [BytesLike]
+  ): string;
   encodeFunctionData(functionFragment: "symbol", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "totalSupply",
@@ -132,6 +144,14 @@ export interface PrivateERC20MockInterface extends Interface {
   encodeFunctionData(
     functionFragment: "transfer(address,uint256)",
     values: [AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "transferAndCall(address,uint64,bytes)",
+    values: [AddressLike, BigNumberish, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "transferAndCall(address,(uint256,bytes),bytes)",
+    values: [AddressLike, ItUint64Struct, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "transferFrom(address,address,(uint256,bytes))",
@@ -171,6 +191,10 @@ export interface PrivateERC20MockInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "burn", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "confidentialTotalSupply",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "decimals", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
@@ -180,6 +204,10 @@ export interface PrivateERC20MockInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "setAccountEncryptionAddress",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "supportsInterface",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "symbol", data: BytesLike): Result;
@@ -196,6 +224,14 @@ export interface PrivateERC20MockInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "transferAndCall(address,uint64,bytes)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "transferAndCall(address,(uint256,bytes),bytes)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "transferFrom(address,address,(uint256,bytes))",
     data: BytesLike
   ): Result;
@@ -209,19 +245,19 @@ export namespace ApprovalEvent {
   export type InputTuple = [
     owner: AddressLike,
     spender: AddressLike,
-    ownerValue: BigNumberish,
+    value: BigNumberish,
     spenderValue: BigNumberish
   ];
   export type OutputTuple = [
     owner: string,
     spender: string,
-    ownerValue: bigint,
+    value: bigint,
     spenderValue: bigint
   ];
   export interface OutputObject {
     owner: string;
     spender: string;
-    ownerValue: bigint;
+    value: bigint;
     spenderValue: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -234,20 +270,20 @@ export namespace TransferEvent {
   export type InputTuple = [
     from: AddressLike,
     to: AddressLike,
-    senderValue: BigNumberish,
-    receiverValue: BigNumberish
+    value: BigNumberish,
+    toValue: BigNumberish
   ];
   export type OutputTuple = [
     from: string,
     to: string,
-    senderValue: bigint,
-    receiverValue: bigint
+    value: bigint,
+    toValue: bigint
   ];
   export interface OutputObject {
     from: string;
     to: string;
-    senderValue: bigint;
-    receiverValue: bigint;
+    value: bigint;
+    toValue: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -342,6 +378,8 @@ export interface PrivateERC20Mock extends BaseContract {
     "nonpayable"
   >;
 
+  confidentialTotalSupply: TypedContractMethod<[], [bigint], "view">;
+
   decimals: TypedContractMethod<[], [bigint], "view">;
 
   mint: TypedContractMethod<
@@ -364,6 +402,12 @@ export interface PrivateERC20Mock extends BaseContract {
     "nonpayable"
   >;
 
+  supportsInterface: TypedContractMethod<
+    [interfaceId: BytesLike],
+    [boolean],
+    "view"
+  >;
+
   symbol: TypedContractMethod<[], [string], "view">;
 
   totalSupply: TypedContractMethod<[], [bigint], "view">;
@@ -376,6 +420,18 @@ export interface PrivateERC20Mock extends BaseContract {
 
   "transfer(address,uint256)": TypedContractMethod<
     [to: AddressLike, value: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+
+  "transferAndCall(address,uint64,bytes)": TypedContractMethod<
+    [to: AddressLike, value: BigNumberish, data: BytesLike],
+    [bigint],
+    "nonpayable"
+  >;
+
+  "transferAndCall(address,(uint256,bytes),bytes)": TypedContractMethod<
+    [to: AddressLike, value: ItUint64Struct, data: BytesLike],
     [bigint],
     "nonpayable"
   >;
@@ -441,6 +497,9 @@ export interface PrivateERC20Mock extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "confidentialTotalSupply"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "decimals"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
@@ -468,6 +527,9 @@ export interface PrivateERC20Mock extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "supportsInterface"
+  ): TypedContractMethod<[interfaceId: BytesLike], [boolean], "view">;
+  getFunction(
     nameOrSignature: "symbol"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
@@ -484,6 +546,20 @@ export interface PrivateERC20Mock extends BaseContract {
     nameOrSignature: "transfer(address,uint256)"
   ): TypedContractMethod<
     [to: AddressLike, value: BigNumberish],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "transferAndCall(address,uint64,bytes)"
+  ): TypedContractMethod<
+    [to: AddressLike, value: BigNumberish, data: BytesLike],
+    [bigint],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "transferAndCall(address,(uint256,bytes),bytes)"
+  ): TypedContractMethod<
+    [to: AddressLike, value: ItUint64Struct, data: BytesLike],
     [bigint],
     "nonpayable"
   >;

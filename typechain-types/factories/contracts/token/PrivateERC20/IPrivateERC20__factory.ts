@@ -27,7 +27,7 @@ const _abi = [
       {
         indexed: false,
         internalType: "ctUint64",
-        name: "ownerValue",
+        name: "value",
         type: "uint256",
       },
       {
@@ -58,18 +58,37 @@ const _abi = [
       {
         indexed: false,
         internalType: "ctUint64",
-        name: "senderValue",
+        name: "value",
         type: "uint256",
       },
       {
         indexed: false,
         internalType: "ctUint64",
-        name: "receiverValue",
+        name: "toValue",
         type: "uint256",
       },
     ],
     name: "Transfer",
     type: "event",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+    ],
+    name: "accountEncryptionAddress",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
   },
   {
     inputs: [
@@ -145,7 +164,7 @@ const _abi = [
       },
       {
         internalType: "gtUint64",
-        name: "value",
+        name: "amount",
         type: "uint256",
       },
     ],
@@ -181,7 +200,7 @@ const _abi = [
           },
         ],
         internalType: "struct itUint64",
-        name: "value",
+        name: "amount",
         type: "tuple",
       },
     ],
@@ -229,10 +248,73 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "confidentialTotalSupply",
+    outputs: [
+      {
+        internalType: "ctUint64",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "decimals",
+    outputs: [
+      {
+        internalType: "uint8",
+        name: "",
+        type: "uint8",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "name",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "address",
-        name: "addr",
+        name: "account",
+        type: "address",
+      },
+      {
+        internalType: "bool",
+        name: "isSpender",
+        type: "bool",
+      },
+    ],
+    name: "reencryptAllowance",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "account",
         type: "address",
       },
     ],
@@ -245,6 +327,38 @@ const _abi = [
       },
     ],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes4",
+        name: "interfaceId",
+        type: "bytes4",
+      },
+    ],
+    name: "supportsInterface",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "symbol",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -281,7 +395,7 @@ const _abi = [
           },
         ],
         internalType: "struct itUint64",
-        name: "value",
+        name: "amount",
         type: "tuple",
       },
     ],
@@ -305,11 +419,81 @@ const _abi = [
       },
       {
         internalType: "gtUint64",
-        name: "value",
+        name: "amount",
         type: "uint256",
       },
     ],
     name: "transfer",
+    outputs: [
+      {
+        internalType: "gtBool",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        internalType: "uint64",
+        name: "amount",
+        type: "uint64",
+      },
+      {
+        internalType: "bytes",
+        name: "data",
+        type: "bytes",
+      },
+    ],
+    name: "transferAndCall",
+    outputs: [
+      {
+        internalType: "gtBool",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        components: [
+          {
+            internalType: "ctUint64",
+            name: "ciphertext",
+            type: "uint256",
+          },
+          {
+            internalType: "bytes",
+            name: "signature",
+            type: "bytes",
+          },
+        ],
+        internalType: "struct itUint64",
+        name: "amount",
+        type: "tuple",
+      },
+      {
+        internalType: "bytes",
+        name: "data",
+        type: "bytes",
+      },
+    ],
+    name: "transferAndCall",
     outputs: [
       {
         internalType: "gtBool",
@@ -346,7 +530,7 @@ const _abi = [
           },
         ],
         internalType: "struct itUint64",
-        name: "value",
+        name: "amount",
         type: "tuple",
       },
     ],
@@ -375,7 +559,7 @@ const _abi = [
       },
       {
         internalType: "gtUint64",
-        name: "value",
+        name: "amount",
         type: "uint256",
       },
     ],

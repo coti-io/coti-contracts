@@ -14,9 +14,21 @@ import * as Contracts from ".";
 declare module "hardhat/types/runtime" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
     getContractFactory(
+      name: "Ownable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Ownable__factory>;
+    getContractFactory(
       name: "IERC4906",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC4906__factory>;
+    getContractFactory(
+      name: "IERC20Permit",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC20Permit__factory>;
+    getContractFactory(
+      name: "IERC20",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC20__factory>;
     getContractFactory(
       name: "IERC721",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -41,6 +53,30 @@ declare module "hardhat/types/runtime" {
       name: "DataPrivacyFrameworkMpc",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.DataPrivacyFrameworkMpc__factory>;
+    getContractFactory(
+      name: "FixedRatioCoinDisperser",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.FixedRatioCoinDisperser__factory>;
+    getContractFactory(
+      name: "FixedRatioCoinDisperserLeftoverS1",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.FixedRatioCoinDisperserLeftoverS1__factory>;
+    getContractFactory(
+      name: "FixedRatioCoinDisperserUnlimitedWindow",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.FixedRatioCoinDisperserUnlimitedWindow__factory>;
+    getContractFactory(
+      name: "IMintableERC20",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IMintableERC20__factory>;
+    getContractFactory(
+      name: "MintDisperser",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.MintDisperser__factory>;
+    getContractFactory(
+      name: "TokenDisperser",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TokenDisperser__factory>;
     getContractFactory(
       name: "DataPrivacyFrameworkMock",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -170,6 +206,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.AccountOnboard__factory>;
     getContractFactory(
+      name: "IERC1363Receiver",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC1363Receiver__factory>;
+    getContractFactory(
       name: "IPrivateERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IPrivateERC20__factory>;
@@ -203,10 +243,25 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.ExtendedOperations__factory>;
 
     getContractAt(
+      name: "Ownable",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Ownable>;
+    getContractAt(
       name: "IERC4906",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC4906>;
+    getContractAt(
+      name: "IERC20Permit",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC20Permit>;
+    getContractAt(
+      name: "IERC20",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC20>;
     getContractAt(
       name: "IERC721",
       address: string | ethers.Addressable,
@@ -237,6 +292,36 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.DataPrivacyFrameworkMpc>;
+    getContractAt(
+      name: "FixedRatioCoinDisperser",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.FixedRatioCoinDisperser>;
+    getContractAt(
+      name: "FixedRatioCoinDisperserLeftoverS1",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.FixedRatioCoinDisperserLeftoverS1>;
+    getContractAt(
+      name: "FixedRatioCoinDisperserUnlimitedWindow",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.FixedRatioCoinDisperserUnlimitedWindow>;
+    getContractAt(
+      name: "IMintableERC20",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IMintableERC20>;
+    getContractAt(
+      name: "MintDisperser",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.MintDisperser>;
+    getContractAt(
+      name: "TokenDisperser",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TokenDisperser>;
     getContractAt(
       name: "DataPrivacyFrameworkMock",
       address: string | ethers.Addressable,
@@ -397,6 +482,11 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.AccountOnboard>;
+    getContractAt(
+      name: "IERC1363Receiver",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC1363Receiver>;
     getContractAt(
       name: "IPrivateERC20",
       address: string | ethers.Addressable,
@@ -439,9 +529,21 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.ExtendedOperations>;
 
     deployContract(
+      name: "Ownable",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Ownable>;
+    deployContract(
       name: "IERC4906",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IERC4906>;
+    deployContract(
+      name: "IERC20Permit",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC20Permit>;
+    deployContract(
+      name: "IERC20",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC20>;
     deployContract(
       name: "IERC721",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -466,6 +568,30 @@ declare module "hardhat/types/runtime" {
       name: "DataPrivacyFrameworkMpc",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.DataPrivacyFrameworkMpc>;
+    deployContract(
+      name: "FixedRatioCoinDisperser",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.FixedRatioCoinDisperser>;
+    deployContract(
+      name: "FixedRatioCoinDisperserLeftoverS1",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.FixedRatioCoinDisperserLeftoverS1>;
+    deployContract(
+      name: "FixedRatioCoinDisperserUnlimitedWindow",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.FixedRatioCoinDisperserUnlimitedWindow>;
+    deployContract(
+      name: "IMintableERC20",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IMintableERC20>;
+    deployContract(
+      name: "MintDisperser",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MintDisperser>;
+    deployContract(
+      name: "TokenDisperser",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TokenDisperser>;
     deployContract(
       name: "DataPrivacyFrameworkMock",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -594,6 +720,10 @@ declare module "hardhat/types/runtime" {
       name: "AccountOnboard",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.AccountOnboard>;
+    deployContract(
+      name: "IERC1363Receiver",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC1363Receiver>;
     deployContract(
       name: "IPrivateERC20",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -628,10 +758,25 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.ExtendedOperations>;
 
     deployContract(
+      name: "Ownable",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Ownable>;
+    deployContract(
       name: "IERC4906",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IERC4906>;
+    deployContract(
+      name: "IERC20Permit",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC20Permit>;
+    deployContract(
+      name: "IERC20",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC20>;
     deployContract(
       name: "IERC721",
       args: any[],
@@ -662,6 +807,36 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.DataPrivacyFrameworkMpc>;
+    deployContract(
+      name: "FixedRatioCoinDisperser",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.FixedRatioCoinDisperser>;
+    deployContract(
+      name: "FixedRatioCoinDisperserLeftoverS1",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.FixedRatioCoinDisperserLeftoverS1>;
+    deployContract(
+      name: "FixedRatioCoinDisperserUnlimitedWindow",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.FixedRatioCoinDisperserUnlimitedWindow>;
+    deployContract(
+      name: "IMintableERC20",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IMintableERC20>;
+    deployContract(
+      name: "MintDisperser",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MintDisperser>;
+    deployContract(
+      name: "TokenDisperser",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.TokenDisperser>;
     deployContract(
       name: "DataPrivacyFrameworkMock",
       args: any[],
@@ -822,6 +997,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.AccountOnboard>;
+    deployContract(
+      name: "IERC1363Receiver",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC1363Receiver>;
     deployContract(
       name: "IPrivateERC20",
       args: any[],

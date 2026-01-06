@@ -71,7 +71,7 @@ const _abi = [
       {
         indexed: false,
         internalType: "ctUint64",
-        name: "ownerValue",
+        name: "value",
         type: "uint256",
       },
       {
@@ -102,13 +102,13 @@ const _abi = [
       {
         indexed: false,
         internalType: "ctUint64",
-        name: "senderValue",
+        name: "value",
         type: "uint256",
       },
       {
         indexed: false,
         internalType: "ctUint64",
-        name: "receiverValue",
+        name: "toValue",
         type: "uint256",
       },
     ],
@@ -293,6 +293,19 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "confidentialTotalSupply",
+    outputs: [
+      {
+        internalType: "ctUint64",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "decimals",
     outputs: [
       {
@@ -358,6 +371,25 @@ const _abi = [
       },
     ],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes4",
+        name: "interfaceId",
+        type: "bytes4",
+      },
+    ],
+    name: "supportsInterface",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -436,6 +468,76 @@ const _abi = [
       },
     ],
     name: "transfer",
+    outputs: [
+      {
+        internalType: "gtBool",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        internalType: "uint64",
+        name: "value",
+        type: "uint64",
+      },
+      {
+        internalType: "bytes",
+        name: "data",
+        type: "bytes",
+      },
+    ],
+    name: "transferAndCall",
+    outputs: [
+      {
+        internalType: "gtBool",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        components: [
+          {
+            internalType: "ctUint64",
+            name: "ciphertext",
+            type: "uint256",
+          },
+          {
+            internalType: "bytes",
+            name: "signature",
+            type: "bytes",
+          },
+        ],
+        internalType: "struct itUint64",
+        name: "value",
+        type: "tuple",
+      },
+      {
+        internalType: "bytes",
+        name: "data",
+        type: "bytes",
+      },
+    ],
+    name: "transferAndCall",
     outputs: [
       {
         internalType: "gtBool",
