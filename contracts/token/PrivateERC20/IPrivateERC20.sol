@@ -83,6 +83,17 @@ interface IPrivateERC20 {
      * This value changes when {approve} or {transferFrom} are called.
      */
     function allowance(address account, bool isSpender) external returns (gtUint64);
+    
+    /**
+     * @dev Re-encrypts the allowance value for the caller so they can decrypt and read it.
+     *
+     * @param account The counterparty address (spender if caller is owner, or owner if caller is spender).
+     * @param isSpender If true, `account` is the spender and caller is the owner.
+     *                  If false, `account` is the owner and caller is the spender.
+     *
+     * Returns a boolean value indicating whether the operation succeeded.
+     */
+    function reencryptAllowance(address account, bool isSpender) external returns (bool);
 
     /**
      * @dev Sets a `value` amount of tokens as the allowance of `spender` over the
@@ -140,3 +151,4 @@ interface IPrivateERC20 {
      */
     function transferFrom(address from, address to, gtUint64 value) external returns (gtBool);
 }
+
