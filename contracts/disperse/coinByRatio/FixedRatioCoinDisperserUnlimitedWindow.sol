@@ -4,19 +4,8 @@ pragma solidity ^0.8.20;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
-abstract contract ReentrancyGuard {
-    uint256 private constant _NOT_ENTERED = 1;
-    uint256 private constant _ENTERED = 2;
-    uint256 private _status = _NOT_ENTERED;
-
-    modifier nonReentrant() {
-        require(_status != _ENTERED, "REENTRANCY");
-        _status = _ENTERED;
-        _;
-        _status = _NOT_ENTERED;
-    }
-}
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title FixedRatioCoinDisperserUnlimitedWindow
@@ -27,13 +16,12 @@ abstract contract ReentrancyGuard {
  *         - Native ETH payouts
  *
  */
-contract FixedRatioCoinDisperserUnlimitedWindow is ReentrancyGuard {
+contract FixedRatioCoinDisperserUnlimitedWindow is ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
 
     // --- Custom Errors ---
     error TokenZeroAddress();
     error OwnerZeroAddress();
-    error NotOwner();
     error AlreadyFinalized();
     error PoolZero();
     error SupplyZero();
@@ -64,10 +52,8 @@ contract FixedRatioCoinDisperserUnlimitedWindow is ReentrancyGuard {
     /// @notice Emitted when the payout index is updated via external source sync.
     event AccPayoutPerPointUpdated(uint256 previousAccPayoutPerPoint, uint256 newAccPayoutPerPoint);
 
-
     // --- Config ---
     IERC20 public immutable POINTS_TOKEN;
-    address public owner;
 
     // --- Lifecycle ---
     bool public finalized;
@@ -86,22 +72,16 @@ contract FixedRatioCoinDisperserUnlimitedWindow is ReentrancyGuard {
 
     uint256 private constant ONE = 1e18;
 
-    modifier onlyOwner() {
-        if (msg.sender != owner) revert NotOwner();
-        _;
-    }
-
     /**
      * @dev Constructor
      * @param _pointsToken Address of the ERC20 points token that can be redeemed
      * @param _owner Address that will have admin privileges (can pause, finalize, etc.)
      */
-    constructor(address _pointsToken, address _owner) {
+    constructor(address _pointsToken, address _owner) Ownable(_owner) {
         if (_pointsToken == address(0)) revert TokenZeroAddress();
         if (_owner == address(0)) revert OwnerZeroAddress();
 
         POINTS_TOKEN = IERC20(_pointsToken);
-        owner = _owner;
     }
 
     // --- Admin ---
@@ -196,7 +176,7 @@ contract FixedRatioCoinDisperserUnlimitedWindow is ReentrancyGuard {
         if (bal <= requiredReserve) revert NoDust();
 
         uint256 amount = bal - requiredReserve;
-        (bool success,) = owner.call{value: amount}("");
+        (bool success,) = owner().call{value: amount}("");
         if (!success) revert EthTransferFailed();
 
         emit DustWithdrawn(amount);
@@ -260,6 +240,7 @@ contract FixedRatioCoinDisperserUnlimitedWindow is ReentrancyGuard {
     }
 
     // --- Core math ---
+
     /**
      * @dev Internal function that handles the core redemption logic
      * @param user Address of the user redeeming points
@@ -371,36 +352,20 @@ contract FixedRatioCoinDisperserUnlimitedWindow is ReentrancyGuard {
 
     // --- Governance / Admin override ---
 
-/**
- * @dev Owner can directly update the payout rate per point.
- * @param newAccPayoutPerPoint New payout index (ETH per point, scaled by 1e18)
- * @notice Only callable after finalization.
- * @notice Does NOT retroactively adjust past payouts; only affects future redemptions.
- */
-function setAccPayoutPerPoint(uint256 newAccPayoutPerPoint) external onlyOwner {
-    if (!finalized) revert NotFinalized();
-    if (newAccPayoutPerPoint == 0) revert PayoutZero();
-
-    uint256 prev = accPayoutPerPoint;
-    accPayoutPerPoint = newAccPayoutPerPoint;
-
-    emit AccPayoutPerPointUpdated(prev, newAccPayoutPerPoint);
-}
-
-    // --- Ownership ---
-
     /**
-     * @dev Transfer ownership of the contract to a new address
-     * @param newOwner Address of the new owner
-     * @notice Only the current owner can call this function
-     * @notice New owner cannot be zero address
-     * @notice Emits OwnershipTransferred event
+     * @dev Owner can directly update the payout rate per point.
+     * @param newAccPayoutPerPoint New payout index (ETH per point, scaled by 1e18)
+     * @notice Only callable after finalization.
+     * @notice Does NOT retroactively adjust past payouts; only affects future redemptions.
      */
-    function transferOwnership(address newOwner) external onlyOwner {
-        if (newOwner == address(0)) revert OwnerZeroAddress();
-        address prev = owner;
-        owner = newOwner;
-        emit OwnershipTransferred(prev, newOwner);
+    function setAccPayoutPerPoint(uint256 newAccPayoutPerPoint) external onlyOwner {
+        if (!finalized) revert NotFinalized();
+        if (newAccPayoutPerPoint == 0) revert PayoutZero();
+
+        uint256 prev = accPayoutPerPoint;
+        accPayoutPerPoint = newAccPayoutPerPoint;
+
+        emit AccPayoutPerPointUpdated(prev, newAccPayoutPerPoint);
     }
 
     // Rescue (window no longer enforced)
@@ -442,6 +407,7 @@ function setAccPayoutPerPoint(uint256 newAccPayoutPerPoint) external onlyOwner {
         (bool success,) = to.call{value: amount}("");
         if (!success) revert EthTransferFailed();
     }
+
     // --- Utils ---
 
     /**
