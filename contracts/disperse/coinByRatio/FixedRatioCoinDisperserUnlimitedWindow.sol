@@ -46,7 +46,6 @@ contract FixedRatioCoinDisperserUnlimitedWindow is ReentrancyGuard, Ownable {
     event Redeemed(address indexed user, uint256 pointsRequested, uint256 pointsReceived, uint256 payout, bool pushed);
     event Paused(bool isPaused);
     event DustWithdrawn(uint256 amount);
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event Withdrawal(address indexed user, uint256 amount);
 
     /// @notice Emitted when the payout index is updated via external source sync.
