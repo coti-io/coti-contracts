@@ -5,8 +5,8 @@ import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "./IPrivateERC20.sol";
-import "@coti-io/coti-contracts/contracts/utils/mpc/MpcCore.sol";
-import "../IERC1363Receiver.sol";
+import "../../utils/mpc/MpcCore.sol";
+import "./IERC1363Receiver.sol";
 
 /**
  * @title PrivateERC20_ERC7984
@@ -75,7 +75,7 @@ abstract contract PrivateERC20 is Context, IPrivateERC20, ERC165 {
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165) returns (bool) {
         return interfaceId == type(IPrivateERC20).interfaceId || super.supportsInterface(interfaceId);
     }
 
@@ -474,39 +474,4 @@ abstract contract PrivateERC20 is Context, IPrivateERC20, ERC165 {
         return MpcCore.onBoard(value);
     }
 
-    // =============================================================
-    // 3. ERC-1363 Callbacks Implementation
-    // =============================================================
-
-    function _transferAndCall(address from, address to, gtUint64 value, bytes calldata data) internal returns (gtBool) {
-        // 1. Perform standard encrypted transfer
-        gtBool success = _transfer(from, to, value);
-
-        // 2. Optimistic callback: Call the recipient if it is a contract
-        if (to.code.length > 0) {
-            try IERC1363Receiver(to).onTransferReceived(_msgSender(), from, 0, data) returns (bytes4 retval) {
-                require(retval == IERC1363Receiver.onTransferReceived.selector, "TransferAndCall: Invalid callback return");
-            } catch (bytes memory reason) {
-                if (reason.length == 0) {
-                    revert("TransferAndCall: Transfer to non-ERC1363Receiver implementer");
-                } else {
-                    assembly {
-                        revert(add(32, reason), mload(reason))
-                    }
-                }
-            }
-        }
-
-        return success;
-    }
-
-    function transferAndCall(address to, itUint64 calldata value, bytes calldata data) public virtual returns (gtBool) {
-        gtUint64 gtValue = MpcCore.validateCiphertext(value);
-        return _transferAndCall(_msgSender(), to, gtValue, data);
-    }
-    
-    function transferAndCall(address to, uint64 value, bytes calldata data) public virtual returns (gtBool) {
-        gtUint64 gtValue = MpcCore.setPublic64(value);
-        return _transferAndCall(_msgSender(), to, gtValue, data);
-    }
 }
