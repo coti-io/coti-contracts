@@ -57,7 +57,13 @@ abstract contract PrivateERC20 is Context, IPrivateERC20, ERC165 {
      */
     error ERC20InvalidSpender(address spender);
 
- /**
+    /**
+     * @dev Indicates a failure with the counterparty `account` in allowance operations.
+     * @param account Address that is the owner or spender in the allowance pair.
+     */
+    error ERC20InvalidAccount(address account);
+
+    /**
      * @dev Sets the values for {name} and {symbol}.
      *
      * All two of these values are immutable: they can only be set once during
@@ -206,7 +212,17 @@ abstract contract PrivateERC20 is Context, IPrivateERC20, ERC165 {
         }
     }
 
+    /**
+     * @dev See {IPrivateERC20-reencryptAllowance}.
+     *
+     * Requirements:
+     * - `account` cannot be the zero address.
+     */
     function reencryptAllowance(address account, bool isSpender) public virtual returns (bool) {
+        if (account == address(0)) {
+            revert ERC20InvalidAccount(address(0));
+        }
+
         address encryptionAddress = _getAccountEncryptionAddress(_msgSender());
 
         if (isSpender) {

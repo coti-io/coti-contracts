@@ -91,6 +91,9 @@ interface IPrivateERC20 {
      * @param isSpender If true, `account` is the spender and caller is the owner.
      *                  If false, `account` is the owner and caller is the spender.
      *
+     * Requirements:
+     * - `account` cannot be the zero address.
+     *
      * Returns a boolean value indicating whether the operation succeeded.
      */
     function reencryptAllowance(address account, bool isSpender) external returns (bool);
