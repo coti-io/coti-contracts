@@ -57,7 +57,12 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
         bool success = token.transferFrom(msg.sender, address(this), amount);
         if (!success) revert TokenTransferFailed();
 
-        IPrivateERC20(privateTokenAddress).mint(msg.sender, amount);
+        // Calculate and deduct deposit fee
+        uint256 feeAmount = _calculateFeeAmount(amount, depositFeeBasisPoints);
+        uint256 amountAfterFee = amount - feeAmount;
+        accumulatedFees += feeAmount;
+
+        IPrivateERC20(privateTokenAddress).mint(msg.sender, amountAfterFee);
 
         emit Deposit(msg.sender, amount);
     }
@@ -72,7 +77,11 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
         if (amount == 0) revert AmountZero();
         _checkWithdrawLimits(amount);
         
-        uint256 publicAmount = amount;
+        // Calculate fee
+        uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
+        uint256 publicAmount = amount - feeAmount;
+        accumulatedFees += feeAmount;
+        
         uint256 bridgeBalance = token.balanceOf(address(this));
         if (bridgeBalance < publicAmount) revert InsufficientBridgeLiquidity();
         
@@ -83,7 +92,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
         // Burn private tokens from bridge's balance
         IPrivateERC20(privateTokenAddress).burn(amount);
         
-        // Transfer public tokens to user
+        // Transfer public tokens to user (minus fee)
         bool success = token.transfer(msg.sender, publicAmount);
         if (!success) revert TokenTransferFailed();
         
@@ -106,19 +115,43 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
         
         _checkWithdrawLimits(amount);
         
-        uint256 publicAmount = amount;
+        // Calculate fee
+        uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
+        uint256 publicAmount = amount - feeAmount;
+        accumulatedFees += feeAmount;
+        
         uint256 bridgeBalance = token.balanceOf(address(this));
         if (bridgeBalance < publicAmount) revert InsufficientBridgeLiquidity();
         
         // Burn private tokens (already received by bridge via transfer)
         IPrivateERC20(privateTokenAddress).burn(amount);
         
-        // Transfer public tokens to original sender
+        // Transfer public tokens to original sender (minus fee)
         bool success = token.transfer(from, publicAmount);
         if (!success) revert TokenTransferFailed();
         
         emit Withdraw(from, amount);
         return true;
+    }
+
+    /**
+     * @notice Withdraw accumulated fees (ERC20 implementation)
+     * @param to Address to send fees to
+     * @param amount Amount of fees to withdraw
+     * @dev Only the owner can call this function
+     */
+    function withdrawFees(address to, uint256 amount) external override onlyOwner {
+        if (to == address(0)) revert InvalidAddress();
+        if (amount == 0) revert AmountZero();
+        if (amount > accumulatedFees) revert InsufficientAccumulatedFees();
+        
+        accumulatedFees -= amount;
+        
+        // Transfer public ERC20 tokens
+        bool success = token.transfer(to, amount);
+        if (!success) revert TokenTransferFailed();
+        
+        emit FeesWithdrawn(to, amount);
     }
 
     /**

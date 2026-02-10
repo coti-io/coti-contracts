@@ -22,6 +22,18 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
     /// @notice Minimum amount required for a withdrawal
     uint256 public minWithdrawAmount;
 
+    /// @notice Deposit fee in basis points (1 bp = 0.01%, 100 bp = 1%)
+    uint256 public depositFeeBasisPoints;
+
+    /// @notice Withdrawal fee in basis points (1 bp = 0.01%, 100 bp = 1%)
+    uint256 public withdrawFeeBasisPoints;
+
+    /// @notice Accumulated fees collected by the bridge
+    uint256 public accumulatedFees;
+
+    /// @notice Maximum fee allowed (10% = 1000 basis points)
+    uint256 public constant MAX_FEE_BASIS_POINTS = 1000;
+
     error AmountZero();
     error InsufficientEthBalance();
     error EthTransferFailed();
@@ -33,6 +45,8 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
     error DepositExceedsMaximum();
     error WithdrawBelowMinimum();
     error WithdrawExceedsMaximum();
+    error InvalidFee();
+    error InsufficientAccumulatedFees();
 
     /// @notice Emitted when a user deposits tokens
     event Deposit(address indexed user, uint256 amount);
@@ -42,6 +56,12 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
     
     /// @notice Emitted when deposit/withdrawal limits are updated
     event LimitsUpdated(uint256 minDeposit, uint256 maxDeposit, uint256 minWithdraw, uint256 maxWithdraw);
+    
+    /// @notice Emitted when fees are updated
+    event FeeUpdated(string feeType, uint256 newFeeBasisPoints);
+    
+    /// @notice Emitted when accumulated fees are withdrawn
+    event FeesWithdrawn(address indexed to, uint256 amount);
 
     constructor() Ownable(msg.sender) {
         maxDepositAmount = type(uint256).max;
@@ -103,5 +123,56 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
     function _checkWithdrawLimits(uint256 amount) internal view {
         if (amount < minWithdrawAmount) revert WithdrawBelowMinimum();
         if (amount > maxWithdrawAmount) revert WithdrawExceedsMaximum();
+    }
+
+    /**
+     * @notice Set the deposit fee
+     * @param _feeBasisPoints New deposit fee in basis points (max 1000 = 10%)
+     * @dev Only the owner can call this function
+     */
+    function setDepositFee(uint256 _feeBasisPoints) external onlyOwner {
+        if (_feeBasisPoints > MAX_FEE_BASIS_POINTS) revert InvalidFee();
+        depositFeeBasisPoints = _feeBasisPoints;
+        emit FeeUpdated("deposit", _feeBasisPoints);
+    }
+
+    /**
+     * @notice Set the withdrawal fee
+     * @param _feeBasisPoints New withdrawal fee in basis points (max 1000 = 10%)
+     * @dev Only the owner can call this function
+     */
+    function setWithdrawFee(uint256 _feeBasisPoints) external onlyOwner {
+        if (_feeBasisPoints > MAX_FEE_BASIS_POINTS) revert InvalidFee();
+        withdrawFeeBasisPoints = _feeBasisPoints;
+        emit FeeUpdated("withdraw", _feeBasisPoints);
+    }
+
+    /**
+     * @notice Calculate fee amount based on the input amount and fee basis points
+     * @param amount The amount to calculate fee for
+     * @param feeBasisPoints Fee in basis points (100 bp = 1%)
+     * @return The fee amount
+     */
+    function _calculateFeeAmount(uint256 amount, uint256 feeBasisPoints) internal pure returns (uint256) {
+        if (feeBasisPoints == 0) return 0;
+        return (amount * feeBasisPoints) / 10000;
+    }
+
+    /**
+     * @notice Withdraw accumulated fees
+     * @param to Address to send the fees to
+     * @param amount Amount of fees to withdraw
+     * @dev Only the owner can call this function
+     */
+    function withdrawFees(address to, uint256 amount) external virtual onlyOwner {
+        if (to == address(0)) revert InvalidAddress();
+        if (amount == 0) revert AmountZero();
+        if (amount > accumulatedFees) revert InsufficientAccumulatedFees();
+        
+        accumulatedFees -= amount;
+        emit FeesWithdrawn(to, amount);
+        
+        // Note: Actual transfer implementation will be in derived contracts
+        // since they handle the specific token type (ETH, ERC20, etc.)
     }
 }
