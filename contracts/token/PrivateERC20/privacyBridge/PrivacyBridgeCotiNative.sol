@@ -34,7 +34,12 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
         
         _checkDepositLimits(msg.value);
         
-        privateCoti.mint(sender, msg.value);
+        // Calculate and deduct deposit fee
+        uint256 feeAmount = _calculateFeeAmount(msg.value, depositFeeBasisPoints);
+        uint256 amountAfterFee = msg.value - feeAmount;
+        accumulatedFees += feeAmount;
+        
+        privateCoti.mint(sender, amountAfterFee);
         
         emit Deposit(sender, msg.value);
     }
@@ -65,7 +70,11 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
         
         _checkWithdrawLimits(amount);
         
-        uint256 publicAmount = amount;
+        // Calculate fee
+        uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
+        uint256 publicAmount = amount - feeAmount;
+        accumulatedFees += feeAmount;
+        
         if (address(this).balance < publicAmount) revert InsufficientEthBalance();
         
         // Private tokens are already transferred to this contract by transferAndCall
@@ -87,7 +96,11 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
         if (amount == 0) revert AmountZero();
         _checkWithdrawLimits(amount);
         
-        uint256 publicAmount = amount;
+        // Calculate fee
+        uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
+        uint256 publicAmount = amount - feeAmount;
+        accumulatedFees += feeAmount;
+        
         if (address(this).balance < publicAmount) revert InsufficientEthBalance();
         
         // Transfer private tokens from user to bridge (requires prior approval)
@@ -116,6 +129,26 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
      */
     function getBridgeBalance() external view returns (uint256) {
         return address(this).balance;
+    }
+
+    /**
+     * @notice Withdraw accumulated fees (Native implementation)
+     * @param to Address to send fees to
+     * @param amount Amount of fees to withdraw
+     * @dev Only the owner can call this function
+     */
+    function withdrawFees(address to, uint256 amount) external override onlyOwner {
+        if (to == address(0)) revert InvalidAddress();
+        if (amount == 0) revert AmountZero();
+        if (amount > accumulatedFees) revert InsufficientAccumulatedFees();
+        
+        accumulatedFees -= amount;
+        
+        // Transfer native COTI tokens
+        (bool success, ) = to.call{value: amount}("");
+        if (!success) revert EthTransferFailed();
+        
+        emit FeesWithdrawn(to, amount);
     }
 
     /**
