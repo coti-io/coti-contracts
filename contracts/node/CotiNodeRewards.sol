@@ -24,11 +24,11 @@ contract CotiNodeRewards is Ownable, ReentrancyGuard {
     mapping(bytes32 => uint256) public eligibilityRules;
 
     /// @notice Predefined rule key: Platform USDC amount (value in USDC smallest unit, 6 decimals; e.g. 10 * 10^6 = 10 USDC)
-    bytes32 public constant RULE_PLATFORM_USDC_AMOUNT = keccak256("Platform_USDC_amount");
+    bytes32 public constant RULE_PLATFORM_USDC_AMOUNT = keccak256("RULE_PLATFORM_USDC_AMOUNT");
     /// @notice Predefined rule key: Platform COTI amount (value in COTI smallest unit, 18 decimals; e.g. 5e18 = 5 COTI)
-    bytes32 public constant RULE_PLATFORM_COTI_AMOUNT = keccak256("Platform_COTI_amount");
+    bytes32 public constant RULE_PLATFORM_COTI_AMOUNT = keccak256("RULE_PLATFORM_COTI_AMOUNT");
     /// @notice Predefined rule key: Full node uptime percentage threshold (e.g. 98 for 98%)
-    bytes32 public constant RULE_FULL_NODE_UPTIME_PERCENTAGE_THRESHOLD = keccak256("Full_node_up_time_percentage_threshold");
+    bytes32 public constant RULE_FULL_NODE_UPTIME_PERCENTAGE_THRESHOLD = keccak256("RULE_FULL_NODE_UPTIME_PERCENTAGE_THRESHOLD");
 
     // ============ Reward state ============
     /// @notice Per address: total COTI ever claimed by this address
