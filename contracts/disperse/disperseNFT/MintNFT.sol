@@ -98,6 +98,24 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
     /// @notice Emitted when mint pause state is changed
     event MintPausedSet(bool paused);
 
+    /// @notice Emitted when a token's image URI is updated
+    event ImageURIUpdated(
+        uint256 indexed tokenId,
+        string newImageURI
+    );
+
+    /// @notice Emitted when a token's social URL is updated
+    event SocialURLUpdated(
+        uint256 indexed tokenId,
+        string newSocialURL
+    );
+
+    /// @notice Emitted when a token's node name is updated
+    event NodeNameUpdated(
+        uint256 indexed tokenId,
+        string newNodeName
+    );
+
     /**
      * @notice Contract constructor
      * @param name_ ERC-721 collection name
@@ -230,6 +248,60 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
     function nodeData(uint256 tokenId) external view returns (NodeData memory) {
         if (_ownerOf(tokenId) == address(0)) revert NonexistentToken();
         return _nodeData[tokenId];
+    }
+
+    /**
+     * @notice Update the image URI for a token
+     * @param tokenId Token ID to update
+     * @param newImageURI New image URI (ipfs:// or https://)
+     * @dev Only the contract owner can call this function
+     * @dev Reverts if:
+     *  - Token does not exist (NonexistentToken)
+     * @dev Emits ImageURIUpdated event
+     */
+    function setImageURI(uint256 tokenId, string calldata newImageURI) external onlyOwner {
+        if (_ownerOf(tokenId) == address(0)) revert NonexistentToken();
+
+        _nodeData[tokenId].nodeImageURI = newImageURI;
+        emit ImageURIUpdated(tokenId, newImageURI);
+    }
+
+    /**
+     * @notice Update the social URL for a token
+     * @param tokenId Token ID to update
+     * @param newSocialURL New social URL (<=150 bytes)
+     * @dev Only the contract owner can call this function
+     * @dev Reverts if:
+     *  - Token does not exist (NonexistentToken)
+     *  - newSocialURL exceeds MAX_TEXT_BYTES (SocialURLTooLong)
+     * @dev Emits SocialURLUpdated event
+     */
+    function setSocialURL(uint256 tokenId, string calldata newSocialURL) external onlyOwner {
+        if (_ownerOf(tokenId) == address(0)) revert NonexistentToken();
+        if (bytes(newSocialURL).length > MAX_TEXT_BYTES) revert SocialURLTooLong();
+
+        _nodeData[tokenId].socialURL = newSocialURL;
+        emit SocialURLUpdated(tokenId, newSocialURL);
+    }
+
+    /**
+     * @notice Update the node name for a token
+     * @param tokenId Token ID to update
+     * @param newNodeName New node name (required, <=150 bytes)
+     * @dev Only the contract owner can call this function
+     * @dev Reverts if:
+     *  - Token does not exist (NonexistentToken)
+     *  - newNodeName is empty (NodeNameRequired)
+     *  - newNodeName exceeds MAX_TEXT_BYTES (NodeNameTooLong)
+     * @dev Emits NodeNameUpdated event
+     */
+    function setNodeName(uint256 tokenId, string calldata newNodeName) external onlyOwner {
+        if (_ownerOf(tokenId) == address(0)) revert NonexistentToken();
+        if (bytes(newNodeName).length == 0) revert NodeNameRequired();
+        if (bytes(newNodeName).length > MAX_TEXT_BYTES) revert NodeNameTooLong();
+
+        _nodeData[tokenId].nodeName = newNodeName;
+        emit NodeNameUpdated(tokenId, newNodeName);
     }
 
     /// -----------------------------------------------------------------------
