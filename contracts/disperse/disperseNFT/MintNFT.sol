@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/Base64.sol";
+
 /**
  * @title SoulboundNodeNFT
  * @notice ERC-721 Soulbound Node Identity NFT with ERC-5192 support
@@ -21,11 +26,6 @@ pragma solidity ^0.8.20;
  *  - Credentials
  *  - Non-transferable attestations
  */
-
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/Base64.sol";
 
 /// -----------------------------------------------------------------------
 /// ERC-5192: Minimal Soulbound NFTs
@@ -78,9 +78,9 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
 
     /// @notice Node-specific metadata stored on-chain
     struct NodeData {
-        string nodeName;        // required
-        string nodeImageURI;    // optional (ipfs:// or https://)
-        string socialURL;       // optional
+        string nodeName; // required
+        string nodeImageURI; // optional (ipfs:// or https://)
+        string socialURL; // optional
     }
 
     /// @dev tokenId => NodeData
@@ -99,22 +99,13 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
     event MintPausedSet(bool paused);
 
     /// @notice Emitted when a token's image URI is updated
-    event ImageURIUpdated(
-        uint256 indexed tokenId,
-        string newImageURI
-    );
+    event ImageURIUpdated(uint256 indexed tokenId, string newImageURI);
 
     /// @notice Emitted when a token's social URL is updated
-    event SocialURLUpdated(
-        uint256 indexed tokenId,
-        string newSocialURL
-    );
+    event SocialURLUpdated(uint256 indexed tokenId, string newSocialURL);
 
     /// @notice Emitted when a token's node name is updated
-    event NodeNameUpdated(
-        uint256 indexed tokenId,
-        string newNodeName
-    );
+    event NodeNameUpdated(uint256 indexed tokenId, string newNodeName);
 
     /**
      * @notice Contract constructor
@@ -177,12 +168,9 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
      * @return true if the contract supports the interface, false otherwise
      * @dev Supports ERC721, ERC165, and ERC5192 interfaces
      */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC721)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC721) returns (bool) {
         return
             interfaceId == type(IERC5192).interfaceId ||
             super.supportsInterface(interfaceId);
@@ -251,16 +239,44 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
     }
 
     /**
+     * @notice Get token ID for a given owner address
+     * @param owner The address to query
+     * @return tokenId The ID of the token owned by the address, or 0 if none
+     * @dev Iterates over token IDs. Since mints are sequential and users only own 1, this is a linear scan.
+     * In a production environment with millions of NFTs an off-chain indexer is preferred,
+     * but for this scale and testnet use-case, this convenience function works.
+     */
+    function tokenOfOwner(address owner) external view returns (uint256) {
+        if (owner == address(0)) revert InvalidRecipient();
+        if (balanceOf(owner) == 0) return 0;
+
+        // Since the user only has 1 NFT due to the mint restriction, we can find it
+        for (uint256 i = 1; i <= nextTokenId; ++i) {
+            if (_ownerOf(i) == owner) {
+                return i;
+            }
+        }
+        return 0; // Should never reach here if balanceOf > 0, but fallback
+    }
+
+    /**
      * @notice Update the image URI for a token
      * @param tokenId Token ID to update
      * @param newImageURI New image URI (ipfs:// or https://)
-     * @dev Only the contract owner can call this function
+     * @dev Token owner or contract owner can call this function
      * @dev Reverts if:
      *  - Token does not exist (NonexistentToken)
+     *  - Caller is not authorized (NotAuthorized)
      * @dev Emits ImageURIUpdated event
      */
-    function setImageURI(uint256 tokenId, string calldata newImageURI) external onlyOwner {
-        if (_ownerOf(tokenId) == address(0)) revert NonexistentToken();
+    function setImageURI(
+        uint256 tokenId,
+        string calldata newImageURI
+    ) external {
+        address tokenOwner = _ownerOf(tokenId);
+        if (tokenOwner == address(0)) revert NonexistentToken();
+        if (msg.sender != tokenOwner && msg.sender != owner())
+            revert NotAuthorized();
 
         _nodeData[tokenId].nodeImageURI = newImageURI;
         emit ImageURIUpdated(tokenId, newImageURI);
@@ -270,15 +286,23 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
      * @notice Update the social URL for a token
      * @param tokenId Token ID to update
      * @param newSocialURL New social URL (<=150 bytes)
-     * @dev Only the contract owner can call this function
+     * @dev Token owner or contract owner can call this function
      * @dev Reverts if:
      *  - Token does not exist (NonexistentToken)
      *  - newSocialURL exceeds MAX_TEXT_BYTES (SocialURLTooLong)
+     *  - Caller is not authorized (NotAuthorized)
      * @dev Emits SocialURLUpdated event
      */
-    function setSocialURL(uint256 tokenId, string calldata newSocialURL) external onlyOwner {
-        if (_ownerOf(tokenId) == address(0)) revert NonexistentToken();
-        if (bytes(newSocialURL).length > MAX_TEXT_BYTES) revert SocialURLTooLong();
+    function setSocialURL(
+        uint256 tokenId,
+        string calldata newSocialURL
+    ) external {
+        address tokenOwner = _ownerOf(tokenId);
+        if (tokenOwner == address(0)) revert NonexistentToken();
+        if (msg.sender != tokenOwner && msg.sender != owner())
+            revert NotAuthorized();
+        if (bytes(newSocialURL).length > MAX_TEXT_BYTES)
+            revert SocialURLTooLong();
 
         _nodeData[tokenId].socialURL = newSocialURL;
         emit SocialURLUpdated(tokenId, newSocialURL);
@@ -288,17 +312,25 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
      * @notice Update the node name for a token
      * @param tokenId Token ID to update
      * @param newNodeName New node name (required, <=150 bytes)
-     * @dev Only the contract owner can call this function
+     * @dev Token owner or contract owner can call this function
      * @dev Reverts if:
      *  - Token does not exist (NonexistentToken)
      *  - newNodeName is empty (NodeNameRequired)
      *  - newNodeName exceeds MAX_TEXT_BYTES (NodeNameTooLong)
+     *  - Caller is not authorized (NotAuthorized)
      * @dev Emits NodeNameUpdated event
      */
-    function setNodeName(uint256 tokenId, string calldata newNodeName) external onlyOwner {
-        if (_ownerOf(tokenId) == address(0)) revert NonexistentToken();
+    function setNodeName(
+        uint256 tokenId,
+        string calldata newNodeName
+    ) external {
+        address tokenOwner = _ownerOf(tokenId);
+        if (tokenOwner == address(0)) revert NonexistentToken();
+        if (msg.sender != tokenOwner && msg.sender != owner())
+            revert NotAuthorized();
         if (bytes(newNodeName).length == 0) revert NodeNameRequired();
-        if (bytes(newNodeName).length > MAX_TEXT_BYTES) revert NodeNameTooLong();
+        if (bytes(newNodeName).length > MAX_TEXT_BYTES)
+            revert NodeNameTooLong();
 
         _nodeData[tokenId].nodeName = newNodeName;
         emit NodeNameUpdated(tokenId, newNodeName);
@@ -313,7 +345,10 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
      * @dev Always reverts with SoulboundOperation error since tokens cannot be transferred
      * @dev Parameters match ERC721 interface but are unused
      */
-    function approve(address /* operator */, uint256 /* tokenId */) public pure override {
+    function approve(
+        address /* operator */,
+        uint256 /* tokenId */
+    ) public pure override {
         revert SoulboundOperation();
     }
 
@@ -322,7 +357,10 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
      * @dev Always reverts with SoulboundOperation error since tokens cannot be transferred
      * @dev Parameters match ERC721 interface but are unused
      */
-    function setApprovalForAll(address /* operator */, bool /* approved */) public pure override {
+    function setApprovalForAll(
+        address /* operator */,
+        bool /* approved */
+    ) public pure override {
         revert SoulboundOperation();
     }
 
@@ -331,25 +369,11 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
      * @dev Always reverts with SoulboundOperation error since tokens are soulbound
      * @dev Parameters match ERC721 interface but are unused
      */
-    function transferFrom(address /* from */, address /* to */, uint256 /* tokenId */) public pure override {
-        revert SoulboundOperation();
-    }
-
-    /**
-     * @notice Safely transfer a token (disabled for soulbound NFTs)
-     * @dev Always reverts with SoulboundOperation error since tokens are soulbound
-     * @dev Parameters match ERC721 interface but are unused
-     */
-    function safeTransferFrom(address /* from */, address /* to */, uint256 /* tokenId */) public pure override {
-        revert SoulboundOperation();
-    }
-
-    /**
-     * @notice Safely transfer a token with data (disabled for soulbound NFTs)
-     * @dev Always reverts with SoulboundOperation error since tokens are soulbound
-     * @dev Parameters match ERC721 interface but are unused
-     */
-    function safeTransferFrom(address /* from */, address /* to */, uint256 /* tokenId */, bytes memory /* data */) public pure override {
+    function transferFrom(
+        address /* from */,
+        address /* to */,
+        uint256 /* tokenId */
+    ) public pure override {
         revert SoulboundOperation();
     }
 
@@ -368,7 +392,8 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
      */
     function burn(uint256 tokenId) external {
         address tokenOwner = ownerOf(tokenId);
-        if (msg.sender != tokenOwner && msg.sender != owner()) revert NotAuthorized();
+        if (msg.sender != tokenOwner && msg.sender != owner())
+            revert NotAuthorized();
 
         _burn(tokenId);
         delete _nodeData[tokenId];
@@ -386,14 +411,20 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
      * @dev Includes token name, description, attributes (node name, social URL), and optional image
      * @dev Reverts if the token does not exist (NonexistentToken)
      */
-    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+    function tokenURI(
+        uint256 tokenId
+    ) public view override returns (string memory) {
         if (_ownerOf(tokenId) == address(0)) revert NonexistentToken();
 
         NodeData memory d = _nodeData[tokenId];
 
         string memory attributes = string.concat(
-            '[{"trait_type":"Node name","value":"', _escapeJSON(d.nodeName), '"}',
-            ',{"trait_type":"Social URL","value":"', _escapeJSON(d.socialURL), '"}]'
+            '[{"trait_type":"Node name","value":"',
+            _escapeJSON(d.nodeName),
+            '"}',
+            ',{"trait_type":"Social URL","value":"',
+            _escapeJSON(d.socialURL),
+            '"}]'
         );
 
         string memory imagePart = bytes(d.nodeImageURI).length == 0
@@ -401,17 +432,20 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
             : string.concat(',"image":"', _escapeJSON(d.nodeImageURI), '"');
 
         string memory json = string.concat(
-            '{"name":"Node #', tokenId.toString(),
+            '{"name":"Node #',
+            tokenId.toString(),
             '","description":"Soulbound Node NFT",',
-            '"attributes":', attributes,
+            '"attributes":',
+            attributes,
             imagePart,
             "}"
         );
 
-        return string.concat(
-            "data:application/json;base64,",
-            Base64.encode(bytes(json))
-        );
+        return
+            string.concat(
+                "data:application/json;base64,",
+                Base64.encode(bytes(json))
+            );
     }
 
     /// -----------------------------------------------------------------------
@@ -425,7 +459,9 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
      * @dev Used internally to safely embed strings in JSON metadata
      * @dev Escapes double quotes (") and backslashes (\) by prefixing them with a backslash
      */
-    function _escapeJSON(string memory s) internal pure returns (string memory) {
+    function _escapeJSON(
+        string memory s
+    ) internal pure returns (string memory) {
         bytes memory b = bytes(s);
         bytes memory out = new bytes(b.length * 2);
         uint256 j;
