@@ -20,32 +20,25 @@ import type {
   TypedContractMethod,
 } from "../../../../common";
 
-export type CtUint128Struct = { high: BigNumberish; low: BigNumberish };
-
-export type CtUint128StructOutput = [high: bigint, low: bigint] & {
-  high: bigint;
-  low: bigint;
+export type CtUint256Struct = {
+  ciphertextHigh: BigNumberish;
+  ciphertextLow: BigNumberish;
 };
 
-export type CtUint256Struct = { high: CtUint128Struct; low: CtUint128Struct };
-
 export type CtUint256StructOutput = [
-  high: CtUint128StructOutput,
-  low: CtUint128StructOutput
-] & { high: CtUint128StructOutput; low: CtUint128StructOutput };
+  ciphertextHigh: bigint,
+  ciphertextLow: bigint
+] & { ciphertextHigh: bigint; ciphertextLow: bigint };
 
 export type ItUint256Struct = {
   ciphertext: CtUint256Struct;
-  signature: [[BytesLike, BytesLike], [BytesLike, BytesLike]];
+  signature: BytesLike;
 };
 
 export type ItUint256StructOutput = [
   ciphertext: CtUint256StructOutput,
-  signature: [[string, string], [string, string]]
-] & {
-  ciphertext: CtUint256StructOutput;
-  signature: [[string, string], [string, string]];
-};
+  signature: string
+] & { ciphertext: CtUint256StructOutput; signature: string };
 
 export interface Miscellaneous256BitTestsContractInterface extends Interface {
   getFunction(
@@ -196,12 +189,7 @@ export interface Miscellaneous256BitTestsContract extends BaseContract {
 
   ctNumbers2: TypedContractMethod<
     [arg0: BigNumberish],
-    [
-      [CtUint128StructOutput, CtUint128StructOutput] & {
-        high: CtUint128StructOutput;
-        low: CtUint128StructOutput;
-      }
-    ],
+    [[bigint, bigint] & { ciphertextHigh: bigint; ciphertextLow: bigint }],
     "view"
   >;
 
@@ -269,12 +257,7 @@ export interface Miscellaneous256BitTestsContract extends BaseContract {
     nameOrSignature: "ctNumbers2"
   ): TypedContractMethod<
     [arg0: BigNumberish],
-    [
-      [CtUint128StructOutput, CtUint128StructOutput] & {
-        high: CtUint128StructOutput;
-        low: CtUint128StructOutput;
-      }
-    ],
+    [[bigint, bigint] & { ciphertextHigh: bigint; ciphertextLow: bigint }],
     "view"
   >;
   getFunction(

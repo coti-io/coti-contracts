@@ -16,7 +16,7 @@ contract Miscellaneous256BitTestsContract {
         _resetNumbers2(a_.length);
 
         for (uint256 i = 0; i < a_.length; ++i) {
-            gtUint256 memory gtA = MpcCore.validateCiphertext(a_[i]);
+            gtUint256 gtA = MpcCore.validateCiphertext(a_[i]);
             
             numbers2[i] = MpcCore.decrypt(gtA);
         }
@@ -26,7 +26,7 @@ contract Miscellaneous256BitTestsContract {
         _resetNumbers2(a_.length);
 
         for (uint256 i = 0; i < a_.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a_[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a_[i]);
             
             numbers2[i] = MpcCore.decrypt(gtA);
         }
@@ -36,7 +36,7 @@ contract Miscellaneous256BitTestsContract {
         _resetCtNumbers2(a_.length);
 
         for (uint256 i = 0; i < a_.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a_[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a_[i]);
             
             ctNumbers2[i] = MpcCore.offBoardToUser(gtA, msg.sender);
         }
@@ -74,9 +74,9 @@ contract Miscellaneous256BitTestsContract {
         gtBool gtSuccess;
 
         for (uint256 i = 0; i < a_.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a_[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b_[i]);
-            gtUint256 memory gtAmount = MpcCore.setPublic256(amount_[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a_[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b_[i]);
+            gtUint256 gtAmount = MpcCore.setPublic256(amount_[i]);
             
             (gtA, gtB, gtSuccess) = MpcCore.transfer(gtA, gtB, gtAmount);
 
@@ -109,10 +109,10 @@ contract Miscellaneous256BitTestsContract {
         gtBool gtSuccess;
 
         for (uint256 i = 0; i < a_.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a_[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b_[i]);
-            gtUint256 memory gtAmount = MpcCore.setPublic256(amount_[i]);
-            gtUint256 memory gtAllowance = MpcCore.setPublic256(allowance_[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a_[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b_[i]);
+            gtUint256 gtAmount = MpcCore.setPublic256(amount_[i]);
+            gtUint256 gtAllowance = MpcCore.setPublic256(allowance_[i]);
             
             (gtA, gtB, gtSuccess, gtAllowance) = MpcCore.transferWithAllowance(gtA, gtB, gtAmount, gtAllowance);
 
@@ -140,10 +140,10 @@ contract Miscellaneous256BitTestsContract {
         // Resize the numbers array to match input length
         for(uint i = 0; i < length; i++) {
             ctNumbers2.push(
-                ctUint256(
-                    ctUint128(ctUint64.wrap(0), ctUint64.wrap(0)),
-                    ctUint128(ctUint64.wrap(0), ctUint64.wrap(0))
-                )
+                ctUint256({
+                    ciphertextHigh: ctUint128.wrap(0),
+                    ciphertextLow: ctUint128.wrap(0)
+                })
             );
         }
     }

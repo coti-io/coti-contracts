@@ -3,8 +3,11 @@
 /* eslint-disable */
 import type * as checkedArithmeticWIthOverflowBitTestsContractSol from "./CheckedArithmeticWIthOverflowBitTestsContract.sol";
 export type { checkedArithmeticWIthOverflowBitTestsContractSol };
+import type * as encryptionTestSol from "./EncryptionTest.sol";
+export type { encryptionTestSol };
 export type { Arithmetic128BitTestsContract } from "./Arithmetic128BitTestsContract";
 export type { Arithmetic256BitTestsContract } from "./Arithmetic256BitTestsContract";
+export type { ArithmeticSigned256BitTestsContract } from "./ArithmeticSigned256BitTestsContract";
 export type { ArithmeticTestsContract } from "./ArithmeticTestsContract";
 export type { Bitwise128BitTestsContract } from "./Bitwise128BitTestsContract";
 export type { Bitwise256BitTestsContract } from "./Bitwise256BitTestsContract";
@@ -19,7 +22,14 @@ export type { Miscellaneous1TestsContract } from "./Miscellaneous1TestsContract"
 export type { Miscellaneous256BitTestsContract } from "./Miscellaneous256BitTestsContract";
 export type { MiscellaneousTestsContract } from "./MiscellaneousTestsContract";
 export type { OffboardToUserKeyTestContract } from "./OffboardToUserKeyTestContract";
+export type { RevertTestsContract } from "./RevertTestsContract";
 export type { ShiftTestsContract } from "./ShiftTestsContract";
+export type { SignedInt128TestsContract } from "./SignedInt128TestsContract";
+export type { SignedInt16TestsContract } from "./SignedInt16TestsContract";
+export type { SignedInt256TestsContract } from "./SignedInt256TestsContract";
+export type { SignedInt32TestsContract } from "./SignedInt32TestsContract";
+export type { SignedInt64TestsContract } from "./SignedInt64TestsContract";
+export type { SignedInt8TestsContract } from "./SignedInt8TestsContract";
 export type { StringTestsContract } from "./StringTestsContract";
 export type { TransferScalarTestsContract } from "./TransferScalarTestsContract";
 export type { TransferTestsContract } from "./TransferTestsContract";
@@ -29,3 +39,5 @@ export type { TransferWithAllowance64_64TestsContract } from "./TransferWithAllo
 export type { TransferWithAllowance64_8TestsContract } from "./TransferWithAllowance64_8TestsContract";
 export type { TransferWithAllowanceScalarTestsContract } from "./TransferWithAllowanceScalarTestsContract";
 export type { TransferWithAllowanceTestsContract } from "./TransferWithAllowanceTestsContract";
+export type { UnsignedInt256TestsContract } from "./UnsignedInt256TestsContract";
+export type { UnsignedInt8TestsContract } from "./UnsignedInt8TestsContract";

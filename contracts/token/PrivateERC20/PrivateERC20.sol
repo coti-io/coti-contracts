@@ -470,7 +470,7 @@ abstract contract PrivateERC20 is Context, IPrivateERC20 {
 
     function _safeOnboard(ctUint64 value) internal returns (gtUint64) {
         if (ctUint64.unwrap(value) == 0) {
-            return MpcCore.setPublic64(0);
+            return MpcCore.setPublic64(uint64(0));
         }
 
         return MpcCore.onBoard(value);

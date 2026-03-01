@@ -14,8 +14,8 @@ contract Comparison256BitTestsContract {
         _resetBools(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             boolResults[i] = MpcCore.decrypt(MpcCore.eq(gtA, gtB));
 
@@ -30,8 +30,8 @@ contract Comparison256BitTestsContract {
         _resetBools(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             boolResults[i] = MpcCore.decrypt(MpcCore.ne(gtA, gtB));
 
@@ -46,8 +46,8 @@ contract Comparison256BitTestsContract {
         _resetBools(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             boolResults[i] = MpcCore.decrypt(MpcCore.ge(gtA, gtB));
 
@@ -62,8 +62,8 @@ contract Comparison256BitTestsContract {
         _resetBools(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             boolResults[i] = MpcCore.decrypt(MpcCore.gt(gtA, gtB));
 
@@ -78,8 +78,8 @@ contract Comparison256BitTestsContract {
         _resetBools(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             boolResults[i] = MpcCore.decrypt(MpcCore.le(gtA, gtB));
 
@@ -94,8 +94,8 @@ contract Comparison256BitTestsContract {
         _resetBools(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             boolResults[i] = MpcCore.decrypt(MpcCore.lt(gtA, gtB));
 
@@ -110,8 +110,8 @@ contract Comparison256BitTestsContract {
         _resetNumbers2(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             uintResults2[i] = MpcCore.decrypt(MpcCore.min(gtA, gtB));
 
@@ -126,8 +126,8 @@ contract Comparison256BitTestsContract {
         _resetNumbers2(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             uintResults2[i] = MpcCore.decrypt(MpcCore.max(gtA, gtB));
 

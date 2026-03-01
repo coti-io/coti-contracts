@@ -32,11 +32,11 @@ describe("MPC Core", function () {
     it("Should store the string encrypted using the users key", async function () {
         const { contract, contractAddress, owner } = deployment
 
-        const itString = await owner.encryptValue(
+        const itString = await owner.encryptString(
             str,
             contractAddress,
             contract.setUserEncryptedString.fragment.selector
-        ) as itString
+        )
 
         const tx = await contract
             .connect(owner)
@@ -50,7 +50,7 @@ describe("MPC Core", function () {
 
         const userEncryptedString = await contract.getUserEncryptedString()
 
-        const decryptedStr = await owner.decryptValue(userEncryptedString)
+        const decryptedStr = await owner.decryptString(userEncryptedString)
 
         expect(decryptedStr).to.equal(str)
     })
@@ -60,7 +60,7 @@ describe("MPC Core", function () {
 
         const userEncryptedString = await contract.getUserEncryptedString()
 
-        const decryptedStr = await otherAccount.decryptValue(userEncryptedString)
+        const decryptedStr = await otherAccount.decryptString(userEncryptedString)
 
         expect(decryptedStr).to.not.equal(str)
     })
@@ -72,11 +72,11 @@ describe("MPC Core", function () {
     it("Should store the string encrypted using the network key", async function () {
         const { contract, contractAddress, owner } = deployment
 
-        const itString = await owner.encryptValue(
+        const itString = await owner.encryptString(
             str,
             contractAddress,
             contract.setNetworkEncryptedString.fragment.selector
-        ) as itString
+        )
 
         const tx = await contract
             .connect(owner)
@@ -118,7 +118,7 @@ describe("MPC Core", function () {
 
         const userEncryptedString = await contract.getUserEncryptedString()
 
-        const decryptedStr = await owner.decryptValue(userEncryptedString)
+        const decryptedStr = await owner.decryptString(userEncryptedString)
 
         expect(decryptedStr).to.equal(str)
     })
@@ -132,11 +132,11 @@ describe("MPC Core", function () {
         it("Should set isEqual to true", async function () {
             const { contract, contractAddress, owner } = deployment
 
-            const itString = await owner.encryptValue(
+            const itString = await owner.encryptString(
                 a,
                 contractAddress,
                 contract.setIsEqual.fragment.selector
-            ) as itString
+            )
 
             const tx = await contract
                 .connect(owner)
@@ -152,17 +152,17 @@ describe("MPC Core", function () {
         it("Should set isEqual to false", async function () {
             const { contract, contractAddress, owner } = deployment
 
-            const itStringA = await owner.encryptValue(
+            const itStringA = await owner.encryptString(
                 a,
                 contractAddress,
                 contract.setIsEqual.fragment.selector
-            ) as itString
+            )
 
-            const itStringB = await owner.encryptValue(
+            const itStringB = await owner.encryptString(
                 b,
                 contractAddress,
                 contract.setIsEqual.fragment.selector
-            ) as itString
+            )
 
             const tx = await contract
                 .connect(owner)
@@ -180,17 +180,17 @@ describe("MPC Core", function () {
         it("Should set isEqual to true", async function () {
             const { contract, contractAddress, owner } = deployment
 
-            const itStringA = await owner.encryptValue(
+            const itStringA = await owner.encryptString(
                 a,
                 contractAddress,
                 contract.setIsEqual.fragment.selector
-            ) as itString
+            )
 
-            const itStringB = await owner.encryptValue(
+            const itStringB = await owner.encryptString(
                 b,
                 contractAddress,
                 contract.setIsEqual.fragment.selector
-            ) as itString
+            )
 
             const tx = await contract
                 .connect(owner)
@@ -206,11 +206,11 @@ describe("MPC Core", function () {
         it("Should set isEqual to false", async function () {
             const { contract, contractAddress, owner } = deployment
 
-            const itString = await owner.encryptValue(
+            const itString = await owner.encryptString(
                 a,
                 contractAddress,
                 contract.setIsEqual.fragment.selector
-            ) as itString
+            )
 
             const tx = await contract
                 .connect(owner)

@@ -2,8 +2,10 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as checkedArithmeticWIthOverflowBitTestsContractSol from "./CheckedArithmeticWIthOverflowBitTestsContract.sol";
+export * as encryptionTestSol from "./EncryptionTest.sol";
 export { Arithmetic128BitTestsContract__factory } from "./Arithmetic128BitTestsContract__factory";
 export { Arithmetic256BitTestsContract__factory } from "./Arithmetic256BitTestsContract__factory";
+export { ArithmeticSigned256BitTestsContract__factory } from "./ArithmeticSigned256BitTestsContract__factory";
 export { ArithmeticTestsContract__factory } from "./ArithmeticTestsContract__factory";
 export { Bitwise128BitTestsContract__factory } from "./Bitwise128BitTestsContract__factory";
 export { Bitwise256BitTestsContract__factory } from "./Bitwise256BitTestsContract__factory";
@@ -18,7 +20,14 @@ export { Miscellaneous1TestsContract__factory } from "./Miscellaneous1TestsContr
 export { Miscellaneous256BitTestsContract__factory } from "./Miscellaneous256BitTestsContract__factory";
 export { MiscellaneousTestsContract__factory } from "./MiscellaneousTestsContract__factory";
 export { OffboardToUserKeyTestContract__factory } from "./OffboardToUserKeyTestContract__factory";
+export { RevertTestsContract__factory } from "./RevertTestsContract__factory";
 export { ShiftTestsContract__factory } from "./ShiftTestsContract__factory";
+export { SignedInt128TestsContract__factory } from "./SignedInt128TestsContract__factory";
+export { SignedInt16TestsContract__factory } from "./SignedInt16TestsContract__factory";
+export { SignedInt256TestsContract__factory } from "./SignedInt256TestsContract__factory";
+export { SignedInt32TestsContract__factory } from "./SignedInt32TestsContract__factory";
+export { SignedInt64TestsContract__factory } from "./SignedInt64TestsContract__factory";
+export { SignedInt8TestsContract__factory } from "./SignedInt8TestsContract__factory";
 export { StringTestsContract__factory } from "./StringTestsContract__factory";
 export { TransferScalarTestsContract__factory } from "./TransferScalarTestsContract__factory";
 export { TransferTestsContract__factory } from "./TransferTestsContract__factory";
@@ -28,3 +37,5 @@ export { TransferWithAllowance64_64TestsContract__factory } from "./TransferWith
 export { TransferWithAllowance64_8TestsContract__factory } from "./TransferWithAllowance64_8TestsContract__factory";
 export { TransferWithAllowanceScalarTestsContract__factory } from "./TransferWithAllowanceScalarTestsContract__factory";
 export { TransferWithAllowanceTestsContract__factory } from "./TransferWithAllowanceTestsContract__factory";
+export { UnsignedInt256TestsContract__factory } from "./UnsignedInt256TestsContract__factory";
+export { UnsignedInt8TestsContract__factory } from "./UnsignedInt8TestsContract__factory";

@@ -2,7 +2,7 @@ import hre from "hardhat"
 import { expect } from "chai"
 import { setupAccounts } from "../accounts"
 import { ItUint256Struct } from "../../../typechain-types/contracts/mocks/utils/mpc/Miscellaneous256BitTestsContract"
-import { decryptUint256, encryptUint256, generateRandomNumber } from "./helpers"
+import { gasOptions, generateRandomNumber } from "./helpers"
 
 const MAX_UINT256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
 
@@ -49,17 +49,16 @@ describe("MPC Core", function () {
 
           numbers.push(number)
           encryptedNumbers.push(
-            await encryptUint256(
+            await owner.encryptUint256(
               number,
-              owner,
               await extendedMiscellaneousTests.getAddress(),
               extendedMiscellaneousTests.validateCiphertextTest.fragment.selector
-            ) as ItUint256Struct
+            ) 
           )
         }
 
         // Call validateCiphertextTest with the array
-        await (await extendedMiscellaneousTests.validateCiphertextTest(encryptedNumbers)).wait()
+        await (await extendedMiscellaneousTests.validateCiphertextTest(encryptedNumbers, gasOptions)).wait()
 
         // Verify results
         for (let i = 0; i < 1; i++) {
@@ -80,13 +79,13 @@ describe("MPC Core", function () {
       }
 
       // Call validateCiphertextTest with the array
-      await (await extendedMiscellaneousTests.offBoardToUserTest(numbers)).wait()
+      await (await extendedMiscellaneousTests.offBoardToUserTest(numbers, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
           const ctNumber = await extendedMiscellaneousTests.ctNumbers2(i)
 
-          const result = await decryptUint256(ctNumber, owner)
+          const result = await owner.decryptUint256(ctNumber)
 
           expect(result).to.equal(numbers[i])
       }
@@ -104,7 +103,7 @@ describe("MPC Core", function () {
         }
 
         // Call setPublicTest with the arrays
-        await (await extendedMiscellaneousTests.setPublicTest(numbers)).wait()
+        await (await extendedMiscellaneousTests.setPublicTest(numbers, gasOptions)).wait()
 
         // Verify results
         for (let i = 0; i < 1; i++) {
@@ -119,7 +118,7 @@ describe("MPC Core", function () {
         const length: bigint = generateRandomNumber(1)
 
         // Call setPublicTest with the arrays
-        await (await extendedMiscellaneousTests.randTest2(length)).wait()
+        await (await extendedMiscellaneousTests.randTest2(length, gasOptions)).wait()
 
         // Verify results
         for (let i = 0; i < length; i++) {
@@ -140,7 +139,7 @@ describe("MPC Core", function () {
       }
 
       // Call setPublicTest with the arrays
-      await (await extendedMiscellaneousTests.randBoundedBitsTest2(numbers)).wait()
+      await (await extendedMiscellaneousTests.randBoundedBitsTest2(numbers, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -181,7 +180,7 @@ describe("MPC Core", function () {
       }
 
       // Call transferTest with the arrays
-      await (await extendedMiscellaneousTests.transferTest(aArr, bArr, amountArr)).wait()
+      await (await extendedMiscellaneousTests.transferTest(aArr, bArr, amountArr, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -232,7 +231,7 @@ describe("MPC Core", function () {
       }
 
       // Call transferWithAllowanceTest with the arrays
-      await (await extendedMiscellaneousTests.transferWithAllowanceTest(aArr, bArr, amountArr, allowanceArr)).wait()
+      await (await extendedMiscellaneousTests.transferWithAllowanceTest(aArr, bArr, amountArr, allowanceArr, gasOptions)).wait()
       
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -267,7 +266,7 @@ describe("MPC Core", function () {
       }
 
       // Call addTest with the arrays
-      await (await extendedArithmeticTests.addTest(numbers1, numbers2)).wait()
+      await (await extendedArithmeticTests.addTest(numbers1, numbers2, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -286,7 +285,7 @@ describe("MPC Core", function () {
         
         if (num1 + num2 <= MAX_UINT256) { // max uint256
           // Call checkedAddTest
-          await (await extendedArithmeticTests.checkedAddTest(num1, num2)).wait()
+          await (await extendedArithmeticTests.checkedAddTest(num1, num2, gasOptions)).wait()
 
           const result = await extendedArithmeticTests.numbers2(0)
           expect(result).to.equal(num1 + num2)
@@ -325,7 +324,7 @@ describe("MPC Core", function () {
       }
 
       // Call checkedAddWithOverflowBitTest with the arrays
-      await (await extendedArithmeticTests.checkedAddWithOverflowBitTest(numbers1, numbers2)).wait()
+      await (await extendedArithmeticTests.checkedAddWithOverflowBitTest(numbers1, numbers2, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -377,7 +376,7 @@ describe("MPC Core", function () {
         }
   
         // Call subTest with the arrays
-        await (await extendedArithmeticTests.subTest(numbers1, numbers2)).wait()
+        await (await extendedArithmeticTests.subTest(numbers1, numbers2, gasOptions)).wait()
   
         // Verify results
         for (let i = 0; i < 1; i++) {
@@ -396,7 +395,7 @@ describe("MPC Core", function () {
         
         if (num1 - num2 >= 0n) {
           // Call checkedSubTest
-          await (await extendedArithmeticTests.checkedSubTest(num1, num2)).wait()
+          await (await extendedArithmeticTests.checkedSubTest(num1, num2, gasOptions)).wait()
 
           const result = await extendedArithmeticTests.numbers2(0)
           expect(result).to.equal(num1 - num2)
@@ -435,7 +434,7 @@ describe("MPC Core", function () {
       }
 
       // Call checkedSubWithOverflowBitTest with the arrays
-      await (await extendedArithmeticTests.checkedSubWithOverflowBitTest(numbers1, numbers2)).wait()
+      await (await extendedArithmeticTests.checkedSubWithOverflowBitTest(numbers1, numbers2, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -483,7 +482,7 @@ describe("MPC Core", function () {
       }
 
       // Call addTest with the arrays
-      await (await extendedArithmeticTests.mulTest(numbers1, numbers2, 0n, { gasLimit: 80000000 })).wait()
+      await (await extendedArithmeticTests.mulTest(numbers1, numbers2, 0n, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -514,7 +513,7 @@ describe("MPC Core", function () {
       }
 
       // Call addTest with the arrays
-      await (await extendedArithmeticTests.mulTest(numbers1, numbers2, 1n, { gasLimit: 80000000 })).wait()
+      await (await extendedArithmeticTests.mulTest(numbers1, numbers2, 1n, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -545,7 +544,7 @@ describe("MPC Core", function () {
       }
 
       // Call addTest with the arrays
-      await (await extendedArithmeticTests.mulTest(numbers1, numbers2, 2n, { gasLimit: 80000000 })).wait()
+      await (await extendedArithmeticTests.mulTest(numbers1, numbers2, 2n, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -565,13 +564,13 @@ describe("MPC Core", function () {
         
         if (num1 * num2 <= MAX_UINT256) {
           // Call checkedSubTest
-          await (await extendedArithmeticTests.checkedMulTest(num1, num2, 0n, { gasLimit: 80000000 })).wait()
+          await (await extendedArithmeticTests.checkedMulTest(num1, num2, 0n, gasOptions)).wait()
 
           const result = await extendedArithmeticTests.numbers2(0)
           expect(result).to.equal(num1 * num2)
         } else {
           // Expect revert
-          const tx = await extendedArithmeticTests.checkedMulTest(num1, num2, 0n, { gasLimit: 80000000 })
+          const tx = await extendedArithmeticTests.checkedMulTest(num1, num2, 0n, gasOptions)
 
           try {
             await tx.wait()
@@ -593,13 +592,13 @@ describe("MPC Core", function () {
         
         if (num1 * num2 <= MAX_UINT256) {
           // Call checkedSubTest
-          await (await extendedArithmeticTests.checkedMulTest(num1, num2, 1n, { gasLimit: 80000000 })).wait()
+          await (await extendedArithmeticTests.checkedMulTest(num1, num2, 1n, gasOptions)).wait()
 
           const result = await extendedArithmeticTests.numbers2(0)
           expect(result).to.equal(num1 * num2)
         } else {
           // Expect revert
-          const tx = await extendedArithmeticTests.checkedMulTest(num1, num2, 1n, { gasLimit: 80000000 })
+          const tx = await extendedArithmeticTests.checkedMulTest(num1, num2, 1n, gasOptions)
 
           try {
             await tx.wait()
@@ -621,13 +620,13 @@ describe("MPC Core", function () {
         
         if (num1 * num2 <= MAX_UINT256) {
           // Call checkedSubTest
-          await (await extendedArithmeticTests.checkedMulTest(num1, num2, 2n, { gasLimit: 80000000 })).wait()
+          await (await extendedArithmeticTests.checkedMulTest(num1, num2, 2n, gasOptions)).wait()
 
           const result = await extendedArithmeticTests.numbers2(0)
           expect(result).to.equal(num1 * num2)
         } else {
           // Expect revert
-          const tx = await extendedArithmeticTests.checkedMulTest(num1, num2, 2n, { gasLimit: 80000000 })
+          const tx = await extendedArithmeticTests.checkedMulTest(num1, num2, 2n, gasOptions)
 
           try {
             await tx.wait()
@@ -660,7 +659,7 @@ describe("MPC Core", function () {
       }
 
       // Call checkedSubWithOverflowBitTest with the arrays
-      await (await extendedArithmeticTests.checkedMulWithOverflowBitTest(numbers1, numbers2, 0n, { gasLimit: 80000000 })).wait()
+      await (await extendedArithmeticTests.checkedMulWithOverflowBitTest(numbers1, numbers2, 0n, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -698,7 +697,7 @@ describe("MPC Core", function () {
       }
 
       // Call checkedSubWithOverflowBitTest with the arrays
-      await (await extendedArithmeticTests.checkedMulWithOverflowBitTest(numbers1, numbers2, 1n, { gasLimit: 80000000 })).wait()
+      await (await extendedArithmeticTests.checkedMulWithOverflowBitTest(numbers1, numbers2, 1n, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -736,7 +735,7 @@ describe("MPC Core", function () {
       }
 
       // Call checkedSubWithOverflowBitTest with the arrays
-      await (await extendedArithmeticTests.checkedMulWithOverflowBitTest(numbers1, numbers2, 2n, { gasLimit: 80000000 })).wait()
+      await (await extendedArithmeticTests.checkedMulWithOverflowBitTest(numbers1, numbers2, 2n, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -752,6 +751,105 @@ describe("MPC Core", function () {
         }
       }
     })
+
+    it("div", async function () {
+      const { extendedArithmeticTests } = deployment
+
+      // Generate two arrays of random 256-bit integers
+      const numbers1: bigint[] = []
+      const numbers2: bigint[] = []
+      const expectedResults: bigint[] = []
+
+      for (let i = 0; i < 3; i++) {
+        // Generate random 256-bit integers, ensuring divisor is not zero
+        const num1 = generateRandomNumber(20)
+        let num2 = generateRandomNumber(10)
+        
+        // Ensure divisor is not zero
+        if (num2 === 0n) {
+          num2 = 1n
+        }
+        
+        numbers1.push(num1)
+        numbers2.push(num2)
+        expectedResults.push(num1 / num2)
+      }
+
+      // Call divTest with the arrays
+      await (await extendedArithmeticTests.divTest(numbers1, numbers2, 0n, gasOptions)).wait()
+
+      // Verify results
+      for (let i = 0; i < 3; i++) {
+        const result = await extendedArithmeticTests.numbers2(i)
+        expect(result).to.equal(expectedResults[i])
+      }
+    })
+
+    // it("divLHS", async function () {
+    //   const { extendedArithmeticTests } = deployment
+
+    //   // Generate two arrays of random 256-bit integers
+    //   const numbers1: bigint[] = []
+    //   const numbers2: bigint[] = []
+    //   const expectedResults: bigint[] = []
+
+    //   for (let i = 0; i < 3; i++) {
+    //     // Generate random 256-bit integers, ensuring divisor is not zero
+    //     const num1 = generateRandomNumber(20)
+    //     let num2 = generateRandomNumber(10)
+        
+    //     // Ensure divisor is not zero
+    //     if (num2 === 0n) {
+    //       num2 = 1n
+    //     }
+        
+    //     numbers1.push(num1)
+    //     numbers2.push(num2)
+    //     expectedResults.push(num1 / num2)
+    //   }
+
+    //   // Call divTest with the arrays (LHS private input)
+    //   await (await extendedArithmeticTests.divTest(numbers1, numbers2, 1n, { gasLimit: 80000000 })).wait()
+
+    //   // Verify results
+    //   for (let i = 0; i < 3; i++) {
+    //     const result = await extendedArithmeticTests.numbers2(i)
+    //     expect(result).to.equal(expectedResults[i])
+    //   }
+    // })
+
+    // it("divRHS", async function () {
+    //   const { extendedArithmeticTests } = deployment
+
+    //   // Generate two arrays of random 256-bit integers
+    //   const numbers1: bigint[] = []
+    //   const numbers2: bigint[] = []
+    //   const expectedResults: bigint[] = []
+
+    //   for (let i = 0; i < 3; i++) {
+    //     // Generate random 256-bit integers, ensuring divisor is not zero
+    //     const num1 = generateRandomNumber(20)
+    //     let num2 = generateRandomNumber(10)
+        
+    //     // Ensure divisor is not zero
+    //     if (num2 === 0n) {
+    //       num2 = 1n
+    //     }
+        
+    //     numbers1.push(num1)
+    //     numbers2.push(num2)
+    //     expectedResults.push(num1 / num2)
+    //   }
+
+    //   // Call divTest with the arrays (RHS private input)
+    //   await (await extendedArithmeticTests.divTest(numbers1, numbers2, 2n, { gasLimit: 80000000 })).wait()
+
+    //   // Verify results
+    //   for (let i = 0; i < 3; i++) {
+    //     const result = await extendedArithmeticTests.numbers2(i)
+    //     expect(result).to.equal(expectedResults[i])
+    //   }
+    // })
 
     it("and", async function () {
       const { extendedBitwiseTests } = deployment
@@ -772,7 +870,7 @@ describe("MPC Core", function () {
       }
 
       // Call addTest with the arrays
-      await (await extendedBitwiseTests.andTest(numbers1, numbers2)).wait()
+      await (await extendedBitwiseTests.andTest(numbers1, numbers2, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -800,7 +898,7 @@ describe("MPC Core", function () {
       }
 
       // Call orTest with the arrays
-      await (await extendedBitwiseTests.orTest(numbers1, numbers2)).wait()
+      await (await extendedBitwiseTests.orTest(numbers1, numbers2, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -828,7 +926,7 @@ describe("MPC Core", function () {
       }
 
       // Call xorTest with the arrays
-      await (await extendedBitwiseTests.xorTest(numbers1, numbers2)).wait()
+      await (await extendedBitwiseTests.xorTest(numbers1, numbers2, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -858,7 +956,7 @@ describe("MPC Core", function () {
       }
 
       // Call xorTest with the arrays
-      await (await extendedBitwiseTests.shlTest(numbers1, numbers2)).wait()
+      await (await extendedBitwiseTests.shlTest(numbers1, numbers2, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -888,7 +986,7 @@ describe("MPC Core", function () {
       }
 
       // Call xorTest with the arrays
-      await (await extendedBitwiseTests.shrTest(numbers1, numbers2)).wait()
+      await (await extendedBitwiseTests.shrTest(numbers1, numbers2, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -916,7 +1014,7 @@ describe("MPC Core", function () {
       }
 
       // Call eqTest with the arrays
-      await (await extendedComparisonTests.eqTest(numbers1, numbers2)).wait()
+      await (await extendedComparisonTests.eqTest(numbers1, numbers2, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -944,7 +1042,7 @@ describe("MPC Core", function () {
       }
 
       // Call neTest with the arrays
-      await (await extendedComparisonTests.neTest(numbers1, numbers2)).wait()
+      await (await extendedComparisonTests.neTest(numbers1, numbers2, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -972,7 +1070,7 @@ describe("MPC Core", function () {
       }
 
       // Call geTest with the arrays
-      await (await extendedComparisonTests.geTest(numbers1, numbers2)).wait()
+      await (await extendedComparisonTests.geTest(numbers1, numbers2, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -1000,7 +1098,7 @@ describe("MPC Core", function () {
       }
 
       // Call gtTest with the arrays
-      await (await extendedComparisonTests.gtTest(numbers1, numbers2)).wait()
+      await (await extendedComparisonTests.gtTest(numbers1, numbers2, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -1028,7 +1126,7 @@ describe("MPC Core", function () {
       }
 
       // Call leTest with the arrays
-      await (await extendedComparisonTests.leTest(numbers1, numbers2)).wait()
+      await (await extendedComparisonTests.leTest(numbers1, numbers2, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -1056,7 +1154,7 @@ describe("MPC Core", function () {
       }
 
       // Call ltTest with the arrays
-      await (await extendedComparisonTests.ltTest(numbers1, numbers2)).wait()
+      await (await extendedComparisonTests.ltTest(numbers1, numbers2, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -1084,7 +1182,7 @@ describe("MPC Core", function () {
       }
 
       // Call minTest with the arrays
-      await (await extendedComparisonTests.minTest(numbers1, numbers2)).wait()
+      await (await extendedComparisonTests.minTest(numbers1, numbers2, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {
@@ -1112,7 +1210,7 @@ describe("MPC Core", function () {
       }
 
       // Call maxTest with the arrays
-      await (await extendedComparisonTests.maxTest(numbers1, numbers2)).wait()
+      await (await extendedComparisonTests.maxTest(numbers1, numbers2, gasOptions)).wait()
 
       // Verify results
       for (let i = 0; i < 1; i++) {

@@ -3,7 +3,7 @@ import { expect } from "chai"
 
 import { setupAccounts } from "../../utils/accounts"
 import { PrivateERC20Mock, PrivateERC20WalletMock } from "../../../typechain-types"
-import { itUint, Wallet, ZeroAddress } from "@coti-io/coti-ethers"
+import { Wallet, ZeroAddress } from "@coti-io/coti-ethers"
 
 const GAS_LIMIT = 12000000
 
@@ -74,7 +74,7 @@ describe("Private ERC20", function () {
             it('increments recipient balance', async function () {
                 const ctBalance = await contract["balanceOf(address)"](owner.address)
                 
-                const balance = await owner.decryptValue(ctBalance)
+                const balance = await owner.decryptUint64(ctBalance)
                 
                 await expect(balance).to.equal(value)
             })
@@ -130,7 +130,7 @@ describe("Private ERC20", function () {
                 
                 const ctBalance = await contract["balanceOf(address)"](owner.address)
 
-                const balance = await owner.decryptValue(ctBalance)
+                const balance = await owner.decryptUint64(ctBalance)
     
                 await expect(balance).to.equal(value)
             })
@@ -148,7 +148,7 @@ describe("Private ERC20", function () {
             it('decrements the senders balance', async function () {
                 const ctBalance = await contract["balanceOf(address)"](owner.address)
 
-                const balance = await owner.decryptValue(ctBalance)
+                const balance = await owner.decryptUint64(ctBalance)
     
                 await expect(balance).to.equal(0n)
             })
@@ -172,7 +172,7 @@ describe("Private ERC20", function () {
 
         describe("failed transfer", async function () {
             it('rejects transferring to the zero address', async function () {
-                const itValue = await owner.encryptValue(value, contractAddress, contract["transfer(address,(uint256,bytes))"].fragment.selector) as itUint
+                const itValue = await owner.encryptUint64(value, contractAddress, contract["transfer(address,(uint256,bytes))"].fragment.selector)
     
                 await expect(
                     contract
@@ -185,7 +185,7 @@ describe("Private ERC20", function () {
             })
 
             it('does not transfer tokens when amount exceeds balance', async function () {
-                const itValue = await owner.encryptValue(value + 1n, contractAddress, contract["transfer(address,(uint256,bytes))"].fragment.selector) as itUint
+                const itValue = await owner.encryptUint64(value + 1n, contractAddress, contract["transfer(address,(uint256,bytes))"].fragment.selector)
 
                 const tx = await contract
                     .connect(owner)
@@ -196,13 +196,13 @@ describe("Private ERC20", function () {
 
                 let ctBalance = await contract["balanceOf(address)"](owner.address)
 
-                let balance = await owner.decryptValue(ctBalance)
+                let balance = await owner.decryptUint64(ctBalance)
     
                 await expect(balance).to.equal(value)
 
                 ctBalance = await contract["balanceOf(address)"](otherAccount.address)
 
-                balance = await otherAccount.decryptValue(ctBalance)
+                balance = await otherAccount.decryptUint64(ctBalance)
     
                 await expect(balance).to.equal(0n)
             })
@@ -210,7 +210,7 @@ describe("Private ERC20", function () {
 
         describe("successful transfer", async function () {
             before("transferring", async function () {
-                const itValue = await owner.encryptValue(value / 2n, contractAddress, contract["transfer(address,(uint256,bytes))"].fragment.selector) as itUint
+                const itValue = await owner.encryptUint64(value / 2n, contractAddress, contract["transfer(address,(uint256,bytes))"].fragment.selector)
 
                 const tx = await contract
                     .connect(owner)
@@ -223,7 +223,7 @@ describe("Private ERC20", function () {
             it('decrements the senders balance', async function () {
                 const ctBalance = await contract["balanceOf(address)"](owner.address)
 
-                const balance = await owner.decryptValue(ctBalance)
+                const balance = await owner.decryptUint64(ctBalance)
     
                 await expect(balance).to.equal(value / 2n)
             })
@@ -231,7 +231,7 @@ describe("Private ERC20", function () {
             it('increments the receivers balance', async function () {
                 const ctBalance = await contract["balanceOf(address)"](otherAccount.address)
 
-                const balance = await otherAccount.decryptValue(ctBalance)
+                const balance = await otherAccount.decryptUint64(ctBalance)
     
                 await expect(balance).to.equal(value / 2n)
             })
@@ -243,7 +243,7 @@ describe("Private ERC20", function () {
 
         describe("failed approval", async function () {
             it('rejects when approving the zero address', async function () {
-                const itValue = await owner.encryptValue(value, contractAddress, contract["transfer(address,(uint256,bytes))"].fragment.selector) as itUint
+                const itValue = await owner.encryptUint64(value, contractAddress, contract["transfer(address,(uint256,bytes))"].fragment.selector)
     
                 await expect(
                     contract
@@ -258,7 +258,7 @@ describe("Private ERC20", function () {
 
         describe("successful approval", async function () {
             before('approving', async function () {
-                const itValue = await owner.encryptValue(value, contractAddress, contract["approve(address,(uint256,bytes))"].fragment.selector) as itUint
+                const itValue = await owner.encryptUint64(value, contractAddress, contract["approve(address,(uint256,bytes))"].fragment.selector)
 
                 const tx = await contract
                     .connect(owner)
@@ -273,7 +273,7 @@ describe("Private ERC20", function () {
                     ["allowance(address,address)"]
                     (owner.address, otherAccount.address)
                 
-                const allowance = await owner.decryptValue(ctAllowance[1])
+                const allowance = await owner.decryptUint64(ctAllowance[1])
 
                 await expect(allowance).to.equal(value)
             })
@@ -283,7 +283,7 @@ describe("Private ERC20", function () {
                     ["allowance(address,address)"]
                     (owner.address, otherAccount.address)
                 
-                const allowance = await otherAccount.decryptValue(ctAllowance[2])
+                const allowance = await otherAccount.decryptUint64(ctAllowance[2])
 
                 await expect(allowance).to.equal(value)
             })
@@ -295,7 +295,7 @@ describe("Private ERC20", function () {
 
         describe('failed transferFrom', async function () {
             it('rejects transferring to the zero address', async function () {
-                const itValue = await otherAccount.encryptValue(value, contractAddress, contract["transferFrom(address,address,(uint256,bytes))"].fragment.selector) as itUint
+                const itValue = await otherAccount.encryptUint64(value, contractAddress, contract["transferFrom(address,address,(uint256,bytes))"].fragment.selector)
     
                 await expect(
                     contract
@@ -309,7 +309,7 @@ describe("Private ERC20", function () {
 
             describe("transferring more than the owners balance", async function () {
                 before("transferring", async function () {
-                    const itValue = await otherAccount.encryptValue(2n * value, contractAddress, contract["transferFrom(address,address,(uint256,bytes))"].fragment.selector) as itUint
+                    const itValue = await otherAccount.encryptUint64(2n * value, contractAddress, contract["transferFrom(address,address,(uint256,bytes))"].fragment.selector)
 
                     const tx = await contract
                         .connect(otherAccount)
@@ -322,7 +322,7 @@ describe("Private ERC20", function () {
                 it("does not decrement the owners balance", async function () {
                     const ctBalance = await contract["balanceOf(address)"](owner.address)
 
-                    const balance = await owner.decryptValue(ctBalance)
+                    const balance = await owner.decryptUint64(ctBalance)
         
                     await expect(balance).to.equal(5000n)
                 })
@@ -330,7 +330,7 @@ describe("Private ERC20", function () {
                 it("does not decrement the spenders allowance", async function () {
                     const ctAllowance = await contract["allowance(address,address)"](owner.address, otherAccount.address)
 
-                    const allowance = await owner.decryptValue(ctAllowance[1])
+                    const allowance = await owner.decryptUint64(ctAllowance[1])
         
                     await expect(allowance).to.equal(5000n)
                 })
@@ -339,7 +339,7 @@ describe("Private ERC20", function () {
 
         describe('successful transferFrom', async function () {
             before('transferring', async function () {
-                const itValue = await otherAccount.encryptValue(value, contractAddress, contract["transferFrom(address,address,(uint256,bytes))"].fragment.selector) as itUint
+                const itValue = await otherAccount.encryptUint64(value, contractAddress, contract["transferFrom(address,address,(uint256,bytes))"].fragment.selector)
 
                 const tx = await contract
                     .connect(otherAccount)
@@ -352,7 +352,7 @@ describe("Private ERC20", function () {
             it('decrement the owners balance', async function () {
                 const ctBalance = await contract["balanceOf(address)"](owner.address)
 
-                const balance = await owner.decryptValue(ctBalance)
+                const balance = await owner.decryptUint64(ctBalance)
     
                 await expect(balance).to.equal(2000n)
             })
@@ -360,7 +360,7 @@ describe("Private ERC20", function () {
             it('increment the recipients balance', async function () {
                 const ctBalance = await contract["balanceOf(address)"](otherAccount.address)
 
-                const balance = await otherAccount.decryptValue(ctBalance)
+                const balance = await otherAccount.decryptUint64(ctBalance)
     
                 await expect(balance).to.equal(8000n)
             })
@@ -368,7 +368,7 @@ describe("Private ERC20", function () {
             it('decrement the spenders allowance', async function () {
                 const ctAllowance = await contract["allowance(address,address)"](owner.address, otherAccount.address)
 
-                const allowance = await otherAccount.decryptValue(ctAllowance[2])
+                const allowance = await otherAccount.decryptUint64(ctAllowance[2])
     
                 await expect(allowance).to.equal(2000n)
             })
@@ -416,7 +416,7 @@ describe("Private ERC20", function () {
             it("reencrypt balance using the new account encryption address", async function () {
                 const ctBalance = await contract["balanceOf(address)"](walletContractAddress)
 
-                const balance = await otherAccount.decryptValue(ctBalance)
+                const balance = await otherAccount.decryptUint64(ctBalance)
 
                 await expect(balance).to.equal(value)
             })
@@ -434,7 +434,7 @@ describe("Private ERC20", function () {
             it('decrement the senders balance', async function () {
                 const ctBalance = await contract["balanceOf(address)"](walletContractAddress)
 
-                const balance = await otherAccount.decryptValue(ctBalance)
+                const balance = await otherAccount.decryptUint64(ctBalance)
 
                 await expect(balance).to.equal(value / 2n)
             })
@@ -442,7 +442,7 @@ describe("Private ERC20", function () {
             it('increment the receivers balance', async function () {
                 const ctBalance = await contract["balanceOf(address)"](otherAccount.address)
 
-                const balance = await otherAccount.decryptValue(ctBalance)
+                const balance = await otherAccount.decryptUint64(ctBalance)
 
                 await expect(balance).to.equal(13000n)
             })
@@ -460,7 +460,7 @@ describe("Private ERC20", function () {
             it("increment the spenders allowance", async function () {
                 const ctAllowance = await contract["allowance(address,address)"](walletContractAddress, owner.address)
 
-                const allowance = await otherAccount.decryptValue(ctAllowance[1])
+                const allowance = await otherAccount.decryptUint64(ctAllowance[1])
 
                 await expect(allowance).to.equal(value / 2n)
             })
@@ -470,7 +470,7 @@ describe("Private ERC20", function () {
             const value = 5000n
 
             before("transferring", async function () {
-                const itValue = await otherAccount.encryptValue(value, contractAddress, contract["approve(address,(uint256,bytes))"].fragment.selector) as itUint
+                const itValue = await otherAccount.encryptUint64(value, contractAddress, contract["approve(address,(uint256,bytes))"].fragment.selector)
 
                 let tx = await contract
                     .connect(otherAccount)
@@ -489,7 +489,7 @@ describe("Private ERC20", function () {
             it('decrement the owners balance', async function () {
                 const itBalance = await contract["balanceOf(address)"](otherAccount.address)
 
-                const balance = await otherAccount.decryptValue(itBalance)
+                const balance = await otherAccount.decryptUint64(itBalance)
 
                 await expect(balance).to.equal(8000n)
             })
@@ -497,7 +497,7 @@ describe("Private ERC20", function () {
             it('increment the recipients balance', async function () {
                 const itBalance = await contract["balanceOf(address)"](owner.address)
 
-                const balance = await owner.decryptValue(itBalance)
+                const balance = await owner.decryptUint64(itBalance)
 
                 await expect(balance).to.equal(7000n)
             })
@@ -508,7 +508,7 @@ describe("Private ERC20", function () {
         const value = (2n ** 64n) - 1n
 
         before("transferring", async function () {
-            let itValue = await owner.encryptValue(value, contractAddress, contract["approve(address,(uint256,bytes))"].fragment.selector) as itUint
+            let itValue = await owner.encryptUint64(value, contractAddress, contract["approve(address,(uint256,bytes))"].fragment.selector)
 
             let tx = await contract
                 .connect(owner)
@@ -517,7 +517,7 @@ describe("Private ERC20", function () {
             
             await tx.wait()
 
-            itValue = await otherAccount.encryptValue(7000n, contractAddress, contract["transferFrom(address,address,(uint256,bytes))"].fragment.selector) as itUint
+            itValue = await otherAccount.encryptUint64(7000n, contractAddress, contract["transferFrom(address,address,(uint256,bytes))"].fragment.selector)
 
             tx = await contract
                 .connect(otherAccount)
@@ -530,7 +530,7 @@ describe("Private ERC20", function () {
         it("decrement the owners balance", async function () {
             const ctBalance = await contract["balanceOf(address)"](owner.address)
 
-            const balance = await owner.decryptValue(ctBalance)
+            const balance = await owner.decryptUint64(ctBalance)
 
             await expect(balance).to.equal(0n)
         })
@@ -538,7 +538,7 @@ describe("Private ERC20", function () {
         it("does not decrement the spenders allowance", async function () {
             const ctAllowance = await contract["allowance(address,address)"](owner.address, otherAccount.address)
 
-            const allowance = await owner.decryptValue(ctAllowance[1])
+            const allowance = await owner.decryptUint64(ctAllowance[1])
 
             await expect(allowance).to.equal(value)
         })

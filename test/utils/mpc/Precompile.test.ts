@@ -44,9 +44,9 @@ function buildTestWithUser(contractName: string, func: string, resFunc: string, 
     const results = await contract.getFunction(resFunc)()
     for (let i = 0; i < results.length; i++) {
       if (i === 0) {
-        expect(Boolean(await owner.decryptValue(results[i]))).to.equal(true)
+        expect(await owner.decryptBool(results[i])).to.equal(true)
       } else {
-        expect(await owner.decryptValue(results[i])).to.equal(param)
+        expect(await owner.decryptUint64(results[i])).to.equal(param)
       }
     }
   })

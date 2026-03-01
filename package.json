@@ -23,7 +23,7 @@
     "hardhat": "^2.22.8"
   },
   "dependencies": {
-    "@coti-io/coti-ethers": "^1.0.5",
+    "@coti-io/coti-ethers": "github:vladi-coti/coti-ethers#extended-uint-support",
     "@openzeppelin/contracts": "^4.9.6",
     "dotenv": "^16.4.5"
   }

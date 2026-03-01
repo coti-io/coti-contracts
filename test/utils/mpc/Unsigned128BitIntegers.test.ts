@@ -1,7 +1,7 @@
 import hre from "hardhat"
 import { expect } from "chai"
 import { setupAccounts } from "../accounts"
-import { decryptUint128, encryptUint128, generateRandomNumber } from "./helpers"
+import { generateRandomNumber } from "./helpers"
 import { ItUint128Struct } from "../../../typechain-types/contracts/mocks/utils/mpc/Miscellaneous128BitTestsContract"
 
 
@@ -50,9 +50,8 @@ describe("MPC Core", function () {
 
           numbers.push(number)
           encryptedNumbers.push(
-            await encryptUint128(
+            await owner.encryptUint128(
               number,
-              owner,
               await extendedMiscellaneousTests.getAddress(),
               extendedMiscellaneousTests.validateCiphertextTest.fragment.selector
             )
@@ -87,7 +86,7 @@ describe("MPC Core", function () {
       for (let i = 0; i < 100; i++) {
           const ctNumber = await extendedMiscellaneousTests.ctNumbers(i)
 
-          const result = await decryptUint128(ctNumber, owner)
+          const result = await owner.decryptUint128(ctNumber)
 
           expect(result).to.equal(numbers[i])
       }
@@ -571,6 +570,87 @@ describe("MPC Core", function () {
           expect(resultLHS).to.equal(expectedResults[i])
           expect(resultRHS).to.equal(expectedResults[i])
         }
+      }
+    })
+
+    it("div", async function () {
+      const { extendedArithmeticTests } = deployment
+
+      // Hardcoded test cases for each division scenario
+      const numbers1: bigint[] = []
+      const numbers2: bigint[] = []
+      const expectedResults: bigint[] = []
+
+      // Case 1: Both numbers fit in 64 bits (a.high == 0 && b.high == 0)
+      numbers1.push(10n)
+      numbers2.push(5n)
+      expectedResults.push(2n)
+      
+      numbers1.push(1000000n)
+      numbers2.push(3n)
+      expectedResults.push(333333n)
+
+      // Case 2: Large dividend, small divisor (a.high != 0 && b.high == 0) 
+      // Use 2^70 ÷ 1000 = 1180591620717411303424 ÷ 1000 = 1180591620717411303
+      numbers1.push(1180591620717411303424n) // 2^70
+      numbers2.push(1000n)
+      expectedResults.push(1180591620717411303n)
+      
+      // Use 2^65 ÷ 7 = 36893488147419103232 ÷ 7 = 5270498592488443318
+      numbers1.push(36893488147419103232n) // 2^65
+      numbers2.push(7n)
+      expectedResults.push(5270498306774157604n)
+
+      // Case 3: Both numbers are large (a.high != 0 && b.high != 0)
+      // Use 2^100 ÷ 2^70 = large ÷ large
+      numbers1.push(1267650600228229401496703205376n) // 2^100  
+      numbers2.push(1180591620717411303424n) // 2^70 (this has high != 0)
+      expectedResults.push(1073741824n) // 2^30
+      
+      // Use another case: 2^80 ÷ 2^65 = 32768
+      numbers1.push(1208925819614629174706176n) // 2^80
+      numbers2.push(36893488147419103232n) // 2^65 (this has high != 0)  
+      expectedResults.push(32768n) // 2^15
+
+      // Add some random test cases
+      for (let i = 0; i < 4; i++) {
+        // Generate random 128-bit integers, ensuring divisor is not zero
+        const num1 = generateRandomNumber(10)
+        let num2 = generateRandomNumber(8)
+        
+        // Ensure divisor is not zero
+        if (num2 === 0n) {
+          num2 = 1n
+        }
+        
+        numbers1.push(num1)
+        numbers2.push(num2)
+        expectedResults.push(num1 / num2)
+      }
+
+      const cases = numbers1.length
+      console.log(`Testing ${cases} division cases:`)
+      for (let i = 0; i < cases; i++) {
+        console.log(`Case ${i + 1}: ${numbers1[i].toString()} ÷ ${numbers2[i].toString()} = ${expectedResults[i].toString()}`)
+        
+        // Determine which case this should be
+        const aHigh = numbers1[i] >> 64n
+        const bHigh = numbers2[i] >> 64n
+        let caseType = ""
+        if (aHigh === 0n && bHigh === 0n) caseType = "Case 1 (both 64-bit)"
+        else if (aHigh !== 0n && bHigh === 0n) caseType = "Case 2 (128÷64-bit)"
+        else if (aHigh !== 0n && bHigh !== 0n) caseType = "Case 3 (both 128-bit)"
+        console.log(`  -> ${caseType}`)
+      }
+
+      // Call divTest with the arrays
+      await (await extendedArithmeticTests.divTest(numbers1, numbers2)).wait()
+
+      // Verify results
+      for (let i = 0; i < cases; i++) {
+        const result = await extendedArithmeticTests.numbers(i)
+        console.log(`Result ${i + 1}: ${result.toString()}, Expected: ${expectedResults[i].toString()}`)
+        expect(result).to.equal(expectedResults[i])
       }
     })
 

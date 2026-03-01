@@ -13,8 +13,8 @@ contract Bitwise256BitTestsContract {
         _resetNumbers2(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             numbers2[i] = MpcCore.decrypt(MpcCore.and(gtA, gtB));
 
@@ -29,8 +29,8 @@ contract Bitwise256BitTestsContract {
         _resetNumbers2(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             numbers2[i] = MpcCore.decrypt(MpcCore.or(gtA, gtB));
 
@@ -45,8 +45,8 @@ contract Bitwise256BitTestsContract {
         _resetNumbers2(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             numbers2[i] = MpcCore.decrypt(MpcCore.xor(gtA, gtB));
 
@@ -61,7 +61,7 @@ contract Bitwise256BitTestsContract {
         _resetNumbers2(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
             
             numbers2[i] = MpcCore.decrypt(MpcCore.shl(gtA, b[i]));
         }
@@ -73,7 +73,7 @@ contract Bitwise256BitTestsContract {
         _resetNumbers2(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
             
             numbers2[i] = MpcCore.decrypt(MpcCore.shr(gtA, b[i]));
         }

@@ -24,8 +24,8 @@ contract Arithmetic256BitTestsContract {
         _resetNumbers2(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             numbers2[i] = MpcCore.decrypt(MpcCore.add(gtA, gtB));
 
@@ -37,8 +37,8 @@ contract Arithmetic256BitTestsContract {
     function checkedAddTest(uint256 a, uint256 b) public {
         _resetNumbers2(1);
 
-        gtUint256 memory gtA = MpcCore.setPublic256(a);
-        gtUint256 memory gtB = MpcCore.setPublic256(b);
+        gtUint256 gtA = MpcCore.setPublic256(a);
+        gtUint256 gtB = MpcCore.setPublic256(b);
 
         numbers2[0] = MpcCore.decrypt(MpcCore.checkedAdd(gtA, gtB));
 
@@ -59,13 +59,13 @@ contract Arithmetic256BitTestsContract {
         gtBool bit;
         gtBool bitLHS;
         gtBool bitRHS;
-        gtUint256 memory result;
-        gtUint256 memory resultLHS;
-        gtUint256 memory resultRHS;
+        gtUint256 result;
+        gtUint256 resultLHS;
+        gtUint256 resultRHS;
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             (bit, result) = MpcCore.checkedAddWithOverflowBit(gtA, gtB);
             (bitLHS, resultLHS) = MpcCore.checkedAddWithOverflowBit(a[i], gtB);
@@ -86,8 +86,8 @@ contract Arithmetic256BitTestsContract {
         _resetNumbers2(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             numbers2[i] = MpcCore.decrypt(MpcCore.sub(gtA, gtB));
 
@@ -99,8 +99,8 @@ contract Arithmetic256BitTestsContract {
     function checkedSubTest(uint256 a, uint256 b) public {
         _resetNumbers2(1);
 
-        gtUint256 memory gtA = MpcCore.setPublic256(a);
-        gtUint256 memory gtB = MpcCore.setPublic256(b);
+        gtUint256 gtA = MpcCore.setPublic256(a);
+        gtUint256 gtB = MpcCore.setPublic256(b);
 
         numbers2[0] = MpcCore.decrypt(MpcCore.checkedSub(gtA, gtB));
 
@@ -121,13 +121,13 @@ contract Arithmetic256BitTestsContract {
         gtBool bit;
         gtBool bitLHS;
         gtBool bitRHS;
-        gtUint256 memory result;
-        gtUint256 memory resultLHS;
-        gtUint256 memory resultRHS;
+        gtUint256 result;
+        gtUint256 resultLHS;
+        gtUint256 resultRHS;
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             (bit, result) = MpcCore.checkedSubWithOverflowBit(gtA, gtB);
             (bitLHS, resultLHS) = MpcCore.checkedSubWithOverflowBit(a[i], gtB);
@@ -148,8 +148,8 @@ contract Arithmetic256BitTestsContract {
         _resetNumbers2(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             if (privateInput == PrivateInput.BOTH) {
                 numbers2[i] = MpcCore.decrypt(MpcCore.mul(gtA, gtB));
@@ -164,8 +164,8 @@ contract Arithmetic256BitTestsContract {
     function checkedMulTest(uint256 a, uint256 b, PrivateInput privateInput) public {
         _resetNumbers2(1);
 
-        gtUint256 memory gtA = MpcCore.setPublic256(a);
-        gtUint256 memory gtB = MpcCore.setPublic256(b);
+        gtUint256 gtA = MpcCore.setPublic256(a);
+        gtUint256 gtB = MpcCore.setPublic256(b);
 
         if (privateInput == PrivateInput.BOTH) {
             numbers2[0] = MpcCore.decrypt(MpcCore.checkedMul(gtA, gtB));
@@ -183,11 +183,11 @@ contract Arithmetic256BitTestsContract {
         _resetNumbers2(a.length);
 
         gtBool bit;
-        gtUint256 memory result;
+        gtUint256 result;
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint256 memory gtA = MpcCore.setPublic256(a[i]);
-            gtUint256 memory gtB = MpcCore.setPublic256(b[i]);
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
             
             if (privateInput == PrivateInput.BOTH) {
                 (bit, result) = MpcCore.checkedMulWithOverflowBit(gtA, gtB);
@@ -199,6 +199,25 @@ contract Arithmetic256BitTestsContract {
 
             overflows[i] = MpcCore.decrypt(bit);
             numbers2[i] = MpcCore.decrypt(result);
+        }
+    }
+
+    function divTest(uint256[] calldata a, uint256[] calldata b, PrivateInput privateInput) public {
+        require(a.length == b.length, "Input length mismatch");
+        
+        _resetNumbers2(a.length);
+
+        for (uint256 i = 0; i < a.length; ++i) {
+            gtUint256 gtA = MpcCore.setPublic256(a[i]);
+            gtUint256 gtB = MpcCore.setPublic256(b[i]);
+            
+            if (privateInput == PrivateInput.BOTH) {
+                numbers2[i] = MpcCore.decrypt(MpcCore.div(gtA, gtB));
+            // } else if (privateInput == PrivateInput.LHS) {
+            //     numbers2[i] = MpcCore.decrypt(MpcCore.div(gtA, b[i]));
+            // } else if (privateInput == PrivateInput.RHS) {
+            //     numbers2[i] = MpcCore.decrypt(MpcCore.div(a[i], gtB));
+            }
         }
     }
 

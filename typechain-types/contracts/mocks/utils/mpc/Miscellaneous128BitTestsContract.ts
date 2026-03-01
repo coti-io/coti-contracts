@@ -20,22 +20,15 @@ import type {
   TypedContractMethod,
 } from "../../../../common";
 
-export type CtUint128Struct = { high: BigNumberish; low: BigNumberish };
-
-export type CtUint128StructOutput = [high: bigint, low: bigint] & {
-  high: bigint;
-  low: bigint;
-};
-
 export type ItUint128Struct = {
-  ciphertext: CtUint128Struct;
-  signature: [BytesLike, BytesLike];
+  ciphertext: BigNumberish;
+  signature: BytesLike;
 };
 
-export type ItUint128StructOutput = [
-  ciphertext: CtUint128StructOutput,
-  signature: [string, string]
-] & { ciphertext: CtUint128StructOutput; signature: [string, string] };
+export type ItUint128StructOutput = [ciphertext: bigint, signature: string] & {
+  ciphertext: bigint;
+  signature: string;
+};
 
 export interface Miscellaneous128BitTestsContractInterface extends Interface {
   getFunction(
@@ -184,11 +177,7 @@ export interface Miscellaneous128BitTestsContract extends BaseContract {
 
   b: TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
 
-  ctNumbers: TypedContractMethod<
-    [arg0: BigNumberish],
-    [[bigint, bigint] & { high: bigint; low: bigint }],
-    "view"
-  >;
+  ctNumbers: TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
 
   numbers: TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
 
@@ -252,11 +241,7 @@ export interface Miscellaneous128BitTestsContract extends BaseContract {
   ): TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
   getFunction(
     nameOrSignature: "ctNumbers"
-  ): TypedContractMethod<
-    [arg0: BigNumberish],
-    [[bigint, bigint] & { high: bigint; low: bigint }],
-    "view"
-  >;
+  ): TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
   getFunction(
     nameOrSignature: "numbers"
   ): TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;

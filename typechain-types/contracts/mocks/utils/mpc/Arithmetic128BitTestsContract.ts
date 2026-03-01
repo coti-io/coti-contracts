@@ -30,6 +30,7 @@ export interface Arithmetic128BitTestsContractInterface extends Interface {
       | "checkedMulWithOverflowBitTest"
       | "checkedSubTest"
       | "checkedSubWithOverflowBitTest"
+      | "divTest"
       | "mulTest"
       | "numbers"
       | "numbersLHS"
@@ -66,6 +67,10 @@ export interface Arithmetic128BitTestsContractInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "checkedSubWithOverflowBitTest",
+    values: [BigNumberish[], BigNumberish[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "divTest",
     values: [BigNumberish[], BigNumberish[]]
   ): string;
   encodeFunctionData(
@@ -126,6 +131,7 @@ export interface Arithmetic128BitTestsContractInterface extends Interface {
     functionFragment: "checkedSubWithOverflowBitTest",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "divTest", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "mulTest", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "numbers", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "numbersLHS", data: BytesLike): Result;
@@ -227,6 +233,12 @@ export interface Arithmetic128BitTestsContract extends BaseContract {
     "nonpayable"
   >;
 
+  divTest: TypedContractMethod<
+    [a: BigNumberish[], b: BigNumberish[]],
+    [void],
+    "nonpayable"
+  >;
+
   mulTest: TypedContractMethod<
     [a: BigNumberish[], b: BigNumberish[]],
     [void],
@@ -299,6 +311,13 @@ export interface Arithmetic128BitTestsContract extends BaseContract {
   >;
   getFunction(
     nameOrSignature: "checkedSubWithOverflowBitTest"
+  ): TypedContractMethod<
+    [a: BigNumberish[], b: BigNumberish[]],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "divTest"
   ): TypedContractMethod<
     [a: BigNumberish[], b: BigNumberish[]],
     [void],

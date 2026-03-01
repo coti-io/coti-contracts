@@ -16,7 +16,7 @@ contract Miscellaneous128BitTestsContract {
         _resetNumbers(a_.length);
 
         for (uint256 i = 0; i < a_.length; ++i) {
-            gtUint128 memory gtA = MpcCore.validateCiphertext(a_[i]);
+            gtUint128 gtA = MpcCore.validateCiphertext(a_[i]);
             
             numbers[i] = MpcCore.decrypt(gtA);
         }
@@ -26,7 +26,7 @@ contract Miscellaneous128BitTestsContract {
         _resetNumbers(a_.length);
 
         for (uint256 i = 0; i < a_.length; ++i) {
-            gtUint128 memory gtA = MpcCore.setPublic128(a_[i]);
+            gtUint128 gtA = MpcCore.setPublic128(a_[i]);
             
             numbers[i] = MpcCore.decrypt(gtA);
         }
@@ -36,7 +36,7 @@ contract Miscellaneous128BitTestsContract {
         _resetCtNumbers(a_.length);
 
         for (uint256 i = 0; i < a_.length; ++i) {
-            gtUint128 memory gtA = MpcCore.setPublic128(a_[i]);
+            gtUint128 gtA = MpcCore.setPublic128(a_[i]);
             
             ctNumbers[i] = MpcCore.offBoardToUser(gtA, msg.sender);
         }
@@ -74,9 +74,9 @@ contract Miscellaneous128BitTestsContract {
         gtBool gtSuccess;
 
         for (uint256 i = 0; i < a_.length; ++i) {
-            gtUint128 memory gtA = MpcCore.setPublic128(a_[i]);
-            gtUint128 memory gtB = MpcCore.setPublic128(b_[i]);
-            gtUint128 memory gtAmount = MpcCore.setPublic128(amount_[i]);
+            gtUint128 gtA = MpcCore.setPublic128(a_[i]);
+            gtUint128 gtB = MpcCore.setPublic128(b_[i]);
+            gtUint128 gtAmount = MpcCore.setPublic128(amount_[i]);
             
             (gtA, gtB, gtSuccess) = MpcCore.transfer(gtA, gtB, gtAmount);
 
@@ -109,10 +109,10 @@ contract Miscellaneous128BitTestsContract {
         gtBool gtSuccess;
 
         for (uint256 i = 0; i < a_.length; ++i) {
-            gtUint128 memory gtA = MpcCore.setPublic128(a_[i]);
-            gtUint128 memory gtB = MpcCore.setPublic128(b_[i]);
-            gtUint128 memory gtAmount = MpcCore.setPublic128(amount_[i]);
-            gtUint128 memory gtAllowance = MpcCore.setPublic128(allowance_[i]);
+            gtUint128 gtA = MpcCore.setPublic128(a_[i]);
+            gtUint128 gtB = MpcCore.setPublic128(b_[i]);
+            gtUint128 gtAmount = MpcCore.setPublic128(amount_[i]);
+            gtUint128 gtAllowance = MpcCore.setPublic128(allowance_[i]);
             
             (gtA, gtB, gtSuccess, gtAllowance) = MpcCore.transferWithAllowance(gtA, gtB, gtAmount, gtAllowance);
 
@@ -139,7 +139,7 @@ contract Miscellaneous128BitTestsContract {
         
         // Resize the numbers array to match input length
         for(uint i = 0; i < length; i++) {
-            ctNumbers.push(ctUint128(ctUint64.wrap(0), ctUint64.wrap(0)));
+            ctNumbers.push(ctUint128.wrap(0));
         }
     }
 

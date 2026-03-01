@@ -7,11 +7,12 @@ import { setupAccounts } from "../utils/accounts"
 const gasLimit = 12000000
 
 async function deploy() {
-  const [owner, otherAccount] = await setupAccounts()
+  const [owner, otherAccount] = await setupAccounts(true)
 
   const factory = await hre.ethers.getContractFactory("AccountOnboard")
   const contract = await factory.connect(owner).deploy({ gasLimit })
   await contract.waitForDeployment()
+  console.log("Deployed AccountOnboard contract at ", await contract.getAddress())
   
   return { contract, contractAddress: await contract.getAddress(), owner, otherAccount }
 }

@@ -18,8 +18,8 @@ contract Arithmetic128BitTestsContract {
         _resetNumbers(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint128 memory gtA = MpcCore.setPublic128(a[i]);
-            gtUint128 memory gtB = MpcCore.setPublic128(b[i]);
+            gtUint128 gtA = MpcCore.setPublic128(a[i]);
+            gtUint128 gtB = MpcCore.setPublic128(b[i]);
             
             numbers[i] = MpcCore.decrypt(MpcCore.add(gtA, gtB));
 
@@ -31,8 +31,8 @@ contract Arithmetic128BitTestsContract {
     function checkedAddTest(uint128 a, uint128 b) public {
         _resetNumbers(1);
 
-        gtUint128 memory gtA = MpcCore.setPublic128(a);
-        gtUint128 memory gtB = MpcCore.setPublic128(b);
+        gtUint128 gtA = MpcCore.setPublic128(a);
+        gtUint128 gtB = MpcCore.setPublic128(b);
 
         numbers[0] = MpcCore.decrypt(MpcCore.checkedAdd(gtA, gtB));
 
@@ -53,13 +53,13 @@ contract Arithmetic128BitTestsContract {
         gtBool bit;
         gtBool bitLHS;
         gtBool bitRHS;
-        gtUint128 memory result;
-        gtUint128 memory resultLHS;
-        gtUint128 memory resultRHS;
+        gtUint128 result;
+        gtUint128 resultLHS;
+        gtUint128 resultRHS;
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint128 memory gtA = MpcCore.setPublic128(a[i]);
-            gtUint128 memory gtB = MpcCore.setPublic128(b[i]);
+            gtUint128 gtA = MpcCore.setPublic128(a[i]);
+            gtUint128 gtB = MpcCore.setPublic128(b[i]);
             
             (bit, result) = MpcCore.checkedAddWithOverflowBit(gtA, gtB);
             (bitLHS, resultLHS) = MpcCore.checkedAddWithOverflowBit(a[i], gtB);
@@ -80,8 +80,8 @@ contract Arithmetic128BitTestsContract {
         _resetNumbers(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint128 memory gtA = MpcCore.setPublic128(a[i]);
-            gtUint128 memory gtB = MpcCore.setPublic128(b[i]);
+            gtUint128 gtA = MpcCore.setPublic128(a[i]);
+            gtUint128 gtB = MpcCore.setPublic128(b[i]);
             
             numbers[i] = MpcCore.decrypt(MpcCore.sub(gtA, gtB));
 
@@ -93,8 +93,8 @@ contract Arithmetic128BitTestsContract {
     function checkedSubTest(uint128 a, uint128 b) public {
         _resetNumbers(1);
 
-        gtUint128 memory gtA = MpcCore.setPublic128(a);
-        gtUint128 memory gtB = MpcCore.setPublic128(b);
+        gtUint128 gtA = MpcCore.setPublic128(a);
+        gtUint128 gtB = MpcCore.setPublic128(b);
 
         numbers[0] = MpcCore.decrypt(MpcCore.checkedSub(gtA, gtB));
 
@@ -115,13 +115,13 @@ contract Arithmetic128BitTestsContract {
         gtBool bit;
         gtBool bitLHS;
         gtBool bitRHS;
-        gtUint128 memory result;
-        gtUint128 memory resultLHS;
-        gtUint128 memory resultRHS;
+        gtUint128 result;
+        gtUint128 resultLHS;
+        gtUint128 resultRHS;
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint128 memory gtA = MpcCore.setPublic128(a[i]);
-            gtUint128 memory gtB = MpcCore.setPublic128(b[i]);
+            gtUint128 gtA = MpcCore.setPublic128(a[i]);
+            gtUint128 gtB = MpcCore.setPublic128(b[i]);
             
             (bit, result) = MpcCore.checkedSubWithOverflowBit(gtA, gtB);
             (bitLHS, resultLHS) = MpcCore.checkedSubWithOverflowBit(a[i], gtB);
@@ -142,8 +142,8 @@ contract Arithmetic128BitTestsContract {
         _resetNumbers(a.length);
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint128 memory gtA = MpcCore.setPublic128(a[i]);
-            gtUint128 memory gtB = MpcCore.setPublic128(b[i]);
+            gtUint128 gtA = MpcCore.setPublic128(a[i]);
+            gtUint128 gtB = MpcCore.setPublic128(b[i]);
             
             numbers[i] = MpcCore.decrypt(MpcCore.mul(gtA, gtB));
 
@@ -155,8 +155,8 @@ contract Arithmetic128BitTestsContract {
     function checkedMulTest(uint128 a, uint128 b) public {
         _resetNumbers(1);
 
-        gtUint128 memory gtA = MpcCore.setPublic128(a);
-        gtUint128 memory gtB = MpcCore.setPublic128(b);
+        gtUint128 gtA = MpcCore.setPublic128(a);
+        gtUint128 gtB = MpcCore.setPublic128(b);
 
         numbers[0] = MpcCore.decrypt(MpcCore.checkedMul(gtA, gtB));
 
@@ -177,13 +177,13 @@ contract Arithmetic128BitTestsContract {
         gtBool bit;
         gtBool bitLHS;
         gtBool bitRHS;
-        gtUint128 memory result;
-        gtUint128 memory resultLHS;
-        gtUint128 memory resultRHS;
+        gtUint128 result;
+        gtUint128 resultLHS;
+        gtUint128 resultRHS;
 
         for (uint256 i = 0; i < a.length; ++i) {
-            gtUint128 memory gtA = MpcCore.setPublic128(a[i]);
-            gtUint128 memory gtB = MpcCore.setPublic128(b[i]);
+            gtUint128 gtA = MpcCore.setPublic128(a[i]);
+            gtUint128 gtB = MpcCore.setPublic128(b[i]);
             
             (bit, result) = MpcCore.checkedMulWithOverflowBit(gtA, gtB);
             (bitLHS, resultLHS) = MpcCore.checkedMulWithOverflowBit(a[i], gtB);
@@ -195,6 +195,22 @@ contract Arithmetic128BitTestsContract {
             numbers[i] = MpcCore.decrypt(result);
             numbersLHS[i] = MpcCore.decrypt(resultLHS);
             numbersRHS[i] = MpcCore.decrypt(resultRHS);
+        }
+    }
+
+    function divTest(uint128[] calldata a, uint128[] calldata b) public {
+        require(a.length == b.length, "Input length mismatch");
+        
+        _resetNumbers(a.length);
+
+        for (uint256 i = 0; i < a.length; ++i) {
+            gtUint128 gtA = MpcCore.setPublic128(a[i]);
+            gtUint128 gtB = MpcCore.setPublic128(b[i]);
+            
+            numbers[i] = MpcCore.decrypt(MpcCore.div(gtA, gtB));
+
+            // assert(numbers[i] == MpcCore.decrypt(MpcCore.div(MpcCore.setPublic128(a[i]), gtB)));
+            // assert(numbers[i] == MpcCore.decrypt(MpcCore.div(gtA, MpcCore.setPublic128(b[i]))));
         }
     }
 

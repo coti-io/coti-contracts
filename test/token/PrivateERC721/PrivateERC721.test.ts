@@ -47,7 +47,7 @@ describe("Private ERC721", function () {
       before(async function () {
         const { contract, contractAddress, owner, otherAccount } = deployment
         
-        const encryptedTokenURI = await owner.encryptValue(tokenURI, contractAddress, contract.mint.fragment.selector) as itString
+        const encryptedTokenURI = await owner.encryptString(tokenURI, contractAddress, contract.mint.fragment.selector)
 
         tx = await (
           await contract
@@ -82,8 +82,8 @@ describe("Private ERC721", function () {
     it("Should fail to mint if the encrypted token URI is faulty", async function () {
       const { contract, contractAddress, otherAccount, owner } = deployment
 
-      const ownerEncryptedTokenURI = await owner.encryptValue(tokenURI, contractAddress, contract.mint.fragment.selector) as itString
-      const otherAccountEncryptedTokenURI = await otherAccount.encryptValue(tokenURI, contractAddress, contract.mint.fragment.selector) as itString
+      const ownerEncryptedTokenURI = await owner.encryptString(tokenURI, contractAddress, contract.mint.fragment.selector)
+      const otherAccountEncryptedTokenURI = await otherAccount.encryptString(tokenURI, contractAddress, contract.mint.fragment.selector)
 
       const encryptedTokenURI = {
         ciphertext: ownerEncryptedTokenURI.ciphertext,
@@ -108,7 +108,7 @@ describe("Private ERC721", function () {
 
       const tokenId = BigInt(1)
       const ctURI = await contract.connect(owner).tokenURI(tokenId)
-      const uri = await owner.decryptValue(ctURI)
+      const uri = await owner.decryptString(ctURI)
       
       expect(uri).to.equal("")
     })
@@ -144,7 +144,7 @@ describe("Private ERC721", function () {
 
         const encryptedTokenURI = await contract.tokenURI(tokenId)
 
-        const decryptedTokenURI = await owner.decryptValue(encryptedTokenURI)
+        const decryptedTokenURI = await owner.decryptString(encryptedTokenURI)
 
         expect(decryptedTokenURI).to.equal(tokenURI)
       })
@@ -154,7 +154,7 @@ describe("Private ERC721", function () {
 
         const encryptedTokenURI = await contract.tokenURI(tokenId)
 
-        const decryptedTokenURI = await otherAccount.decryptValue(encryptedTokenURI)
+        const decryptedTokenURI = await otherAccount.decryptString(encryptedTokenURI)
 
         expect(decryptedTokenURI).to.not.equal(tokenURI)
       })
@@ -166,7 +166,7 @@ describe("Private ERC721", function () {
       it("Should fail transfer token to other account for when no allowance", async function () {
         const { contract, contractAddress, owner, otherAccount } = deployment
 
-        const encryptedTokenURI = await owner.encryptValue(tokenURI, contractAddress, contract.mint.fragment.selector) as itString
+        const encryptedTokenURI = await owner.encryptString(tokenURI, contractAddress, contract.mint.fragment.selector)
   
         const tokenId = await deployment.contract.totalSupply()
         
@@ -194,7 +194,7 @@ describe("Private ERC721", function () {
       it("Should fail to transfer from non-owner", async function () {
         const { contract, contractAddress, owner, otherAccount } = deployment
 
-        const encryptedTokenURI = await owner.encryptValue(tokenURI, contractAddress, contract.mint.fragment.selector) as itString
+        const encryptedTokenURI = await owner.encryptString(tokenURI, contractAddress, contract.mint.fragment.selector)
   
         const tokenId = await deployment.contract.totalSupply()
         
