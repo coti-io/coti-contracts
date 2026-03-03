@@ -78,9 +78,15 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
      * @dev DEPRECATED: Use privateToken.transferAndCall(bridge, amount, "") instead
      *      This function requires prior approval which needs encrypted signature
      */
-    function withdraw(uint256 amount) external nonReentrant whenNotPaused {
+    function withdraw(uint256 amount) external payable nonReentrant whenNotPaused {
         if (amount == 0) revert AmountZero();
+        if (msg.value < nativeCotiFee) revert InsufficientCotiFee();
         _checkWithdrawLimits(amount);
+
+        // Handle native COTI fee
+        if (msg.value > 0) {
+            accumulatedCotiFees += msg.value;
+        }
 
         // Calculate fee
         uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
