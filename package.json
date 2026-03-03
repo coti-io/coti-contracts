@@ -40,13 +40,9 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@coti-io/coti-ethers": "file:../coti-ethers-fork",
-    "@coti-io/coti-sdk-typescript": "git+https://github.com/upendra-eth/coti-sdk-typescript.git#feature/add-128-256-bit-operations-support",
+    "@coti-io/coti-ethers": "^1.0.5",
+    "@coti-io/coti-sdk-typescript": "^1.0.6",
     "@openzeppelin/contracts": "^4.9.6",
     "dotenv": "^16.4.5"
-  },
-  "overrides": {
-    "@coti-io/coti-ethers": "file:../coti-ethers-fork",
-    "@coti-io/coti-sdk-typescript": "git+https://github.com/upendra-eth/coti-sdk-typescript.git#feature/add-128-256-bit-operations-support"
   }
 }
