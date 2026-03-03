@@ -9,7 +9,7 @@ import "../PrivateERC20.sol";
  * @dev Extends PayableToken for role-based minting/burning and bridge operations
  */
 contract PrivateBridgedUSDC is PrivateERC20 {
-    constructor() PrivateERC20("Private Bridged USDC", "p.USDC.e") {}
+    constructor() PrivateERC20("Private Bridged USDC (COTI)", "p.USDC.e") {}
 
     function decimals() public view virtual override returns (uint8) {
         return 6;
