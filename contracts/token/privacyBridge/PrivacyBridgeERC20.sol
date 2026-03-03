@@ -49,14 +49,12 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
     ) external payable nonReentrant whenNotPaused {
         if (!isDepositEnabled) revert DepositDisabled();
         if (amount == 0) revert AmountZero();
-        if (msg.value < nativeCotiFee) revert InsufficientCotiFee();
+        if (msg.value != nativeCotiFee) revert InsufficientCotiFee();
 
         _checkDepositLimits(amount);
 
-        // Handle native COTI fee
-        if (msg.value > 0) {
-            accumulatedCotiFees += msg.value;
-        }
+        // Handle native COTI fee (exact fee enforced)
+        accumulatedCotiFees += msg.value;
 
         bool success = token.transferFrom(msg.sender, address(this), amount);
         if (!success) revert TokenTransferFailed();
@@ -80,13 +78,11 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
      */
     function withdraw(uint256 amount) external payable nonReentrant whenNotPaused {
         if (amount == 0) revert AmountZero();
-        if (msg.value < nativeCotiFee) revert InsufficientCotiFee();
+        if (msg.value != nativeCotiFee) revert InsufficientCotiFee();
         _checkWithdrawLimits(amount);
 
-        // Handle native COTI fee
-        if (msg.value > 0) {
-            accumulatedCotiFees += msg.value;
-        }
+        // Handle native COTI fee (exact fee enforced)
+        accumulatedCotiFees += msg.value;
 
         // Calculate fee
         uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
