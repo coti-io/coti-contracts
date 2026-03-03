@@ -3,6 +3,8 @@
 /* eslint-disable */
 import type * as access from "./access";
 export type { access };
+import type * as disperse from "./disperse";
+export type { disperse };
 import type * as mocks from "./mocks";
 export type { mocks };
 import type * as onboard from "./onboard";

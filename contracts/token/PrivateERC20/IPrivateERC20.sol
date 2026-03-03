@@ -20,7 +20,8 @@ interface IPrivateERC20 {
      *
      * Note that `senderValue/receiverValue` may be zero.
      */
-    event Transfer(
+
+event Transfer(
         address indexed from,
         address indexed to,
         ctUint256 senderValue,

@@ -593,6 +593,35 @@ const _abi = [
       },
       {
         internalType: "uint256",
+        name: "gt",
+        type: "uint256",
+      },
+    ],
+    name: "OffBoard256",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "ctHigh",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "ctLow",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes1",
+        name: "metaData",
+        type: "bytes1",
+      },
+      {
+        internalType: "uint256",
         name: "ct",
         type: "uint256",
       },
@@ -603,6 +632,69 @@ const _abi = [
       },
     ],
     name: "OffBoardToUser",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "result",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes1",
+        name: "metaData",
+        type: "bytes1",
+      },
+      {
+        internalType: "uint256",
+        name: "ct",
+        type: "uint256",
+      },
+      {
+        internalType: "bytes",
+        name: "addr",
+        type: "bytes",
+      },
+    ],
+    name: "OffBoardToUser256",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "ctHigh",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "ctLow",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes1",
+        name: "metaData",
+        type: "bytes1",
+      },
+      {
+        internalType: "uint256",
+        name: "ctHigh",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "ctLow",
+        type: "uint256",
+      },
+    ],
+    name: "OnBoard",
     outputs: [
       {
         internalType: "uint256",
@@ -985,6 +1077,40 @@ const _abi = [
       {
         internalType: "uint256",
         name: "new_allowance",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes1",
+        name: "metaData",
+        type: "bytes1",
+      },
+      {
+        internalType: "uint256",
+        name: "ciphertextHigh",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "ciphertextLow",
+        type: "uint256",
+      },
+      {
+        internalType: "bytes",
+        name: "signature",
+        type: "bytes",
+      },
+    ],
+    name: "ValidateCiphertext",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "result",
         type: "uint256",
       },
     ],

@@ -69,16 +69,40 @@ const _abi = [
         type: "address",
       },
       {
+        components: [
+          {
+            internalType: "ctUint128",
+            name: "ciphertextHigh",
+            type: "uint256",
+          },
+          {
+            internalType: "ctUint128",
+            name: "ciphertextLow",
+            type: "uint256",
+          },
+        ],
         indexed: false,
-        internalType: "ctUint64",
+        internalType: "struct ctUint256",
         name: "ownerValue",
-        type: "uint256",
+        type: "tuple",
       },
       {
+        components: [
+          {
+            internalType: "ctUint128",
+            name: "ciphertextHigh",
+            type: "uint256",
+          },
+          {
+            internalType: "ctUint128",
+            name: "ciphertextLow",
+            type: "uint256",
+          },
+        ],
         indexed: false,
-        internalType: "ctUint64",
+        internalType: "struct ctUint256",
         name: "spenderValue",
-        type: "uint256",
+        type: "tuple",
       },
     ],
     name: "Approval",
@@ -100,16 +124,40 @@ const _abi = [
         type: "address",
       },
       {
+        components: [
+          {
+            internalType: "ctUint128",
+            name: "ciphertextHigh",
+            type: "uint256",
+          },
+          {
+            internalType: "ctUint128",
+            name: "ciphertextLow",
+            type: "uint256",
+          },
+        ],
         indexed: false,
-        internalType: "ctUint64",
+        internalType: "struct ctUint256",
         name: "senderValue",
-        type: "uint256",
+        type: "tuple",
       },
       {
+        components: [
+          {
+            internalType: "ctUint128",
+            name: "ciphertextHigh",
+            type: "uint256",
+          },
+          {
+            internalType: "ctUint128",
+            name: "ciphertextLow",
+            type: "uint256",
+          },
+        ],
         indexed: false,
-        internalType: "ctUint64",
+        internalType: "struct ctUint256",
         name: "receiverValue",
-        type: "uint256",
+        type: "tuple",
       },
     ],
     name: "Transfer",
@@ -150,7 +198,7 @@ const _abi = [
     name: "allowance",
     outputs: [
       {
-        internalType: "gtUint64",
+        internalType: "gtUint256",
         name: "",
         type: "uint256",
       },
@@ -176,19 +224,55 @@ const _abi = [
       {
         components: [
           {
-            internalType: "ctUint64",
+            components: [
+              {
+                internalType: "ctUint128",
+                name: "ciphertextHigh",
+                type: "uint256",
+              },
+              {
+                internalType: "ctUint128",
+                name: "ciphertextLow",
+                type: "uint256",
+              },
+            ],
+            internalType: "struct ctUint256",
             name: "ciphertext",
-            type: "uint256",
+            type: "tuple",
           },
           {
-            internalType: "ctUint64",
+            components: [
+              {
+                internalType: "ctUint128",
+                name: "ciphertextHigh",
+                type: "uint256",
+              },
+              {
+                internalType: "ctUint128",
+                name: "ciphertextLow",
+                type: "uint256",
+              },
+            ],
+            internalType: "struct ctUint256",
             name: "ownerCiphertext",
-            type: "uint256",
+            type: "tuple",
           },
           {
-            internalType: "ctUint64",
+            components: [
+              {
+                internalType: "ctUint128",
+                name: "ciphertextHigh",
+                type: "uint256",
+              },
+              {
+                internalType: "ctUint128",
+                name: "ciphertextLow",
+                type: "uint256",
+              },
+            ],
+            internalType: "struct ctUint256",
             name: "spenderCiphertext",
-            type: "uint256",
+            type: "tuple",
           },
         ],
         internalType: "struct IPrivateERC20.Allowance",
@@ -207,7 +291,7 @@ const _abi = [
         type: "address",
       },
       {
-        internalType: "gtUint64",
+        internalType: "gtUint256",
         name: "value",
         type: "uint256",
       },
@@ -233,9 +317,21 @@ const _abi = [
       {
         components: [
           {
-            internalType: "ctUint64",
+            components: [
+              {
+                internalType: "ctUint128",
+                name: "ciphertextHigh",
+                type: "uint256",
+              },
+              {
+                internalType: "ctUint128",
+                name: "ciphertextLow",
+                type: "uint256",
+              },
+            ],
+            internalType: "struct ctUint256",
             name: "ciphertext",
-            type: "uint256",
+            type: "tuple",
           },
           {
             internalType: "bytes",
@@ -243,7 +339,7 @@ const _abi = [
             type: "bytes",
           },
         ],
-        internalType: "struct itUint64",
+        internalType: "struct itUint256",
         name: "value",
         type: "tuple",
       },
@@ -270,9 +366,21 @@ const _abi = [
     name: "balanceOf",
     outputs: [
       {
-        internalType: "ctUint64",
+        components: [
+          {
+            internalType: "ctUint128",
+            name: "ciphertextHigh",
+            type: "uint256",
+          },
+          {
+            internalType: "ctUint128",
+            name: "ciphertextLow",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct ctUint256",
         name: "",
-        type: "uint256",
+        type: "tuple",
       },
     ],
     stateMutability: "view",
@@ -283,7 +391,7 @@ const _abi = [
     name: "balanceOf",
     outputs: [
       {
-        internalType: "gtUint64",
+        internalType: "gtUint256",
         name: "",
         type: "uint256",
       },
@@ -396,9 +504,21 @@ const _abi = [
       {
         components: [
           {
-            internalType: "ctUint64",
+            components: [
+              {
+                internalType: "ctUint128",
+                name: "ciphertextHigh",
+                type: "uint256",
+              },
+              {
+                internalType: "ctUint128",
+                name: "ciphertextLow",
+                type: "uint256",
+              },
+            ],
+            internalType: "struct ctUint256",
             name: "ciphertext",
-            type: "uint256",
+            type: "tuple",
           },
           {
             internalType: "bytes",
@@ -406,7 +526,7 @@ const _abi = [
             type: "bytes",
           },
         ],
-        internalType: "struct itUint64",
+        internalType: "struct itUint256",
         name: "value",
         type: "tuple",
       },
@@ -430,7 +550,7 @@ const _abi = [
         type: "address",
       },
       {
-        internalType: "gtUint64",
+        internalType: "gtUint256",
         name: "value",
         type: "uint256",
       },
@@ -459,21 +579,9 @@ const _abi = [
         type: "address",
       },
       {
-        components: [
-          {
-            internalType: "ctUint64",
-            name: "ciphertext",
-            type: "uint256",
-          },
-          {
-            internalType: "bytes",
-            name: "signature",
-            type: "bytes",
-          },
-        ],
-        internalType: "struct itUint64",
+        internalType: "gtUint256",
         name: "value",
-        type: "tuple",
+        type: "uint256",
       },
     ],
     name: "transferFrom",
@@ -500,9 +608,33 @@ const _abi = [
         type: "address",
       },
       {
-        internalType: "gtUint64",
+        components: [
+          {
+            components: [
+              {
+                internalType: "ctUint128",
+                name: "ciphertextHigh",
+                type: "uint256",
+              },
+              {
+                internalType: "ctUint128",
+                name: "ciphertextLow",
+                type: "uint256",
+              },
+            ],
+            internalType: "struct ctUint256",
+            name: "ciphertext",
+            type: "tuple",
+          },
+          {
+            internalType: "bytes",
+            name: "signature",
+            type: "bytes",
+          },
+        ],
+        internalType: "struct itUint256",
         name: "value",
-        type: "uint256",
+        type: "tuple",
       },
     ],
     name: "transferFrom",

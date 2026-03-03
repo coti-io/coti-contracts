@@ -19,12 +19,34 @@
     "on-chain-compute"
   ],
   "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",
+    "@nomicfoundation/hardhat-ethers": "^3.1.0",
+    "@nomicfoundation/hardhat-ignition": "^0.15.0",
+    "@nomicfoundation/hardhat-ignition-ethers": "^0.15.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "hardhat": "^2.22.8"
+    "@nomicfoundation/hardhat-verify": "^2.0.1",
+    "@nomicfoundation/ignition-core": "^0.15.0",
+    "@typechain/ethers-v6": "^0.5.1",
+    "@typechain/hardhat": "^9.1.0",
+    "@types/chai": "^4.2.0",
+    "@types/mocha": "^10.0.10",
+    "chai": "^4.2.0",
+    "hardhat": "^2.22.8",
+    "hardhat-gas-reporter": "^1.0.8",
+    "solidity-coverage": "^0.8.16",
+    "ts-node": "^10.9.2",
+    "typechain": "^8.3.2",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@coti-io/coti-ethers": "^1.0.5",
+    "@coti-io/coti-ethers": "file:../coti-ethers-fork",
+    "@coti-io/coti-sdk-typescript": "git+https://github.com/upendra-eth/coti-sdk-typescript.git#feature/add-128-256-bit-operations-support",
     "@openzeppelin/contracts": "^4.9.6",
     "dotenv": "^16.4.5"
+  },
+  "overrides": {
+    "@coti-io/coti-ethers": "file:../coti-ethers-fork",
+    "@coti-io/coti-sdk-typescript": "git+https://github.com/upendra-eth/coti-sdk-typescript.git#feature/add-128-256-bit-operations-support"
   }
 }
