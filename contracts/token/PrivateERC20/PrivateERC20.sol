@@ -7,7 +7,7 @@ import {IPrivateERC20} from "./IPrivateERC20.sol";
 import {ITokenReceiver} from "./ITokenReceiver.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import "../utils/mpc/MpcCore.sol";
+import "../../utils/mpc/MpcCore.sol";
 
 /*
 THIS IS THE 256 BIT VERSION OF PRIVATE ERC20.
@@ -119,17 +119,17 @@ abstract contract PrivateERC20 is
     }
 
     function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
-        gtUint256 memory gtAmount = MpcCore.setPublic256(amount);
+        gtUint256 gtAmount = MpcCore.setPublic256(amount);
         _mint(to, gtAmount);
     }
 
     function burn(uint256 amount) public {
-        gtUint256 memory gtAmount = MpcCore.setPublic256(amount);
+        gtUint256 gtAmount = MpcCore.setPublic256(amount);
         _burn(msg.sender, gtAmount);
     }
 
     function transfer(address to, uint256 amount) public returns (bool) {
-        gtUint256 memory gtAmount = MpcCore.setPublic256(amount);
+        gtUint256 gtAmount = MpcCore.setPublic256(amount);
         _transfer(msg.sender, to, gtAmount);
         return true;
     }
@@ -139,7 +139,7 @@ abstract contract PrivateERC20 is
         uint256 amount,
         bytes calldata data
     ) public virtual returns (bool) {
-        gtUint256 memory gtAmount = MpcCore.setPublic256(amount);
+        gtUint256 gtAmount = MpcCore.setPublic256(amount);
         gtBool success = _transfer(msg.sender, to, gtAmount);
         require(MpcCore.decrypt(success), "Transfer failed");
 
@@ -178,7 +178,7 @@ abstract contract PrivateERC20 is
     /**
      * @dev See {IPrivateERC20-balanceOf}.
      */
-    function balanceOf() public virtual returns (gtUint256 memory) {
+    function balanceOf() public virtual returns (gtUint256) {
         return _getBalance(_msgSender());
     }
 
@@ -190,7 +190,7 @@ abstract contract PrivateERC20 is
     function setAccountEncryptionAddress(
         address offBoardAddress
     ) public virtual returns (bool) {
-        gtUint256 memory gtBalance = _getBalance(_msgSender());
+        gtUint256 gtBalance = _getBalance(_msgSender());
 
         _accountEncryptionAddress[_msgSender()] = offBoardAddress;
 
@@ -216,7 +216,7 @@ abstract contract PrivateERC20 is
     ) public virtual returns (gtBool) {
         address owner = _msgSender();
 
-        gtUint256 memory gtValue = MpcCore.validateCiphertext(value);
+        gtUint256 gtValue = MpcCore.validateCiphertext(value);
 
         return _transfer(owner, to, gtValue);
     }
@@ -231,7 +231,7 @@ abstract contract PrivateERC20 is
      */
     function transfer(
         address to,
-        gtUint256 memory value
+        gtUint256 value
     ) public virtual returns (gtBool) {
         address owner = _msgSender();
 
@@ -254,7 +254,7 @@ abstract contract PrivateERC20 is
     function allowance(
         address account,
         bool isSpender
-    ) public virtual returns (gtUint256 memory) {
+    ) public virtual returns (gtUint256) {
         if (isSpender) {
             return _safeOnboard(_allowances[_msgSender()][account].ciphertext);
         } else {
@@ -303,7 +303,7 @@ abstract contract PrivateERC20 is
     ) public virtual returns (bool) {
         address owner = _msgSender();
 
-        gtUint256 memory gtValue = MpcCore.validateCiphertext(value);
+        gtUint256 gtValue = MpcCore.validateCiphertext(value);
 
         _approve(owner, spender, gtValue);
 
@@ -322,7 +322,7 @@ abstract contract PrivateERC20 is
      */
     function approve(
         address spender,
-        gtUint256 memory value
+        gtUint256 value
     ) public virtual returns (bool) {
         address owner = _msgSender();
 
@@ -348,7 +348,7 @@ abstract contract PrivateERC20 is
     ) public virtual returns (gtBool) {
         address spender = _msgSender();
 
-        gtUint256 memory gtValue = MpcCore.validateCiphertext(value);
+        gtUint256 gtValue = MpcCore.validateCiphertext(value);
 
         _spendAllowance(from, spender, gtValue);
 
@@ -368,7 +368,7 @@ abstract contract PrivateERC20 is
     function transferFrom(
         address from,
         address to,
-        gtUint256 memory value
+        gtUint256 value
     ) public virtual returns (gtBool) {
         address spender = _msgSender();
 
@@ -390,7 +390,7 @@ abstract contract PrivateERC20 is
     function _transfer(
         address from,
         address to,
-        gtUint256 memory value
+        gtUint256 value
     ) internal returns (gtBool) {
         if (from == address(0)) {
             revert ERC20InvalidSender(address(0));
@@ -413,27 +413,27 @@ abstract contract PrivateERC20 is
     function _update(
         address from,
         address to,
-        gtUint256 memory value
+        gtUint256 value
     ) internal virtual returns (gtBool) {
-        gtUint256 memory newToBalance;
-        gtUint256 memory valueTransferred = value;
+        gtUint256 newToBalance;
+        gtUint256 valueTransferred = value;
         gtBool result = MpcCore.setPublic(true);
 
         if (from == address(0)) {
-            gtUint256 memory totalSupply_ = _safeOnboard(_totalSupply);
+            gtUint256 totalSupply_ = _safeOnboard(_totalSupply);
 
             totalSupply_ = MpcCore.add(totalSupply_, value);
 
             _totalSupply = MpcCore.offBoard(totalSupply_);
 
-            gtUint256 memory currentBalance = _getBalance(to);
+            gtUint256 currentBalance = _getBalance(to);
 
             newToBalance = MpcCore.add(currentBalance, value);
         } else {
-            gtUint256 memory fromBalance = _getBalance(from);
-            gtUint256 memory toBalance = _getBalance(to);
+            gtUint256 fromBalance = _getBalance(from);
+            gtUint256 toBalance = _getBalance(to);
 
-            gtUint256 memory newFromBalance;
+            gtUint256 newFromBalance;
 
             (newFromBalance, newToBalance, result) = MpcCore.transfer(
                 fromBalance,
@@ -447,7 +447,7 @@ abstract contract PrivateERC20 is
         }
 
         if (to == address(0)) {
-            gtUint256 memory totalSupply_ = _safeOnboard(_totalSupply);
+            gtUint256 totalSupply_ = _safeOnboard(_totalSupply);
 
             totalSupply_ = MpcCore.sub(totalSupply_, valueTransferred);
 
@@ -466,7 +466,7 @@ abstract contract PrivateERC20 is
         return result;
     }
 
-    function _getBalance(address account) internal returns (gtUint256 memory) {
+    function _getBalance(address account) internal returns (gtUint256) {
         ctUint256 memory ctBalance = _balances[account].ciphertext;
 
         return _safeOnboard(ctBalance);
@@ -484,10 +484,7 @@ abstract contract PrivateERC20 is
         return encryptionAddress;
     }
 
-    function _updateBalance(
-        address account,
-        gtUint256 memory balance
-    ) internal {
+    function _updateBalance(address account, gtUint256 balance) internal {
         address encryptionAddress = _getAccountEncryptionAddress(account);
 
         _balances[account] = MpcCore.offBoardCombined(
@@ -504,10 +501,7 @@ abstract contract PrivateERC20 is
      *
      * NOTE: This function is not virtual, {_update} should be overridden instead.
      */
-    function _mint(
-        address account,
-        gtUint256 memory value
-    ) internal returns (gtBool) {
+    function _mint(address account, gtUint256 value) internal returns (gtBool) {
         if (account == address(0)) {
             revert ERC20InvalidReceiver(address(0));
         }
@@ -523,10 +517,7 @@ abstract contract PrivateERC20 is
      *
      * NOTE: This function is not virtual, {_update} should be overridden instead
      */
-    function _burn(
-        address account,
-        gtUint256 memory value
-    ) internal returns (gtBool) {
+    function _burn(address account, gtUint256 value) internal returns (gtBool) {
         if (account == address(0)) {
             revert ERC20InvalidSender(address(0));
         }
@@ -552,7 +543,7 @@ abstract contract PrivateERC20 is
     function _approve(
         address owner,
         address spender,
-        gtUint256 memory value
+        gtUint256 value
     ) internal {
         if (owner == address(0)) {
             revert ERC20InvalidApprover(address(0));
@@ -597,12 +588,10 @@ abstract contract PrivateERC20 is
     function _spendAllowance(
         address owner,
         address spender,
-        gtUint256 memory value
+        gtUint256 value
     ) internal virtual {
-        gtUint256 memory currentBalance = _safeOnboard(
-            _balances[owner].ciphertext
-        );
-        gtUint256 memory currentAllowance = _safeOnboard(
+        gtUint256 currentBalance = _safeOnboard(_balances[owner].ciphertext);
+        gtUint256 currentAllowance = _safeOnboard(
             _allowances[owner][spender].ciphertext
         );
 
@@ -613,7 +602,7 @@ abstract contract PrivateERC20 is
         gtBool insufficientBalance = MpcCore.lt(currentBalance, value);
         gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, value);
 
-        gtUint256 memory newAllowance = MpcCore.mux(
+        gtUint256 newAllowance = MpcCore.mux(
             MpcCore.or(
                 maxAllowance,
                 MpcCore.or(insufficientBalance, inSufficientAllowance)
@@ -627,7 +616,7 @@ abstract contract PrivateERC20 is
 
     function _safeOnboard(
         ctUint256 memory value
-    ) internal returns (gtUint256 memory) {
+    ) internal returns (gtUint256) {
         if (
             ctUint64.unwrap(value.high.high) == 0 &&
             ctUint64.unwrap(value.high.low) == 0 &&

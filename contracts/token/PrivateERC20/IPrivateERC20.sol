@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.19;
 
-import "../utils/mpc/MpcCore.sol";
+import "../../utils/mpc/MpcCore.sol";
 
 /**
  * @dev Interface of the COTI Private ERC-20 standard.
@@ -54,7 +54,7 @@ event Transfer(
     /**
      * @dev Returns the value of tokens owned by the caller.
      */
-    function balanceOf() external returns (gtUint256 memory);
+    function balanceOf() external returns (gtUint256);
 
     /**
      * @dev Reencrypts the caller's balance using the AES key of `addr`.
@@ -80,10 +80,7 @@ event Transfer(
      *
      * Emits a {Transfer} event.
      */
-    function transfer(
-        address to,
-        gtUint256 memory value
-    ) external returns (gtBool);
+    function transfer(address to, gtUint256 value) external returns (gtBool);
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
@@ -104,10 +101,7 @@ event Transfer(
      *
      * This value changes when {approve} or {transferFrom} are called.
      */
-    function allowance(
-        address account,
-        bool isSpender
-    ) external returns (gtUint256 memory);
+    function allowance(address account, bool isSpender) external returns (gtUint256);
 
     /**
      * @dev Sets a `value` amount of tokens as the allowance of `spender` over the
@@ -144,10 +138,7 @@ event Transfer(
      *
      * Emits an {Approval} event.
      */
-    function approve(
-        address spender,
-        gtUint256 memory value
-    ) external returns (bool);
+    function approve(address spender, gtUint256 value) external returns (bool);
 
     /**
      * @dev Moves a `value` amount of tokens from `from` to `to` using the
@@ -173,11 +164,7 @@ event Transfer(
      *
      * Emits a {Transfer} event.
      */
-    function transferFrom(
-        address from,
-        address to,
-        gtUint256 memory value
-    ) external returns (gtBool);
+    function transferFrom(address from, address to, gtUint256 value) external returns (gtBool);
 
     /**
      * @dev Moves a `value` amount of tokens from the caller's account to `to`, and then calls `onTokenReceived` on `to`.
