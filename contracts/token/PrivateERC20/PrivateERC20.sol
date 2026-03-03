@@ -118,7 +118,7 @@ abstract contract PrivateERC20 is
         return 0;
     }
 
-    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
+    function mint(address to, uint256 amount) public virtual onlyRole(MINTER_ROLE) {
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
         _mint(to, gtAmount);
     }
