@@ -15,8 +15,8 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
     /// @notice The public ERC20 token being bridged (e.g., USDC, WETH)
     IERC20 public token;
 
-    /// @notice Address of the private token contract
-    address public privateTokenAddress;
+    /// @notice Private token contract being minted/burned
+    IPrivateERC20 public privateToken;
 
     error InvalidTokenAddress();
     error InvalidPrivateTokenAddress();
@@ -37,7 +37,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
         if (_privateToken == address(0)) revert InvalidPrivateTokenAddress();
 
         token = IERC20(_token);
-        privateTokenAddress = _privateToken;
+        privateToken = IPrivateERC20(_privateToken);
     }    
 
     /**
@@ -64,7 +64,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
         uint256 amountAfterFee = amount - feeAmount;
         accumulatedFees += feeAmount;
 
-        IPrivateERC20(privateTokenAddress).mint(msg.sender, amountAfterFee);
+        privateToken.mint(msg.sender, amountAfterFee);
 
         // Emit gross deposit amount and net private tokens minted
         emit Deposit(msg.sender, amount, amountAfterFee);
@@ -94,14 +94,14 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
 
         // Transfer private tokens from user to bridge (requires prior approval)
         gtUint256 memory gtAmount = MpcCore.setPublic256(amount);
-        IPrivateERC20(privateTokenAddress).transferFrom(
+        privateToken.transferFrom(
             msg.sender,
             address(this),
             gtAmount
         );
 
         // Burn private tokens from bridge's balance
-        IPrivateERC20(privateTokenAddress).burn(amount);
+        privateToken.burn(amount);
 
         // Transfer public tokens to user (minus fee)
         bool success = token.transfer(msg.sender, amountAfterFee);
@@ -126,7 +126,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
         bytes calldata data
     ) external override nonReentrant whenNotPaused returns (bool) {
         // Only accept tokens from our private token contract
-        if (msg.sender != privateTokenAddress) revert InvalidTokenSender();
+        if (msg.sender != address(privateToken)) revert InvalidTokenSender();
         if (amount == 0) revert AmountZero();
 
         _checkWithdrawLimits(amount);
@@ -140,7 +140,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
         if (bridgeBalance < amountAfterFee) revert InsufficientBridgeLiquidity();
 
         // Burn private tokens (already received by bridge via transfer)
-        IPrivateERC20(privateTokenAddress).burn(amount);
+        privateToken.burn(amount);
 
         // Transfer public tokens to original sender (minus fee)
         bool success = token.transfer(from, amountAfterFee);
