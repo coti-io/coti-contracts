@@ -9,7 +9,5 @@ import "../PrivateERC20.sol";
  * @dev Extends PayableToken for role-based minting/burning and bridge operations
  */
 contract PrivateWrappedEther is PrivateERC20 {
-    constructor() PrivateERC20("Private WETH", "p.WETH") {}
-
-
+    constructor() PrivateERC20("Private Wrapped Ether", "p.WETH") {}
 }

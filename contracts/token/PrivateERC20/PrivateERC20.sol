@@ -3,11 +3,11 @@
 pragma solidity ^0.8.19;
 
 import {Context} from "@openzeppelin/contracts/utils/Context.sol";
-import {IPrivateERC20, ITokenReceiver} from "./IPrivateERC20.sol";
+import {IPrivateERC20} from "./IPrivateERC20.sol";
+import {ITokenReceiver} from "./ITokenReceiver.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import "@coti-io/coti-contracts/contracts/utils/mpc/MpcCore.sol";
-
+import "../utils/mpc/MpcCore.sol";
 
 /*
 THIS IS THE 256 BIT VERSION OF PRIVATE ERC20.
@@ -20,7 +20,12 @@ Key Features:
 - Encrypted Operations (Mint, Burn, Transfer, Approve)
 */
 
-abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl {
+abstract contract PrivateERC20 is
+    Context,
+    ERC165,
+    IPrivateERC20,
+    AccessControl
+{
     uint256 private constant MAX_UINT_256 = type(uint256).max;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -29,7 +34,8 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
 
     mapping(address account => utUint256) private _balances;
 
-    mapping(address account => mapping(address spender => Allowance)) private _allowances;
+    mapping(address account => mapping(address spender => Allowance))
+        private _allowances;
 
     ctUint256 private _totalSupply;
 
@@ -122,40 +128,50 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
         _burn(msg.sender, gtAmount);
     }
 
-    function burn(address from, uint256 amount) public onlyRole(MINTER_ROLE) {
-        gtUint256 memory gtAmount = MpcCore.setPublic256(amount);
-        _burn(from, gtAmount);
-    }
-
     function transfer(address to, uint256 amount) public returns (bool) {
         gtUint256 memory gtAmount = MpcCore.setPublic256(amount);
         _transfer(msg.sender, to, gtAmount);
         return true;
     }
 
-    function transferAndCall(address to, uint256 amount, bytes calldata data) public virtual returns (bool) {
+    function transferAndCall(
+        address to,
+        uint256 amount,
+        bytes calldata data
+    ) public virtual returns (bool) {
         gtUint256 memory gtAmount = MpcCore.setPublic256(amount);
         gtBool success = _transfer(msg.sender, to, gtAmount);
         require(MpcCore.decrypt(success), "Transfer failed");
 
         if (to.code.length > 0) {
-            require(ITokenReceiver(to).onTokenReceived(msg.sender, amount, data), "Callback failed");
+            require(
+                ITokenReceiver(to).onTokenReceived(msg.sender, amount, data),
+                "Callback failed"
+            );
         }
         return true;
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControl, ERC165) returns (bool) {
-        return interfaceId == type(IPrivateERC20).interfaceId || super.supportsInterface(interfaceId);
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(AccessControl, ERC165) returns (bool) {
+        return
+            interfaceId == type(IPrivateERC20).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
-    function accountEncryptionAddress(address account) public view returns (address) {
+    function accountEncryptionAddress(
+        address account
+    ) public view returns (address) {
         return _accountEncryptionAddress[account];
-    } 
+    }
 
     /**
      * @dev See {IPrivateERC20-balanceOf}.
      */
-    function balanceOf(address account) public view virtual returns (ctUint256 memory) {
+    function balanceOf(
+        address account
+    ) public view virtual returns (ctUint256 memory) {
         return _balances[account].userCiphertext;
     }
 
@@ -168,19 +184,24 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
 
     /**
      * @dev See {IPrivateERC20-setAccountEncryptionAddress}.
-     * 
+     *
      * NOTE: This will not reencrypt your allowances until they are changed
      */
-    function setAccountEncryptionAddress(address offBoardAddress) public virtual returns (bool) {
+    function setAccountEncryptionAddress(
+        address offBoardAddress
+    ) public virtual returns (bool) {
         gtUint256 memory gtBalance = _getBalance(_msgSender());
 
         _accountEncryptionAddress[_msgSender()] = offBoardAddress;
 
-        _balances[_msgSender()].userCiphertext = MpcCore.offBoardToUser(gtBalance, offBoardAddress);
+        _balances[_msgSender()].userCiphertext = MpcCore.offBoardToUser(
+            gtBalance,
+            offBoardAddress
+        );
 
         return true;
     }
-    
+
     /**
      * @dev See {IPrivateERC20-transfer}.
      *
@@ -189,7 +210,10 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
      * - `to` cannot be the zero address.
      * - the caller must have a balance of at least `value`.
      */
-    function transfer(address to, itUint256 calldata value) public virtual returns (gtBool) {
+    function transfer(
+        address to,
+        itUint256 calldata value
+    ) public virtual returns (gtBool) {
         address owner = _msgSender();
 
         gtUint256 memory gtValue = MpcCore.validateCiphertext(value);
@@ -205,7 +229,10 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
      * - `to` cannot be the zero address.
      * - the caller must have a balance of at least `value`.
      */
-    function transfer(address to, gtUint256 memory value) public virtual returns (gtBool) {
+    function transfer(
+        address to,
+        gtUint256 memory value
+    ) public virtual returns (gtBool) {
         address owner = _msgSender();
 
         return _transfer(owner, to, value);
@@ -214,14 +241,20 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
     /**
      * @dev See {IPrivateERC20-allowance}.
      */
-    function allowance(address owner, address spender) public view virtual returns (Allowance memory) {
+    function allowance(
+        address owner,
+        address spender
+    ) public view virtual returns (Allowance memory) {
         return _allowances[owner][spender];
     }
 
     /**
      * @dev See {IPrivateERC20-allowance}.
      */
-    function allowance(address account, bool isSpender) public virtual returns (gtUint256 memory) {
+    function allowance(
+        address account,
+        bool isSpender
+    ) public virtual returns (gtUint256 memory) {
         if (isSpender) {
             return _safeOnboard(_allowances[_msgSender()][account].ciphertext);
         } else {
@@ -229,7 +262,10 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
         }
     }
 
-    function reencryptAllowance(address account, bool isSpender) public virtual returns (bool) {
+    function reencryptAllowance(
+        address account,
+        bool isSpender
+    ) public virtual returns (bool) {
         address encryptionAddress = _getAccountEncryptionAddress(_msgSender());
 
         if (isSpender) {
@@ -261,7 +297,10 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
      *
      * - `spender` cannot be the zero address.
      */
-    function approve(address spender, itUint256 calldata value) public virtual returns (bool) {
+    function approve(
+        address spender,
+        itUint256 calldata value
+    ) public virtual returns (bool) {
         address owner = _msgSender();
 
         gtUint256 memory gtValue = MpcCore.validateCiphertext(value);
@@ -281,7 +320,10 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
      *
      * - `spender` cannot be the zero address.
      */
-    function approve(address spender, gtUint256 memory value) public virtual returns (bool) {
+    function approve(
+        address spender,
+        gtUint256 memory value
+    ) public virtual returns (bool) {
         address owner = _msgSender();
 
         _approve(owner, spender, value);
@@ -299,7 +341,11 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
      * - the caller must have allowance for ``from``'s tokens of at least
      * `value`.
      */
-    function transferFrom(address from, address to, itUint256 calldata value) public virtual returns (gtBool) {
+    function transferFrom(
+        address from,
+        address to,
+        itUint256 calldata value
+    ) public virtual returns (gtBool) {
         address spender = _msgSender();
 
         gtUint256 memory gtValue = MpcCore.validateCiphertext(value);
@@ -308,7 +354,7 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
 
         return _transfer(from, to, gtValue);
     }
-    
+
     /**
      * @dev See {IPrivateERC20-transferFrom}.
      *
@@ -319,14 +365,18 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
      * - the caller must have allowance for ``from``'s tokens of at least
      * `value`.
      */
-    function transferFrom(address from, address to, gtUint256 memory value) public virtual returns (gtBool) {
+    function transferFrom(
+        address from,
+        address to,
+        gtUint256 memory value
+    ) public virtual returns (gtBool) {
         address spender = _msgSender();
 
         _spendAllowance(from, spender, value);
 
         return _transfer(from, to, value);
     }
-    
+
     /**
      * @dev Moves a `value` amount of tokens from `from` to `to`.
      *
@@ -337,7 +387,11 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
      *
      * NOTE: This function is not virtual, {_update} should be overridden instead.
      */
-    function _transfer(address from, address to, gtUint256 memory value) internal returns (gtBool) {
+    function _transfer(
+        address from,
+        address to,
+        gtUint256 memory value
+    ) internal returns (gtBool) {
         if (from == address(0)) {
             revert ERC20InvalidSender(address(0));
         }
@@ -348,7 +402,7 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
 
         return _update(from, to, value);
     }
-    
+
     /**
      * @dev Transfers a `value` amount of tokens from `from` to `to`, or alternatively mints (or burns) if `from`
      * (or `to`) is the zero address. All customizations to transfers, mints, and burns should be done by overriding
@@ -356,7 +410,11 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
      *
      * Emits a {Transfer} event.
      */
-    function _update(address from, address to, gtUint256 memory value) internal virtual returns (gtBool) {
+    function _update(
+        address from,
+        address to,
+        gtUint256 memory value
+    ) internal virtual returns (gtBool) {
         gtUint256 memory newToBalance;
         gtUint256 memory valueTransferred = value;
         gtBool result = MpcCore.setPublic(true);
@@ -377,7 +435,11 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
 
             gtUint256 memory newFromBalance;
 
-            (newFromBalance, newToBalance, result) = MpcCore.transfer(fromBalance, toBalance, value);
+            (newFromBalance, newToBalance, result) = MpcCore.transfer(
+                fromBalance,
+                toBalance,
+                value
+            );
 
             _updateBalance(from, newFromBalance);
 
@@ -393,7 +455,7 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
         } else {
             _updateBalance(to, newToBalance);
         }
-        
+
         emit Transfer(
             from,
             to,
@@ -410,7 +472,9 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
         return _safeOnboard(ctBalance);
     }
 
-    function _getAccountEncryptionAddress(address account) internal view returns (address) {
+    function _getAccountEncryptionAddress(
+        address account
+    ) internal view returns (address) {
         address encryptionAddress = _accountEncryptionAddress[account];
 
         if (encryptionAddress == address(0)) {
@@ -420,12 +484,18 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
         return encryptionAddress;
     }
 
-    function _updateBalance(address account, gtUint256 memory balance) internal {
+    function _updateBalance(
+        address account,
+        gtUint256 memory balance
+    ) internal {
         address encryptionAddress = _getAccountEncryptionAddress(account);
 
-        _balances[account] = MpcCore.offBoardCombined(balance, encryptionAddress);
+        _balances[account] = MpcCore.offBoardCombined(
+            balance,
+            encryptionAddress
+        );
     }
-    
+
     /**
      * @dev Creates a `value` amount of tokens and assigns them to `account`, by transferring it from address(0).
      * Relies on the `_update` mechanism
@@ -434,7 +504,10 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
      *
      * NOTE: This function is not virtual, {_update} should be overridden instead.
      */
-    function _mint(address account, gtUint256 memory value) internal returns (gtBool) {
+    function _mint(
+        address account,
+        gtUint256 memory value
+    ) internal returns (gtBool) {
         if (account == address(0)) {
             revert ERC20InvalidReceiver(address(0));
         }
@@ -450,7 +523,10 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
      *
      * NOTE: This function is not virtual, {_update} should be overridden instead
      */
-    function _burn(address account, gtUint256 memory value) internal returns (gtBool) {
+    function _burn(
+        address account,
+        gtUint256 memory value
+    ) internal returns (gtBool) {
         if (account == address(0)) {
             revert ERC20InvalidSender(address(0));
         }
@@ -473,7 +549,11 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
      *
      * Overrides to this logic should be done to the variant with an additional `bool emitEvent` argument.
      */
-    function _approve(address owner, address spender, gtUint256 memory value) internal {
+    function _approve(
+        address owner,
+        address spender,
+        gtUint256 memory value
+    ) internal {
         if (owner == address(0)) {
             revert ERC20InvalidApprover(address(0));
         }
@@ -486,13 +566,23 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
 
         address encryptionAddress = _getAccountEncryptionAddress(owner);
 
-        ctUint256 memory ownerCiphertext = MpcCore.offBoardToUser(value, encryptionAddress);
+        ctUint256 memory ownerCiphertext = MpcCore.offBoardToUser(
+            value,
+            encryptionAddress
+        );
 
         encryptionAddress = _getAccountEncryptionAddress(spender);
 
-        ctUint256 memory spenderCiphertext = MpcCore.offBoardToUser(value, encryptionAddress);
+        ctUint256 memory spenderCiphertext = MpcCore.offBoardToUser(
+            value,
+            encryptionAddress
+        );
 
-        _allowances[owner][spender] = Allowance(ciphertext, ownerCiphertext, spenderCiphertext);
+        _allowances[owner][spender] = Allowance(
+            ciphertext,
+            ownerCiphertext,
+            spenderCiphertext
+        );
 
         emit Approval(owner, spender, ownerCiphertext, spenderCiphertext);
     }
@@ -504,16 +594,30 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
      * Does not decrease the allowance if not enough allowance is available.
      *
      */
-    function _spendAllowance(address owner, address spender, gtUint256 memory value) internal virtual {
-        gtUint256 memory currentBalance = _safeOnboard(_balances[owner].ciphertext);
-        gtUint256 memory currentAllowance = _safeOnboard(_allowances[owner][spender].ciphertext);
+    function _spendAllowance(
+        address owner,
+        address spender,
+        gtUint256 memory value
+    ) internal virtual {
+        gtUint256 memory currentBalance = _safeOnboard(
+            _balances[owner].ciphertext
+        );
+        gtUint256 memory currentAllowance = _safeOnboard(
+            _allowances[owner][spender].ciphertext
+        );
 
-        gtBool maxAllowance = MpcCore.eq(currentAllowance, MpcCore.setPublic256(MAX_UINT_256));
+        gtBool maxAllowance = MpcCore.eq(
+            currentAllowance,
+            MpcCore.setPublic256(MAX_UINT_256)
+        );
         gtBool insufficientBalance = MpcCore.lt(currentBalance, value);
         gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, value);
 
         gtUint256 memory newAllowance = MpcCore.mux(
-            MpcCore.or(maxAllowance, MpcCore.or(insufficientBalance, inSufficientAllowance)),
+            MpcCore.or(
+                maxAllowance,
+                MpcCore.or(insufficientBalance, inSufficientAllowance)
+            ),
             MpcCore.sub(currentAllowance, value),
             currentAllowance
         );
@@ -521,7 +625,9 @@ abstract contract PrivateERC20 is Context, ERC165, IPrivateERC20, AccessControl 
         _approve(owner, spender, newAllowance);
     }
 
-    function _safeOnboard(ctUint256 memory value) internal returns (gtUint256 memory) {
+    function _safeOnboard(
+        ctUint256 memory value
+    ) internal returns (gtUint256 memory) {
         if (
             ctUint64.unwrap(value.high.high) == 0 &&
             ctUint64.unwrap(value.high.low) == 0 &&
