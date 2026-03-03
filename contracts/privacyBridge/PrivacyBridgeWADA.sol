@@ -9,9 +9,9 @@ import "../privateERC20/tokens/PrivateWrappedADA.sol";
  * @notice Bridge contract for converting between WADA and privacy-preserving p.WADA tokens
  */
 contract PrivacyBridgeWADA is PrivacyBridgeERC20 {
-    PrivateWrappedADA public privateWada;
+    
 
     constructor(address _wada, address _privateWada) PrivacyBridgeERC20(_wada, _privateWada) {
-        privateWada = PrivateWrappedADA(_privateWada);
+        
     }
 }

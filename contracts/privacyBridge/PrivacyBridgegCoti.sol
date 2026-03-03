@@ -9,9 +9,9 @@ import "../privateERC20/tokens/PrivateCOTITreasuryGovernanceToken.sol";
  * @notice Bridge contract for converting between gCOTI and privacy-preserving p.gCOTI tokens
  */
 contract PrivacyBridgegCoti is PrivacyBridgeERC20 {
-    PrivateCOTITreasuryGovernanceToken public privategCoti;
+    
 
     constructor(address _gCoti, address _privategCoti) PrivacyBridgeERC20(_gCoti, _privategCoti) {
-        privategCoti = PrivateCOTITreasuryGovernanceToken(_privategCoti);
+        
     }
 }
