@@ -128,12 +128,6 @@ abstract contract PrivateERC20 is
         _burn(msg.sender, gtAmount);
     }
 
-    function transfer(address to, uint256 amount) public returns (bool) {
-        gtUint256 gtAmount = MpcCore.setPublic256(amount);
-        _transfer(msg.sender, to, gtAmount);
-        return true;
-    }
-
     function transferAndCall(
         address to,
         uint256 amount,
@@ -617,11 +611,10 @@ abstract contract PrivateERC20 is
     function _safeOnboard(
         ctUint256 memory value
     ) internal returns (gtUint256) {
+        // If both 128-bit ciphertext halves are zero, treat as public zero
         if (
-            ctUint64.unwrap(value.high.high) == 0 &&
-            ctUint64.unwrap(value.high.low) == 0 &&
-            ctUint64.unwrap(value.low.high) == 0 &&
-            ctUint64.unwrap(value.low.low) == 0
+            ctUint128.unwrap(value.ciphertextHigh) == 0 &&
+            ctUint128.unwrap(value.ciphertextLow) == 0
         ) {
             return MpcCore.setPublic256(0);
         }
