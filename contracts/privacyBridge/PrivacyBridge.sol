@@ -232,4 +232,22 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
         // Note: Actual transfer implementation will be in derived contracts
         // since they handle the specific token type (ETH, ERC20, etc.)
     }
+
+    /**
+     * @notice Withdraw accumulated native COTI fees
+     * @param to Address to send the native COTI fees to
+     * @param amount Amount of native COTI fees to withdraw
+     * @dev Only the owner can call this function
+     */
+    function withdrawCotiFees(address to, uint256 amount) external onlyOwner {
+        if (to == address(0)) revert InvalidAddress();
+        if (amount == 0) revert AmountZero();
+        if (amount > accumulatedCotiFees) revert InsufficientAccumulatedFees();
+        if (amount > address(this).balance) revert InsufficientEthBalance();
+
+        accumulatedCotiFees -= amount;
+
+        (bool success, ) = to.call{value: amount}("");
+        if (!success) revert EthTransferFailed();
+    }
 }
