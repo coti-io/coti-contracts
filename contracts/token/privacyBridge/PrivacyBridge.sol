@@ -63,10 +63,16 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
     error InsufficientAccumulatedFees();
 
     /// @notice Emitted when a user deposits tokens
-    event Deposit(address indexed user, uint256 amount);
+    /// @param user        Address of the user
+    /// @param grossAmount Total amount provided by the user before fees
+    /// @param netAmount   Net amount credited to the user after fees
+    event Deposit(address indexed user, uint256 grossAmount, uint256 netAmount);
 
     /// @notice Emitted when a user withdraws tokens
-    event Withdraw(address indexed user, uint256 amount);
+    /// @param user        Address of the user
+    /// @param grossAmount Total amount of private tokens burned / requested
+    /// @param netAmount   Net public/native amount sent to the user after fees
+    event Withdraw(address indexed user, uint256 grossAmount, uint256 netAmount);
 
     /// @notice Emitted when deposit/withdrawal limits are updated
     event LimitsUpdated(

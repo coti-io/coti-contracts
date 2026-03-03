@@ -27,9 +27,6 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
     error TokenTransferFailed();
     error InvalidTokenSender();
 
-    /// @notice Scaling factor to convert between public and private token decimals
-    // SCALING_FACTOR removed (deprecated)
-
     /**
      * @notice Initialize the PrivacyBridgeERC20 contract
      * @param _token Address of the public ERC20 token
@@ -41,9 +38,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
 
         token = IERC20(_token);
         privateTokenAddress = _privateToken;
-    }
-
-    // Hooks removed: logic implemented directly using IPrivateERC20 interface
+    }    
 
     /**
      * @notice Deposit public ERC20 tokens to receive equivalent private tokens
@@ -73,7 +68,8 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
 
         IPrivateERC20(privateTokenAddress).mint(msg.sender, amountAfterFee);
 
-        emit Deposit(msg.sender, amount);
+        // Emit gross deposit amount and net private tokens minted
+        emit Deposit(msg.sender, amount, amountAfterFee);
     }
 
     /**
@@ -88,11 +84,11 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
 
         // Calculate fee
         uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
-        uint256 publicAmount = amount - feeAmount;
+        uint256 amountAfterFee = amount - feeAmount;
         accumulatedFees += feeAmount;
 
         uint256 bridgeBalance = token.balanceOf(address(this));
-        if (bridgeBalance < publicAmount) revert InsufficientBridgeLiquidity();
+        if (bridgeBalance < amountAfterFee) revert InsufficientBridgeLiquidity();
 
         // Transfer private tokens from user to bridge (requires prior approval)
         gtUint256 memory gtAmount = MpcCore.setPublic256(amount);
@@ -106,10 +102,11 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
         IPrivateERC20(privateTokenAddress).burn(amount);
 
         // Transfer public tokens to user (minus fee)
-        bool success = token.transfer(msg.sender, publicAmount);
+        bool success = token.transfer(msg.sender, amountAfterFee);
         if (!success) revert TokenTransferFailed();
 
-        emit Withdraw(msg.sender, amount);
+        // Emit gross private amount burned and net public tokens sent
+        emit Withdraw(msg.sender, amount, amountAfterFee);
     }
 
     /**
@@ -134,20 +131,21 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
 
         // Calculate fee
         uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
-        uint256 publicAmount = amount - feeAmount;
+        uint256 amountAfterFee = amount - feeAmount;
         accumulatedFees += feeAmount;
 
         uint256 bridgeBalance = token.balanceOf(address(this));
-        if (bridgeBalance < publicAmount) revert InsufficientBridgeLiquidity();
+        if (bridgeBalance < amountAfterFee) revert InsufficientBridgeLiquidity();
 
         // Burn private tokens (already received by bridge via transfer)
         IPrivateERC20(privateTokenAddress).burn(amount);
 
         // Transfer public tokens to original sender (minus fee)
-        bool success = token.transfer(from, publicAmount);
+        bool success = token.transfer(from, amountAfterFee);
         if (!success) revert TokenTransferFailed();
 
-        emit Withdraw(from, amount);
+        // Emit gross private amount burned and net public tokens sent
+        emit Withdraw(from, amount, amountAfterFee);
         return true;
     }
 

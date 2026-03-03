@@ -44,7 +44,8 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
 
         privateCoti.mint(sender, amountAfterFee);
 
-        emit Deposit(sender, msg.value);
+        // Emit gross deposit amount and net private tokens minted
+        emit Deposit(sender, msg.value, amountAfterFee);
     }
 
     /**
@@ -92,7 +93,8 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
         (bool success, ) = from.call{value: publicAmount}("");
         if (!success) revert EthTransferFailed();
 
-        emit Withdraw(from, amount);
+        // Emit gross private amount burned and net native COTI sent
+        emit Withdraw(from, amount, publicAmount);
         return true;
     }
 
@@ -126,7 +128,8 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
         (bool success, ) = msg.sender.call{value: publicAmount}("");
         if (!success) revert EthTransferFailed();
 
-        emit Withdraw(msg.sender, amount);
+        // Emit gross private amount burned and net native COTI sent
+        emit Withdraw(msg.sender, amount, publicAmount);
     }
 
     /**
