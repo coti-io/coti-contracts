@@ -26,6 +26,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
     error InsufficientBridgeLiquidity();
     error TokenTransferFailed();
     error InvalidTokenSender();
+    error NativeFeeRequiredForTransferAndCallWithdraw();
 
     /**
      * @notice Initialize the PrivacyBridgeERC20 contract
@@ -73,8 +74,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
     /**
      * @notice Withdraw public ERC20 tokens by burning private tokens
      * @param amount Amount of private tokens to burn
-     * @dev DEPRECATED: Use privateToken.transferAndCall(bridge, amount, "") instead
-     *      This function requires prior approval which needs encrypted signature
+     * @dev This function requires prior approval on the private token and a native COTI fee.
      */
     function withdraw(uint256 amount) external payable nonReentrant whenNotPaused {
         if (amount == 0) revert AmountZero();
@@ -113,42 +113,15 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
 
     /**
      * @notice Callback for receiving private tokens via transferAndCall
-     * @param from The address that sent the tokens
-     * @param amount The amount of tokens transferred
-     * @param data Additional data (unused)
-     * @return success Whether the callback succeeded
-     * @dev This is the preferred withdrawal method - no approval needed!
-     *      User calls: privateToken.transferAndCall(bridge, amount, "")
+     * @dev Disabled because withdraws must include a native COTI fee, which cannot be provided via transferAndCall.
+     *      Users MUST use the approval-based {withdraw} function instead.
      */
     function onTokenReceived(
         address from,
         uint256 amount,
         bytes calldata data
     ) external override nonReentrant whenNotPaused returns (bool) {
-        // Only accept tokens from our private token contract
-        if (msg.sender != address(privateToken)) revert InvalidTokenSender();
-        if (amount == 0) revert AmountZero();
-
-        _checkWithdrawLimits(amount);
-
-        // Calculate fee
-        uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
-        uint256 amountAfterFee = amount - feeAmount;
-        accumulatedFees += feeAmount;
-
-        uint256 bridgeBalance = token.balanceOf(address(this));
-        if (bridgeBalance < amountAfterFee) revert InsufficientBridgeLiquidity();
-
-        // Burn private tokens (already received by bridge via transfer)
-        privateToken.burn(amount);
-
-        // Transfer public tokens to original sender (minus fee)
-        bool success = token.transfer(from, amountAfterFee);
-        if (!success) revert TokenTransferFailed();
-
-        // Emit gross private amount burned and net public tokens sent
-        emit Withdraw(from, amount, amountAfterFee);
-        return true;
+        revert NativeFeeRequiredForTransferAndCallWithdraw();
     }
 
     /**
