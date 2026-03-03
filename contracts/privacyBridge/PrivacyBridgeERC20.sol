@@ -111,19 +111,6 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
     }
 
     /**
-     * @notice Callback for receiving private tokens via transferAndCall
-     * @dev Disabled because withdraws must include a native COTI fee, which cannot be provided via transferAndCall.
-     *      Users MUST use the approval-based {withdraw} function instead.
-     */
-    function onTokenReceived(
-        address from,
-        uint256 amount,
-        bytes calldata data
-    ) external override nonReentrant whenNotPaused returns (bool) {
-        revert NativeFeeRequiredForTransferAndCallWithdraw();
-    }
-
-    /**
      * @notice Withdraw accumulated fees (ERC20 implementation)
      * @param to Address to send fees to
      * @param amount Amount of fees to withdraw
