@@ -3,15 +3,14 @@ pragma solidity ^0.8.19;
 
 import "./PrivacyBridge.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../privateERC20/IPrivateERC20.sol";
-import "../privateERC20/ITokenReceiver.sol";
+import "../token/PrivateERC20/IPrivateERC20.sol";
 import "../utils/mpc/MpcCore.sol";
 
 /**
  * @dev Abstract base contract for ERC20 Token Privacy Bridges
  * @dev Handles the logic for bridging ERC20 tokens to their private counterparts.
  */
-contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
+contract PrivacyBridgeERC20 is PrivacyBridge {
     /// @notice The public ERC20 token being bridged (e.g., USDC, WETH)
     IERC20 public token;
 
@@ -93,7 +92,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge, ITokenReceiver {
         if (bridgeBalance < amountAfterFee) revert InsufficientBridgeLiquidity();
 
         // Transfer private tokens from user to bridge (requires prior approval)
-        gtUint256 memory gtAmount = MpcCore.setPublic256(amount);
+        gtUint256 gtAmount = MpcCore.setPublic256(amount);
         privateToken.transferFrom(
             msg.sender,
             address(this),

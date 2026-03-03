@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
@@ -88,7 +88,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
     /// @notice Emitted when accumulated fees are withdrawn
     event FeesWithdrawn(address indexed to, uint256 amount);
 
-    constructor() Ownable(msg.sender) {
+    constructor() Ownable() {
         maxDepositAmount = type(uint256).max;
         maxWithdrawAmount = type(uint256).max;
         minDepositAmount = 1;

@@ -2,8 +2,8 @@
 pragma solidity ^0.8.19;
 
 import "./PrivacyBridge.sol";
-import "../privateERC20/tokens/PrivateCOTI.sol";
-import "../privateERC20/IPrivateERC20.sol";
+import "../token/PrivateERC20/tokens/PrivateCOTI.sol";
+import "../token/PrivateERC20/IPrivateERC20.sol";
 import "../utils/mpc/MpcCore.sol";
 
 /**
@@ -115,7 +115,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
             revert InsufficientEthBalance();
 
         // Transfer private tokens from user to bridge (requires prior approval)
-        gtUint256 memory gtAmount = MpcCore.setPublic256(amount);
+        gtUint256 gtAmount = MpcCore.setPublic256(amount);
         IPrivateERC20(address(privateCoti)).transferFrom(
             msg.sender,
             address(this),

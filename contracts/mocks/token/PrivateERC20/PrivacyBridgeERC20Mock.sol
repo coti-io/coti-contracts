@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "../../../token/PrivateERC20/privacyBridge/PrivacyBridgeERC20.sol";
+import "../../../privacyBridge/PrivacyBridgeERC20.sol";
 
 /**
  * @dev Mock contract for testing PrivacyBridgeERC20

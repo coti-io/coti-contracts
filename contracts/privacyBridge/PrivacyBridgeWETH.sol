@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import "./PrivacyBridgeERC20.sol";
-import "../privateERC20/tokens/PrivateWrappedEther.sol";
+import "../token/PrivateERC20/tokens/PrivateWrappedEther.sol";
 
 /**
  * @title PrivacyBridgeWETH
