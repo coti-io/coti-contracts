@@ -118,7 +118,10 @@ abstract contract PrivateERC20 is
         return 0;
     }
 
-    function mint(address to, uint256 amount) public virtual onlyRole(MINTER_ROLE) {
+    function mint(
+        address to,
+        uint256 amount
+    ) public virtual onlyRole(MINTER_ROLE) {
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
         _mint(to, gtAmount);
     }
@@ -450,12 +453,31 @@ abstract contract PrivateERC20 is
             _updateBalance(to, newToBalance);
         }
 
-        emit Transfer(
-            from,
-            to,
-            MpcCore.offBoardToUser(valueTransferred, from),
-            MpcCore.offBoardToUser(valueTransferred, to)
-        );
+        // When minting or transferring to/from a smart contract (which has no AES key),
+        // we must bypass offBoardToUser to prevent on-chain reverts.
+        ctUint256 memory senderCt;
+        address fromEnc = _getAccountEncryptionAddress(from);
+        if (fromEnc != address(0)) {
+            senderCt = MpcCore.offBoardToUser(valueTransferred, fromEnc);
+        } else {
+            senderCt = ctUint256({
+                ciphertextHigh: ctUint128.wrap(0),
+                ciphertextLow: ctUint128.wrap(0)
+            });
+        }
+
+        ctUint256 memory receiverCt;
+        address toEnc = _getAccountEncryptionAddress(to);
+        if (toEnc != address(0)) {
+            receiverCt = MpcCore.offBoardToUser(valueTransferred, toEnc);
+        } else {
+            receiverCt = ctUint256({
+                ciphertextHigh: ctUint128.wrap(0),
+                ciphertextLow: ctUint128.wrap(0)
+            });
+        }
+
+        emit Transfer(from, to, senderCt, receiverCt);
 
         return result;
     }
@@ -469,9 +491,16 @@ abstract contract PrivateERC20 is
     function _getAccountEncryptionAddress(
         address account
     ) internal view returns (address) {
+        if (account == address(0)) return address(0);
+
         address encryptionAddress = _accountEncryptionAddress[account];
 
         if (encryptionAddress == address(0)) {
+            if (account.code.length > 0) {
+                // Smart contracts don't have AES keys, so we return address(0)
+                // as a signal to bypass encryption in offBoardToUser.
+                return address(0);
+            }
             encryptionAddress = account;
         }
 
@@ -551,17 +580,30 @@ abstract contract PrivateERC20 is
 
         address encryptionAddress = _getAccountEncryptionAddress(owner);
 
-        ctUint256 memory ownerCiphertext = MpcCore.offBoardToUser(
-            value,
-            encryptionAddress
-        );
+        ctUint256 memory ownerCiphertext;
+        if (encryptionAddress != address(0)) {
+            ownerCiphertext = MpcCore.offBoardToUser(value, encryptionAddress);
+        } else {
+            ownerCiphertext = ctUint256({
+                ciphertextHigh: ctUint128.wrap(0),
+                ciphertextLow: ctUint128.wrap(0)
+            });
+        }
 
         encryptionAddress = _getAccountEncryptionAddress(spender);
 
-        ctUint256 memory spenderCiphertext = MpcCore.offBoardToUser(
-            value,
-            encryptionAddress
-        );
+        ctUint256 memory spenderCiphertext;
+        if (encryptionAddress != address(0)) {
+            spenderCiphertext = MpcCore.offBoardToUser(
+                value,
+                encryptionAddress
+            );
+        } else {
+            spenderCiphertext = ctUint256({
+                ciphertextHigh: ctUint128.wrap(0),
+                ciphertextLow: ctUint128.wrap(0)
+            });
+        }
 
         _allowances[owner][spender] = Allowance(
             ciphertext,
@@ -608,9 +650,7 @@ abstract contract PrivateERC20 is
         _approve(owner, spender, newAllowance);
     }
 
-    function _safeOnboard(
-        ctUint256 memory value
-    ) internal returns (gtUint256) {
+    function _safeOnboard(ctUint256 memory value) internal returns (gtUint256) {
         // If both 128-bit ciphertext halves are zero, treat as public zero
         if (
             ctUint128.unwrap(value.ciphertextHigh) == 0 &&

@@ -38,7 +38,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
 
         token = IERC20(_token);
         privateToken = IPrivateERC20(_privateToken);
-    }    
+    }
 
     /**
      * @notice Deposit public ERC20 tokens to receive equivalent private tokens
@@ -75,7 +75,9 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
      * @param amount Amount of private tokens to burn
      * @dev This function requires prior approval on the private token and a native COTI fee.
      */
-    function withdraw(uint256 amount) external payable nonReentrant whenNotPaused {
+    function withdraw(
+        uint256 amount
+    ) external payable nonReentrant whenNotPaused {
         if (amount == 0) revert AmountZero();
         if (msg.value != nativeCotiFee) revert InsufficientCotiFee();
         _checkWithdrawLimits(amount);
@@ -89,15 +91,12 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
         accumulatedFees += feeAmount;
 
         uint256 bridgeBalance = token.balanceOf(address(this));
-        if (bridgeBalance < amountAfterFee) revert InsufficientBridgeLiquidity();
+        if (bridgeBalance < amountAfterFee)
+            revert InsufficientBridgeLiquidity();
 
         // Transfer private tokens from user to bridge (requires prior approval)
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
-        privateToken.transferFrom(
-            msg.sender,
-            address(this),
-            gtAmount
-        );
+        privateToken.transferFrom(msg.sender, address(this), gtAmount);
 
         // Burn private tokens from bridge's balance
         privateToken.burn(amount);
