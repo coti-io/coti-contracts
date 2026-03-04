@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import "./PrivacyBridge.sol";
 import "../token/PrivateERC20/tokens/PrivateCOTI.sol";
 import "../token/PrivateERC20/IPrivateERC20.sol";
+import "../token/PrivateERC20/ITokenReceiver.sol";
 import "../utils/mpc/MpcCore.sol";
 
 /**
