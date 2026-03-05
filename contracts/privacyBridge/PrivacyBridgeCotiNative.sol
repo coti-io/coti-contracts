@@ -2,8 +2,8 @@
 pragma solidity ^0.8.19;
 
 import "./PrivacyBridge.sol";
-import "../privateERC20/tokens/PrivateCOTI.sol";
-import "../privateERC20/IPrivateERC20.sol";
+import "../token/PrivateERC20/tokens/PrivateCOTI.sol";
+import "../token/PrivateERC20/ITokenReceiver.sol";
 import "../utils/mpc/MpcCore.sol";
 
 /**
@@ -178,20 +178,19 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
             );
             require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
 
-            // Transfer and burn
+            // Transfer and burn (encrypted input)
             IPrivateERC20(address(privateCoti)).transferFrom(
                 msg.sender,
                 address(this),
-                gtAmount
+                encryptedAmount
             );
             privateCoti.burn(encryptedAmount);
         } else {
-            // Standard withdrawal
-            gtUint256 gtAmount = MpcCore.setPublic256(amount);
+            // Standard withdrawal (public amount)
             IPrivateERC20(address(privateCoti)).transferFrom(
                 msg.sender,
                 address(this),
-                gtAmount
+                amount
             );
             privateCoti.burn(amount);
         }

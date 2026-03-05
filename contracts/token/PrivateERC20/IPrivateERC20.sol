@@ -74,13 +74,13 @@ event Transfer(
     ) external returns (gtBool);
 
     /**
-     * @dev Moves a `value` amount of tokens from the caller's account to `to`.
+     * @dev Moves a public `amount` of tokens from the caller's account to `to`.
      *
-     * Returns an encrypted boolean value indicating whether the operation succeeded.
+     * Returns a boolean value indicating whether the operation succeeded.
      *
      * Emits a {Transfer} event.
      */
-    function transfer(address to, gtUint256 value) external returns (gtBool);
+    function transfer(address to, uint256 amount) external returns (bool);
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
@@ -124,21 +124,14 @@ event Transfer(
     ) external returns (bool);
 
     /**
-     * @dev Sets a `value` amount of tokens as the allowance of `spender` over the
+     * @dev Sets a public `amount` as the allowance of `spender` over the
      * caller's tokens.
      *
-     * Returns an encrypted boolean value indicating whether the operation succeeded.
-     *
-     * IMPORTANT: Beware that changing an allowance with this method brings the risk
-     * that someone may use both the old and the new allowance by unfortunate
-     * transaction ordering. One possible solution to mitigate this race
-     * condition is to first reduce the spender's allowance to 0 and set the
-     * desired value afterwards:
-     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+     * Returns a boolean value indicating whether the operation succeeded.
      *
      * Emits an {Approval} event.
      */
-    function approve(address spender, gtUint256 value) external returns (bool);
+    function approve(address spender, uint256 amount) external returns (bool);
 
     /**
      * @dev Moves a `value` amount of tokens from `from` to `to` using the
@@ -156,15 +149,15 @@ event Transfer(
     ) external returns (gtBool);
 
     /**
-     * @dev Moves a `value` amount of tokens from `from` to `to` using the
-     * allowance mechanism. `value` is then deducted from the caller's
+     * @dev Moves a public `amount` of tokens from `from` to `to` using the
+     * allowance mechanism. `amount` is then deducted from the caller's
      * allowance.
      *
-     * Returns an encrypted boolean value indicating whether the operation succeeded.
+     * Returns a boolean value indicating whether the operation succeeded.
      *
      * Emits a {Transfer} event.
      */
-    function transferFrom(address from, address to, gtUint256 value) external returns (gtBool);
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
 
     /**
      * @dev Moves a `value` amount of tokens from the caller's account to `to`, and then calls `onTokenReceived` on `to`.
@@ -180,12 +173,58 @@ event Transfer(
     ) external returns (bool);
 
     /**
-     * @dev Creates `amount` tokens and assigns them to `to`, increasing the total supply.
+     * @dev Moves an input-text (encrypted) `amount` of tokens from the caller's account to `to`,
+     *      and then calls `onTokenReceived` on `to` with the encrypted value.
+     * @param to The address of the recipient
+     * @param amount Encrypted input-text amount to be transferred
+     * @param data Additional data with no specified format, sent in call to `to`
+     * @return An encrypted boolean value indicating whether the operation succeeded
      */
-    function mint(address to, uint256 amount) external;
+    function transferAndCall(
+        address to,
+        itUint256 calldata amount,
+        bytes calldata data
+    ) external returns (gtBool);
 
     /**
-     * @dev Destroys `amount` tokens from the caller.
+     * @dev Creates `amount` public tokens and assigns them to `to`, increasing the total supply.
+     *
+     * Returns a boolean value indicating whether the operation succeeded (decrypted from gtBool).
      */
-    function burn(uint256 amount) external;
+    function mint(address to, uint256 amount) external returns (bool);
+
+    /**
+     * @dev Creates `amount` input-text (encrypted) tokens and assigns them to `to`, increasing the total supply.
+     *
+     * Returns an encrypted boolean value indicating whether the operation succeeded.
+     */
+    function mint(address to, itUint256 calldata amount) external returns (gtBool);
+
+    /**
+     * @dev Creates `amount` garbled-text tokens and assigns them to `to` without re-wrapping.
+     *
+     * Returns an encrypted boolean value indicating whether the operation succeeded.
+     */
+    function mintGt(address to, gtUint256 amount) external returns (gtBool);
+
+    /**
+     * @dev Destroys `amount` public tokens from the caller.
+     *
+     * Returns a boolean value indicating whether the operation succeeded (decrypted from gtBool).
+     */
+    function burn(uint256 amount) external returns (bool);
+
+    /**
+     * @dev Destroys `amount` input-text (encrypted) tokens from the caller.
+     *
+     * Returns an encrypted boolean value indicating whether the operation succeeded.
+     */
+    function burn(itUint256 calldata amount) external returns (gtBool);
+
+    /**
+     * @dev Destroys `amount` garbled-text tokens from the caller without re-wrapping.
+     *
+     * Returns an encrypted boolean value indicating whether the operation succeeded.
+     */
+    function burnGt(gtUint256 amount) external returns (gtBool);
 }

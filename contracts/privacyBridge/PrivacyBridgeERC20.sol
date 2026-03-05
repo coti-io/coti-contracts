@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import "./PrivacyBridge.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../privateERC20/IPrivateERC20.sol";
+import "../token/PrivateERC20/IPrivateERC20.sol";
 import "../utils/mpc/MpcCore.sol";
 
 /**
@@ -163,13 +163,12 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
             );
             require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
 
-            // Transfer and burn
-            privateToken.transferFrom(msg.sender, address(this), gtAmount);
+            // Transfer and burn (encrypted input)
+            privateToken.transferFrom(msg.sender, address(this), encryptedAmount);
             privateToken.burn(encryptedAmount);
         } else {
-            // Standard withdrawal
-            gtUint256 gtAmount = MpcCore.setPublic256(amount);
-            privateToken.transferFrom(msg.sender, address(this), gtAmount);
+            // Standard withdrawal (public amount)
+            privateToken.transferFrom(msg.sender, address(this), amount);
             privateToken.burn(amount);
         }
 
