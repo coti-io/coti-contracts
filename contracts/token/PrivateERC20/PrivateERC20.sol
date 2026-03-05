@@ -30,6 +30,9 @@ abstract contract PrivateERC20 is
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
+    /// @dev Controls whether public uint256 operations are allowed (mint/burn/transfer/transferFrom/approve/transferAndCall with clear values).
+    bool public publicAmountsEnabled;
+
     mapping(address account => address) private _accountEncryptionAddress;
 
     mapping(address account => utUint256) private _balances;
@@ -68,6 +71,11 @@ abstract contract PrivateERC20 is
     error ERC20InvalidSpender(address spender);
 
     /**
+     * @dev Indicates that clear (public) uint256 operations are disabled for this token.
+     */
+    error PublicAmountsDisabled();
+
+    /**
      * @dev Sets the values for {name} and {symbol}.
      *
      * All two of these values are immutable: they can only be set once during
@@ -77,6 +85,7 @@ abstract contract PrivateERC20 is
         _name = name_;
         _symbol = symbol_;
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        publicAmountsEnabled = true;
     }
 
     /**
@@ -122,6 +131,7 @@ abstract contract PrivateERC20 is
         address to,
         uint256 amount
     ) public virtual override onlyRole(MINTER_ROLE) returns (bool) {
+        if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
         gtBool success = _mint(to, gtAmount);
 
@@ -148,6 +158,7 @@ abstract contract PrivateERC20 is
     }
 
     function burn(uint256 amount) public virtual override returns (bool) {
+        if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
         gtBool success = _burn(msg.sender, gtAmount);
 
@@ -172,6 +183,7 @@ abstract contract PrivateERC20 is
         uint256 amount,
         bytes calldata data
     ) public virtual returns (bool) {
+        if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         if (to.code.length > 0) {
             require(
                 ITokenReceiver(to).onTokenReceived(msg.sender, amount, data),
@@ -183,22 +195,22 @@ abstract contract PrivateERC20 is
         gtBool success = _transfer(msg.sender, to, gtAmount);
         require(MpcCore.decrypt(success), "Transfer failed");
 
-        return success;
+        return MpcCore.decrypt(success);
     }
 
     function transferAndCall(
         address to,
-        itUint256 amount,
+        itUint256 calldata amount,
         bytes calldata data
     ) public virtual returns (gtBool) {
         if (to.code.length > 0) {
             require(
-                ITokenReceiver(to).onTokenReceived(msg.sender, amount, data),
+                ITokenReceiver(to).onTokenReceived(msg.sender, 0, data),
                 "Callback failed"
             );
         }
 
-        gtUint256 gtAmount = MpcCore.validateCipherText(amount);
+        gtUint256 gtAmount = MpcCore.validateCiphertext(amount);
         return _transfer(msg.sender, to, gtAmount);
     }
 
@@ -253,6 +265,15 @@ abstract contract PrivateERC20 is
     }
 
     /**
+     * @dev Enables or disables operations that use clear public uint256 amounts
+     *      (mint, burn, transfer, transferFrom, approve, transferAndCall with uint256).
+     *      Intended to be called by the token admin to disallow public value usage if desired.
+     */
+    function setPublicAmountsEnabled(bool enabled) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        publicAmountsEnabled = enabled;
+    }
+
+    /**
      * @dev See {IPrivateERC20-transfer}.
      *
      * Requirements:
@@ -287,6 +308,7 @@ abstract contract PrivateERC20 is
         address to,
         uint256 value
     ) public virtual override returns (bool) {
+        if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         address owner = _msgSender();
 
         gtUint256 gtValue = MpcCore.setPublic256(value);
@@ -386,6 +408,7 @@ abstract contract PrivateERC20 is
         address spender,
         uint256 value
     ) public virtual returns (bool) {
+        if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         address owner = _msgSender();
 
         gtUint256 gtValue = MpcCore.setPublic256(value);
@@ -440,6 +463,7 @@ abstract contract PrivateERC20 is
         address to,
         uint256 value
     ) public virtual returns (bool) {
+        if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         address spender = _msgSender();
 
         gtUint256 gtValue = MpcCore.setPublic256(value);

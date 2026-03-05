@@ -12,8 +12,9 @@ contract PrivateERC20Mock is PrivateERC20 {
         return 6;
     }
 
-    function mint(address account, uint256 amount) public override {
-        _mint(account, MpcCore.setPublic256(amount));
+    function mint(address account, uint256 amount) public override returns (bool) {
+        gtBool success = _mint(account, MpcCore.setPublic256(amount));
+        return MpcCore.decrypt(success);
     }
 
     function burn(address account, uint256 amount) public {

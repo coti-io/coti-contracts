@@ -62,6 +62,21 @@ event Transfer(
     function setAccountEncryptionAddress(address addr) external returns (bool);
 
     /**
+     * @dev Returns whether clear public `uint256` operations are currently enabled
+     *      for this token (mint, burn, transfer, transferFrom, approve, transferAndCall
+     *      variants that take plain amounts).
+     */
+    function publicAmountsEnabled() external view returns (bool);
+
+    /**
+     * @dev Enables or disables operations that use clear public `uint256` amounts
+     *      (mint, burn, transfer, transferFrom, approve, transferAndCall with uint256).
+     *      Intended for token admins that want to disallow public value usage and
+     *      enforce encrypted-only flows.
+     */
+    function setPublicAmountsEnabled(bool enabled) external;
+
+    /**
      * @dev Moves a `value` amount of tokens from the caller's account to `to`.
      *
      * Returns an encrypted boolean value indicating whether the operation succeeded.
