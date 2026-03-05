@@ -7,7 +7,7 @@ import {IPrivateERC20} from "./IPrivateERC20.sol";
 import {ITokenReceiver} from "./ITokenReceiver.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import "../../utils/mpc/MpcCore.sol";
+import "../utils/mpc/MpcCore.sol";
 
 /*
 THIS IS THE 256 BIT VERSION OF PRIVATE ERC20.
@@ -126,8 +126,21 @@ abstract contract PrivateERC20 is
         _mint(to, gtAmount);
     }
 
-    function burn(uint256 amount) public {
+    function mint(
+        address to,
+        itUint256 calldata amount
+    ) public virtual onlyRole(MINTER_ROLE) {
+        gtUint256 gtAmount = MpcCore.validateCiphertext(amount);
+        _mint(to, gtAmount);
+    }
+
+    function burn(uint256 amount) public virtual {
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
+        _burn(msg.sender, gtAmount);
+    }
+
+    function burn(itUint256 calldata amount) public virtual {
+        gtUint256 gtAmount = MpcCore.validateCiphertext(amount);
         _burn(msg.sender, gtAmount);
     }
 
@@ -236,6 +249,27 @@ abstract contract PrivateERC20 is
     }
 
     /**
+     * @dev See {IPrivateERC20-transferPublic}.
+     *
+     * Requirements:
+     *
+     * - `to` cannot be the zero address.
+     * - the caller must have a balance of at least `value`.
+     */
+    function transferPublic(
+        address to,
+        uint256 value
+    ) public virtual returns (bool) {
+        address owner = _msgSender();
+
+        gtUint256 gtValue = MpcCore.setPublic256(value);
+
+        gtBool success = _transfer(owner, to, gtValue);
+
+        return MpcCore.decrypt(success);
+    }
+
+    /**
      * @dev See {IPrivateERC20-allowance}.
      */
     function allowance(
@@ -329,6 +363,26 @@ abstract contract PrivateERC20 is
     }
 
     /**
+     * @dev See {IPrivateERC20-approvePublic}.
+     *
+     * Requirements:
+     *
+     * - `spender` cannot be the zero address.
+     */
+    function approvePublic(
+        address spender,
+        uint256 value
+    ) public virtual returns (bool) {
+        address owner = _msgSender();
+
+        gtUint256 gtValue = MpcCore.setPublic256(value);
+
+        _approve(owner, spender, gtValue);
+
+        return true;
+    }
+
+    /**
      * @dev See {IPrivateERC20-transferFrom}.
      *
      * Requirements:
@@ -372,6 +426,32 @@ abstract contract PrivateERC20 is
         _spendAllowance(from, spender, value);
 
         return _transfer(from, to, value);
+    }
+
+    /**
+     * @dev See {IPrivateERC20-transferFromPublic}.
+     *
+     * Requirements:
+     *
+     * - `from` and `to` cannot be the zero address.
+     * - `from` must have a balance of at least `value`.
+     * - the caller must have allowance for ``from``'s tokens of at least
+     * `value`.
+     */
+    function transferFromPublic(
+        address from,
+        address to,
+        uint256 value
+    ) public virtual returns (bool) {
+        address spender = _msgSender();
+
+        gtUint256 gtValue = MpcCore.setPublic256(value);
+
+        _spendAllowance(from, spender, gtValue);
+
+        gtBool success = _transfer(from, to, gtValue);
+
+        return MpcCore.decrypt(success);
     }
 
     /**

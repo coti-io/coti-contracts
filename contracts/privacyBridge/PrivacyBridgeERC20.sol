@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import "./PrivacyBridge.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../token/PrivateERC20/IPrivateERC20.sol";
+import "../privateERC20/IPrivateERC20.sol";
 import "../utils/mpc/MpcCore.sol";
 
 /**
@@ -47,6 +47,30 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
     function deposit(
         uint256 amount
     ) external payable nonReentrant whenNotPaused {
+        _deposit(
+            amount,
+            false,
+            itUint256(ctUint256(ctUint128.wrap(0), ctUint128.wrap(0)), "")
+        );
+    }
+
+    /**
+     * @notice Deposit public ERC20 tokens with an encrypted amount for the private minting event
+     * @param amount Public amount of tokens to lock
+     * @param encryptedAmount Encrypted amount to mint
+     */
+    function deposit(
+        uint256 amount,
+        itUint256 calldata encryptedAmount
+    ) external payable nonReentrant whenNotPaused {
+        _deposit(amount, true, encryptedAmount);
+    }
+
+    function _deposit(
+        uint256 amount,
+        bool isEncrypted,
+        itUint256 memory encryptedAmount
+    ) internal {
         if (!isDepositEnabled) revert DepositDisabled();
         if (amount == 0) revert AmountZero();
         if (msg.value != nativeCotiFee) revert InsufficientCotiFee();
@@ -64,7 +88,19 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
         uint256 amountAfterFee = amount - feeAmount;
         accumulatedFees += feeAmount;
 
-        privateToken.mint(msg.sender, amountAfterFee);
+        if (isEncrypted) {
+            // Verify parity between public amount and encrypted amount
+            gtUint256 gtAmount = MpcCore.validateCiphertext(encryptedAmount);
+            gtBool amountMatch = MpcCore.eq(
+                gtAmount,
+                MpcCore.setPublic256(amountAfterFee)
+            );
+            require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
+
+            privateToken.mint(msg.sender, encryptedAmount);
+        } else {
+            privateToken.mint(msg.sender, amountAfterFee);
+        }
 
         // Emit gross deposit amount and net private tokens minted
         emit Deposit(msg.sender, amount, amountAfterFee);
@@ -78,14 +114,38 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
     function withdraw(
         uint256 amount
     ) external payable nonReentrant whenNotPaused {
+        _withdraw(
+            amount,
+            false,
+            itUint256(ctUint256(ctUint128.wrap(0), ctUint128.wrap(0)), "")
+        );
+    }
+
+    /**
+     * @notice Withdraw public ERC20 tokens by burning private tokens with an encrypted amount
+     * @param amount Public amount to release
+     * @param encryptedAmount Encrypted amount to burn
+     */
+    function withdraw(
+        uint256 amount,
+        itUint256 calldata encryptedAmount
+    ) external payable nonReentrant whenNotPaused {
+        _withdraw(amount, true, encryptedAmount);
+    }
+
+    function _withdraw(
+        uint256 amount,
+        bool isEncrypted,
+        itUint256 memory encryptedAmount
+    ) internal {
         if (amount == 0) revert AmountZero();
         if (msg.value != nativeCotiFee) revert InsufficientCotiFee();
         _checkWithdrawLimits(amount);
 
-        // Handle native COTI fee (exact fee enforced)
+        // Handle native COTI fee
         accumulatedCotiFees += msg.value;
 
-        // Calculate fee
+        // Calculate fee on the public side
         uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
         uint256 amountAfterFee = amount - feeAmount;
         accumulatedFees += feeAmount;
@@ -94,18 +154,29 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
         if (bridgeBalance < amountAfterFee)
             revert InsufficientBridgeLiquidity();
 
-        // Transfer private tokens from user to bridge (requires prior approval)
-        gtUint256 gtAmount = MpcCore.setPublic256(amount);
-        privateToken.transferFrom(msg.sender, address(this), gtAmount);
+        if (isEncrypted) {
+            // Verify parity
+            gtUint256 gtAmount = MpcCore.validateCiphertext(encryptedAmount);
+            gtBool amountMatch = MpcCore.eq(
+                gtAmount,
+                MpcCore.setPublic256(amount)
+            );
+            require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
 
-        // Burn private tokens from bridge's balance
-        privateToken.burn(amount);
+            // Transfer and burn
+            privateToken.transferFrom(msg.sender, address(this), gtAmount);
+            privateToken.burn(encryptedAmount);
+        } else {
+            // Standard withdrawal
+            gtUint256 gtAmount = MpcCore.setPublic256(amount);
+            privateToken.transferFrom(msg.sender, address(this), gtAmount);
+            privateToken.burn(amount);
+        }
 
-        // Transfer public tokens to user (minus fee)
+        // Transfer public tokens
         bool success = token.transfer(msg.sender, amountAfterFee);
         if (!success) revert TokenTransferFailed();
 
-        // Emit gross private amount burned and net public tokens sent
         emit Withdraw(msg.sender, amount, amountAfterFee);
     }
 

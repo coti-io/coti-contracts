@@ -2,9 +2,8 @@
 pragma solidity ^0.8.19;
 
 import "./PrivacyBridge.sol";
-import "../token/PrivateERC20/tokens/PrivateCOTI.sol";
-import "../token/PrivateERC20/IPrivateERC20.sol";
-import "../token/PrivateERC20/ITokenReceiver.sol";
+import "../privateERC20/tokens/PrivateCOTI.sol";
+import "../privateERC20/IPrivateERC20.sol";
 import "../utils/mpc/MpcCore.sol";
 
 /**
@@ -29,7 +28,11 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
      * @notice Internal function to handle deposits
      * @param sender Address of the depositor
      */
-    function _deposit(address sender) internal nonReentrant whenNotPaused {
+    function _deposit(
+        address sender,
+        bool isEncrypted,
+        itUint256 memory encryptedAmount
+    ) internal {
         if (!isDepositEnabled) revert DepositDisabled();
         if (msg.value == 0) revert AmountZero();
 
@@ -43,7 +46,19 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
         uint256 amountAfterFee = msg.value - feeAmount;
         accumulatedFees += feeAmount;
 
-        privateCoti.mint(sender, amountAfterFee);
+        if (isEncrypted) {
+            // Verify parity between msg.value and encrypted amount
+            gtUint256 gtAmount = MpcCore.validateCiphertext(encryptedAmount);
+            gtBool amountMatch = MpcCore.eq(
+                gtAmount,
+                MpcCore.setPublic256(amountAfterFee)
+            );
+            require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
+
+            privateCoti.mint(sender, encryptedAmount);
+        } else {
+            privateCoti.mint(sender, amountAfterFee);
+        }
 
         // Emit gross deposit amount and net private tokens minted
         emit Deposit(sender, msg.value, amountAfterFee);
@@ -54,7 +69,19 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
      * @dev User sends native COTI with the transaction
      */
     function deposit() external payable {
-        _deposit(msg.sender);
+        _deposit(
+            msg.sender,
+            false,
+            itUint256(ctUint256(ctUint128.wrap(0), ctUint128.wrap(0)), "")
+        );
+    }
+
+    /**
+     * @notice Deposit native COTI with an encrypted amount for the private minting event
+     * @param encryptedAmount Encrypted amount to mint
+     */
+    function deposit(itUint256 calldata encryptedAmount) external payable {
+        _deposit(msg.sender, true, encryptedAmount);
     }
 
     /**
@@ -100,14 +127,41 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
     }
 
     /**
-     * @notice Deprecated: Withdraw native COTI by burning private COTI
-     * @dev Kept for backward compatibility if needed, but transferAndCall is preferred
+     * @notice Withdraw native COTI by burning private COTI
+     * @param amount Amount of private COTI to burn
+     * @dev User must have approved the bridge to spend their private tokens.
      */
     function withdraw(uint256 amount) external nonReentrant whenNotPaused {
+        _withdraw(
+            msg.sender,
+            amount,
+            false,
+            itUint256(ctUint256(ctUint128.wrap(0), ctUint128.wrap(0)), "")
+        );
+    }
+
+    /**
+     * @notice Withdraw native COTI by burning private COTI with an encrypted amount
+     * @param amount Public amount to release
+     * @param encryptedAmount Encrypted amount to burn
+     */
+    function withdraw(
+        uint256 amount,
+        itUint256 calldata encryptedAmount
+    ) external nonReentrant whenNotPaused {
+        _withdraw(msg.sender, amount, true, encryptedAmount);
+    }
+
+    function _withdraw(
+        address to,
+        uint256 amount,
+        bool isEncrypted,
+        itUint256 memory encryptedAmount
+    ) internal {
         if (amount == 0) revert AmountZero();
         _checkWithdrawLimits(amount);
 
-        // Calculate fee
+        // Calculate fee on the public side
         uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
         uint256 publicAmount = amount - feeAmount;
         accumulatedFees += feeAmount;
@@ -115,21 +169,36 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
         if (address(this).balance < publicAmount)
             revert InsufficientEthBalance();
 
-        // Transfer private tokens from user to bridge (requires prior approval)
-        gtUint256 gtAmount = MpcCore.setPublic256(amount);
-        IPrivateERC20(address(privateCoti)).transferFrom(
-            msg.sender,
-            address(this),
-            gtAmount
-        );
+        if (isEncrypted) {
+            // Verify parity
+            gtUint256 gtAmount = MpcCore.validateCiphertext(encryptedAmount);
+            gtBool amountMatch = MpcCore.eq(
+                gtAmount,
+                MpcCore.setPublic256(amount)
+            );
+            require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
 
-        // Burn private tokens from bridge's balance
-        privateCoti.burn(amount);
+            // Transfer and burn
+            IPrivateERC20(address(privateCoti)).transferFrom(
+                msg.sender,
+                address(this),
+                gtAmount
+            );
+            privateCoti.burn(encryptedAmount);
+        } else {
+            // Standard withdrawal
+            gtUint256 gtAmount = MpcCore.setPublic256(amount);
+            IPrivateERC20(address(privateCoti)).transferFrom(
+                msg.sender,
+                address(this),
+                gtAmount
+            );
+            privateCoti.burn(amount);
+        }
 
-        (bool success, ) = msg.sender.call{value: publicAmount}("");
+        (bool success, ) = to.call{value: publicAmount}("");
         if (!success) revert EthTransferFailed();
 
-        // Emit gross private amount burned and net native COTI sent
         emit Withdraw(msg.sender, amount, publicAmount);
     }
 
@@ -137,7 +206,11 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
      * @notice Fallback function to handle direct COTI transfers as deposits
      */
     receive() external payable {
-        _deposit(msg.sender);
+        _deposit(
+            msg.sender,
+            false,
+            itUint256(ctUint256(ctUint128.wrap(0), ctUint128.wrap(0)), "")
+        );
     }
 
     /**
