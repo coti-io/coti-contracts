@@ -93,11 +93,15 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
             gtUint256 gtAmount = MpcCore.validateCiphertext(encryptedAmount);
             gtBool amountMatch = MpcCore.eq(
                 gtAmount,
-                MpcCore.setPublic256(amountAfterFee)
+                MpcCore.setPublic256(amount)
             );
             require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
 
-            privateToken.mint(msg.sender, encryptedAmount);
+            gtUint256 gtMintAmount = MpcCore.sub(
+                gtAmount,
+                MpcCore.setPublic256(feeAmount)
+            );
+            privateToken.mintGt(msg.sender, gtMintAmount);
         } else {
             privateToken.mint(msg.sender, amountAfterFee);
         }
@@ -164,7 +168,11 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
             require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
 
             // Transfer and burn (encrypted input)
-            privateToken.transferFrom(msg.sender, address(this), encryptedAmount);
+            privateToken.transferFrom(
+                msg.sender,
+                address(this),
+                encryptedAmount
+            );
             privateToken.burn(encryptedAmount);
         } else {
             // Standard withdrawal (public amount)
