@@ -172,7 +172,7 @@ interface IPrivateERC20 {
      * allowance mechanism. `value` is then deducted from the caller's
      * allowance.
      *
-     * Returns an encrypted boolean value indicating whether the operation succeeded.
+     * Reverts if the transfer fails. On success, returns an encrypted true.
      *
      * Emits a {Transfer} event.
      */
@@ -187,7 +187,7 @@ interface IPrivateERC20 {
      * allowance mechanism. `amount` is then deducted from the caller's
      * allowance.
      *
-     * Returns a boolean value indicating whether the operation succeeded.
+     * Reverts if the transfer fails. Returns true on success.
      *
      * Emits a {Transfer} event.
      */
@@ -197,7 +197,7 @@ interface IPrivateERC20 {
      * @dev Moves a garbled-text `value` amount of tokens from `from` to `to` using the
      * allowance mechanism. `value` is then deducted from the caller's allowance.
      *
-     * Returns an encrypted boolean value indicating whether the operation succeeded.
+     * Reverts if the transfer fails. On success, returns an encrypted true.
      *
      * Emits a {Transfer} event.
      */

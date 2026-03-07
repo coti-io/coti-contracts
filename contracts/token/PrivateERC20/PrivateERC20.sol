@@ -82,6 +82,15 @@ abstract contract PrivateERC20 is
     error TransferAndCallRequiresContract(address to);
 
     /**
+     * @dev Indicates that a transfer to self (from == to) was attempted.
+     *      CRITICAL: Self-transfer is explicitly disallowed. The MPC precompile behavior when
+     *      from == to is undefined; allowing it could lead to incorrect balance updates or
+     *      inconsistent state. All transfer/transferFrom paths go through _transfer and are
+     *      therefore protected.
+     */
+    error ERC20SelfTransferNotAllowed(address account);
+
+    /**
      * @dev Emitted when the admin enables or disables public uint256 operations.
      */
     event PublicAmountsEnabledSet(bool enabled);
@@ -367,6 +376,13 @@ abstract contract PrivateERC20 is
         }
     }
 
+    /**
+     * @dev Reencrypts the caller's view of an allowance (as owner or spender) using the caller's encryption address.
+     *
+     * Requirements:
+     * - `account` must not be the zero address.
+     * - Caller must have an encryption address set (EOA or contract with setAccountEncryptionAddress).
+     */
     function reencryptAllowance(
         address account,
         bool isSpender
@@ -515,6 +531,8 @@ abstract contract PrivateERC20 is
      * This internal function is equivalent to {transfer}, and can be used to
      * e.g. implement automatic token fees, slashing mechanisms, etc.
      *
+     * Self-transfer (from == to) is not allowed and reverts.
+     *
      * Emits a {Transfer} event.
      *
      * NOTE: This function is not virtual, {_update} should be overridden instead.
@@ -530,6 +548,10 @@ abstract contract PrivateERC20 is
 
         if (to == address(0)) {
             revert ERC20InvalidReceiver(address(0));
+        }
+
+        if (from == to) {
+            revert ERC20SelfTransferNotAllowed(from);
         }
 
         return _update(from, to, value);
@@ -795,7 +817,7 @@ abstract contract PrivateERC20 is
     }
 
     function _safeOnboard(ctUint256 memory value) internal returns (gtUint256) {
-        // If both 128-bit ciphertext halves are zero, treat as public zero
+        // If both 128-bit ciphertext halves are zero, treat as canonical encoding of zero (public 0).
         if (
             ctUint128.unwrap(value.ciphertextHigh) == 0 &&
             ctUint128.unwrap(value.ciphertextLow) == 0
