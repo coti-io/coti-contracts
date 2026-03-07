@@ -6,6 +6,7 @@ import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 import {IPrivateERC20} from "./IPrivateERC20.sol";
 import {ITokenReceiver} from "./ITokenReceiver.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "../../utils/mpc/MpcCore.sol";
 
@@ -18,13 +19,19 @@ Key Features:
 - ERC165 Support - Tokens Discoverability
 - Payable Tokens with TransferAndCall (ERC677-like callback pattern)
 - Encrypted Operations (Mint, Burn, Transfer, Approve)
+
+Trust assumptions (deploy only when these hold):
+- MPC precompile at address(0x64) is correct and non-malicious; all balances/transfers depend on it.
+- MINTER_ROLE must only pass valid amounts to mint/mintGt/mint(itUint256).
+- Encrypted/GT variants (transfer, burn, mint with itUint256/gtUint256) return success as gtBool and do not revert; callers must check or decrypt.
 */
 
 abstract contract PrivateERC20 is
     Context,
     ERC165,
     IPrivateERC20,
-    AccessControl
+    AccessControl,
+    ReentrancyGuard
 {
     uint256 private constant MAX_UINT_256 = type(uint256).max;
 
@@ -94,6 +101,11 @@ abstract contract PrivateERC20 is
      * @dev Emitted when the admin enables or disables public uint256 operations.
      */
     event PublicAmountsEnabledSet(bool enabled);
+
+    /**
+     * @dev Emitted when an account sets or changes its encryption address for balance reencryption.
+     */
+    event AccountEncryptionAddressSet(address indexed account, address indexed newAddress);
 
     /**
      * @dev Sets the values for {name} and {symbol}.
@@ -208,7 +220,7 @@ abstract contract PrivateERC20 is
         address to,
         uint256 amount,
         bytes calldata data
-    ) public virtual override returns (bool) {
+    ) public virtual override nonReentrant returns (bool) {
         if (to.code.length == 0) revert TransferAndCallRequiresContract(to);
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
 
@@ -228,7 +240,7 @@ abstract contract PrivateERC20 is
         address to,
         itUint256 calldata amount,
         bytes calldata data
-    ) public virtual override returns (gtBool) {
+    ) public virtual override nonReentrant returns (gtBool) {
         if (to.code.length == 0) revert TransferAndCallRequiresContract(to);
 
         gtUint256 gtAmount = MpcCore.validateCiphertext(amount);
@@ -267,6 +279,7 @@ abstract contract PrivateERC20 is
 
     /**
      * @dev See {IPrivateERC20-balanceOf}.
+     *      May perform external calls to the MPC precompile via _getBalance; do not use in staticcall/view contexts.
      */
     function balanceOf() public virtual override returns (gtUint256) {
         return _getBalance(_msgSender());
@@ -291,8 +304,11 @@ abstract contract PrivateERC20 is
             offBoardAddress
         );
 
-        _accountEncryptionAddress[_msgSender()] = offBoardAddress;
-        _balances[_msgSender()].userCiphertext = newUserCiphertext;
+        address account = _msgSender();
+        _accountEncryptionAddress[account] = offBoardAddress;
+        _balances[account].userCiphertext = newUserCiphertext;
+
+        emit AccountEncryptionAddressSet(account, offBoardAddress);
 
         return true;
     }
@@ -357,16 +373,22 @@ abstract contract PrivateERC20 is
 
     /**
      * @dev See {IPrivateERC20-allowance}.
+     *
+     * Requirements:
+     * - `owner` and `spender` must not be the zero address.
      */
     function allowance(
         address owner,
         address spender
     ) public view virtual override returns (Allowance memory) {
+        if (owner == address(0)) revert ERC20InvalidApprover(address(0));
+        if (spender == address(0)) revert ERC20InvalidSpender(address(0));
         return _allowances[owner][spender];
     }
 
     /**
      * @dev See {IPrivateERC20-allowance}.
+     *      May perform external calls to the MPC precompile via _safeOnboard; do not use in staticcall/view contexts.
      */
     function allowance(
         address account,
