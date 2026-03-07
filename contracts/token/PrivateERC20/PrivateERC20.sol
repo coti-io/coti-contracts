@@ -133,6 +133,7 @@ abstract contract PrivateERC20 is
 
     /**
      * @dev See {IPrivateERC20-totalSupply}.
+     *      For privacy, always returns 0; actual total supply is stored encrypted in _totalSupply.
      */
     function totalSupply() public view virtual override returns (uint256) {
         return 0;
@@ -153,6 +154,7 @@ abstract contract PrivateERC20 is
     /**
      * @dev Mint an already-garbled amount without re-wrapping.
      * Intended for contract-to-contract flows that already hold a gtUint256.
+     * Trust: MINTER_ROLE is responsible for passing a valid gtAmount.
      */
     function mintGt(
         address to,
@@ -181,11 +183,13 @@ abstract contract PrivateERC20 is
     /**
      * @dev Burn an already-garbled amount without re-wrapping.
      * Intended for contract-to-contract flows that already hold a gtUint256.
+     * Returns encrypted success; callers must check or decrypt. Does not revert on failure.
      */
     function burnGt(gtUint256 gtAmount) public virtual returns (gtBool) {
         return _burn(msg.sender,gtAmount);
     }
 
+    /// @dev Does not revert on failure; returns encrypted boolean. Callers must check or decrypt.
     function burn(itUint256 calldata amount) public virtual override returns (gtBool) {
         gtUint256 gtAmount = MpcCore.validateCiphertext(amount);
         return _burn(msg.sender, gtAmount);
@@ -298,6 +302,8 @@ abstract contract PrivateERC20 is
      *
      * - `to` cannot be the zero address.
      * - the caller must have a balance of at least `value`.
+     *
+     * Does not revert on failure; returns encrypted boolean. Callers must check or decrypt.
      */
     /// @notice Transfer with encrypted (itUint256) amount
     function transfer(
@@ -311,7 +317,7 @@ abstract contract PrivateERC20 is
         return _transfer(owner, to, gtValue);
     }
 
-    /// @notice Transfer with garbled-text (gtUint256) amount
+    /// @notice Transfer with garbled-text (gtUint256) amount. Does not revert on failure; returns encrypted boolean.
     function transferGT(
         address to,
         gtUint256 value
@@ -416,7 +422,7 @@ abstract contract PrivateERC20 is
     function approveGT(
         address spender,
         gtUint256 value
-    ) public virtual returns (bool) {
+    ) public virtual override returns (bool) {
         address owner = _msgSender();
 
         _approve(owner, spender, value);

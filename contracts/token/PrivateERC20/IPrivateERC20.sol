@@ -20,8 +20,7 @@ interface IPrivateERC20 {
      *
      * Note that `senderValue/receiverValue` may be zero.
      */
-
-event Transfer(
+    event Transfer(
         address indexed from,
         address indexed to,
         ctUint256 senderValue,
@@ -41,6 +40,7 @@ event Transfer(
 
     /**
      * @dev Returns the value of tokens in existence.
+     *      For privacy, this implementation always returns 0; actual supply is stored encrypted.
      */
     function totalSupply() external view returns (uint256);
 
@@ -80,6 +80,7 @@ event Transfer(
      * @dev Moves a `value` amount of tokens from the caller's account to `to`.
      *
      * Returns an encrypted boolean value indicating whether the operation succeeded.
+     * Callers must check or decrypt the return value; this variant does not revert on failure.
      *
      * Emits a {Transfer} event.
      */
@@ -101,6 +102,7 @@ event Transfer(
      * @dev Moves a garbled-text `value` amount of tokens from the caller's account to `to`.
      *
      * Returns an encrypted boolean value indicating whether the operation succeeded.
+     * Callers must check or decrypt the return value; this variant does not revert on failure.
      *
      * Emits a {Transfer} event.
      */
@@ -156,6 +158,14 @@ event Transfer(
      * Emits an {Approval} event.
      */
     function approve(address spender, uint256 amount) external returns (bool);
+
+    /**
+     * @dev Sets a garbled-text `value` as the allowance of `spender` over the
+     * caller's tokens.
+     *
+     * Emits an {Approval} event.
+     */
+    function approveGT(address spender, gtUint256 value) external returns (bool);
 
     /**
      * @dev Moves a `value` amount of tokens from `from` to `to` using the
@@ -252,6 +262,7 @@ event Transfer(
      * @dev Destroys `amount` input-text (encrypted) tokens from the caller.
      *
      * Returns an encrypted boolean value indicating whether the operation succeeded.
+     * Callers must check or decrypt the return value; this variant does not revert on failure.
      */
     function burn(itUint256 calldata amount) external returns (gtBool);
 
@@ -259,6 +270,7 @@ event Transfer(
      * @dev Destroys `amount` garbled-text tokens from the caller without re-wrapping.
      *
      * Returns an encrypted boolean value indicating whether the operation succeeded.
+     * Callers must check or decrypt the return value; this variant does not revert on failure.
      */
     function burnGt(gtUint256 amount) external returns (gtBool);
 }
