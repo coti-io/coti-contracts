@@ -76,6 +76,12 @@ abstract contract PrivateERC20 is
     error PublicAmountsDisabled();
 
     /**
+     * @dev Indicates that transferAndCall was used with a non-contract recipient.
+     *      transferAndCall is for contract-to-contract flows; the recipient must have code.
+     */
+    error TransferAndCallRequiresContract(address to);
+
+    /**
      * @dev Sets the values for {name} and {symbol}.
      *
      * All two of these values are immutable: they can only be set once during
@@ -183,18 +189,18 @@ abstract contract PrivateERC20 is
         uint256 amount,
         bytes calldata data
     ) public virtual returns (bool) {
+        if (to.code.length == 0) revert TransferAndCallRequiresContract(to);
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
-        if (to.code.length > 0) {
-            require(
-                ITokenReceiver(to).onTokenReceived(msg.sender, amount, data),
-                "Callback failed"
-            );
-        }
 
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
         gtBool success = _transfer(msg.sender, to, gtAmount);
         bool ok = MpcCore.decrypt(success);
         require(ok, "Transfer failed");
+
+        require(
+            ITokenReceiver(to).onTokenReceived(msg.sender, amount, data),
+            "Callback failed"
+        );
         return ok;
     }
 
@@ -203,15 +209,16 @@ abstract contract PrivateERC20 is
         itUint256 calldata amount,
         bytes calldata data
     ) public virtual returns (gtBool) {
-        if (to.code.length > 0) {
-            require(
-                ITokenReceiver(to).onTokenReceived(msg.sender, 0, data),
-                "Callback failed"
-            );
-        }
+        if (to.code.length == 0) revert TransferAndCallRequiresContract(to);
 
         gtUint256 gtAmount = MpcCore.validateCiphertext(amount);
-        return _transfer(msg.sender, to, gtAmount);
+        gtBool success = _transfer(msg.sender, to, gtAmount);
+
+        require(
+            ITokenReceiver(to).onTokenReceived(msg.sender, 0, data),
+            "Callback failed"
+        );
+        return success;
     }
 
     function supportsInterface(
