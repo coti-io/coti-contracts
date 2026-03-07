@@ -530,6 +530,8 @@ abstract contract PrivateERC20 is
      * - `from` must have a balance of at least `value`.
      * - the caller must have allowance for ``from``'s tokens of at least
      * `value`.
+     *
+     * Order: (1) check allowance and revert if insufficient, (2) transfer via _transfer, (3) deduct allowance via _spendAllowance.
      */
     /// @notice transferFrom with encrypted (itUint256) amount
     function transferFrom(
@@ -542,6 +544,16 @@ abstract contract PrivateERC20 is
         address spender = _msgSender();
 
         gtUint256 gtValue = MpcCore.validateCiphertext(value);
+
+        {
+            gtUint256 currentAllowance = _safeOnboard(_allowances[from][spender].ciphertext);
+            gtBool maxAllowance = MpcCore.eq(currentAllowance, MpcCore.setPublic256(MAX_UINT_256));
+            gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, gtValue);
+            require(
+                MpcCore.decrypt(MpcCore.or(maxAllowance, MpcCore.not(inSufficientAllowance))),
+                "ERC20: insufficient allowance"
+            );
+        }
 
         gtBool success = _transfer(from, to, gtValue);
         require(MpcCore.decrypt(success), "ERC20: transfer failed");
@@ -560,6 +572,16 @@ abstract contract PrivateERC20 is
         if (from == address(0)) revert ERC20InvalidSender(address(0));
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         address spender = _msgSender();
+
+        {
+            gtUint256 currentAllowance = _safeOnboard(_allowances[from][spender].ciphertext);
+            gtBool maxAllowance = MpcCore.eq(currentAllowance, MpcCore.setPublic256(MAX_UINT_256));
+            gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, value);
+            require(
+                MpcCore.decrypt(MpcCore.or(maxAllowance, MpcCore.not(inSufficientAllowance))),
+                "ERC20: insufficient allowance"
+            );
+        }
 
         gtBool success = _transfer(from, to, value);
         require(MpcCore.decrypt(success), "ERC20: transfer failed");
@@ -582,6 +604,16 @@ abstract contract PrivateERC20 is
         address spender = _msgSender();
 
         gtUint256 gtValue = MpcCore.setPublic256(value);
+
+        {
+            gtUint256 currentAllowance = _safeOnboard(_allowances[from][spender].ciphertext);
+            gtBool maxAllowance = MpcCore.eq(currentAllowance, MpcCore.setPublic256(MAX_UINT_256));
+            gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, gtValue);
+            require(
+                MpcCore.decrypt(MpcCore.or(maxAllowance, MpcCore.not(inSufficientAllowance))),
+                "ERC20: insufficient allowance"
+            );
+        }
 
         gtBool success = _transfer(from, to, gtValue);
         require(MpcCore.decrypt(success), "ERC20: transfer failed");
