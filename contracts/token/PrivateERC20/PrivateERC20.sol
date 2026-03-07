@@ -98,6 +98,11 @@ abstract contract PrivateERC20 is
     error ERC20SelfTransferNotAllowed(address account);
 
     /**
+     * @dev Indicates that name or symbol was empty in the constructor.
+     */
+    error ERC20InvalidMetadata();
+
+    /**
      * @dev Emitted when the admin enables or disables public uint256 operations.
      */
     event PublicAmountsEnabledSet(bool enabled);
@@ -114,6 +119,8 @@ abstract contract PrivateERC20 is
      * construction.
      */
     constructor(string memory name_, string memory symbol_) {
+        if (bytes(name_).length == 0) revert ERC20InvalidMetadata();
+        if (bytes(symbol_).length == 0) revert ERC20InvalidMetadata();
         _name = name_;
         _symbol = symbol_;
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -195,7 +202,7 @@ abstract contract PrivateERC20 is
     function burn(uint256 amount) public virtual override returns (bool) {
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
-        gtBool success = _burn(msg.sender, gtAmount);
+        gtBool success = _burn(_msgSender(), gtAmount);
         require(MpcCore.decrypt(success), "ERC20: burn failed");
 
         return true;
@@ -207,13 +214,13 @@ abstract contract PrivateERC20 is
      * Returns encrypted success; callers must check or decrypt. Does not revert on failure.
      */
     function burnGt(gtUint256 gtAmount) public virtual returns (gtBool) {
-        return _burn(msg.sender,gtAmount);
+        return _burn(_msgSender(), gtAmount);
     }
 
     /// @dev Does not revert on failure; returns encrypted boolean. Callers must check or decrypt.
     function burn(itUint256 calldata amount) public virtual override returns (gtBool) {
         gtUint256 gtAmount = MpcCore.validateCiphertext(amount);
-        return _burn(msg.sender, gtAmount);
+        return _burn(_msgSender(), gtAmount);
     }
 
     function transferAndCall(
@@ -270,10 +277,14 @@ abstract contract PrivateERC20 is
 
     /**
      * @dev See {IPrivateERC20-balanceOf}.
+     *
+     * Requirements:
+     * - `account` must not be the zero address.
      */
     function balanceOf(
         address account
     ) public view virtual override returns (ctUint256 memory) {
+        if (account == address(0)) revert ERC20InvalidReceiver(address(0));
         return _balances[account].userCiphertext;
     }
 
@@ -389,11 +400,15 @@ abstract contract PrivateERC20 is
     /**
      * @dev See {IPrivateERC20-allowance}.
      *      May perform external calls to the MPC precompile via _safeOnboard; do not use in staticcall/view contexts.
+     *
+     * Requirements:
+     * - `account` must not be the zero address.
      */
     function allowance(
         address account,
         bool isSpender
     ) public virtual override returns (gtUint256) {
+        if (account == address(0)) revert ERC20InvalidReceiver(address(0));
         if (isSpender) {
             return _safeOnboard(_allowances[_msgSender()][account].ciphertext);
         } else {
@@ -502,6 +517,8 @@ abstract contract PrivateERC20 is
         address to,
         itUint256 calldata value
     ) public virtual override returns (gtBool) {
+        if (from == address(0)) revert ERC20InvalidSender(address(0));
+        if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         address spender = _msgSender();
 
         gtUint256 gtValue = MpcCore.validateCiphertext(value);
@@ -520,6 +537,8 @@ abstract contract PrivateERC20 is
         address to,
         gtUint256 value
     ) public virtual override returns (gtBool) {
+        if (from == address(0)) revert ERC20InvalidSender(address(0));
+        if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         address spender = _msgSender();
 
         gtBool success = _transfer(from, to, value);
@@ -538,6 +557,8 @@ abstract contract PrivateERC20 is
         uint256 value
     ) public virtual override returns (bool) {
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
+        if (from == address(0)) revert ERC20InvalidSender(address(0));
+        if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         address spender = _msgSender();
 
         gtUint256 gtValue = MpcCore.setPublic256(value);
