@@ -82,6 +82,11 @@ abstract contract PrivateERC20 is
     error TransferAndCallRequiresContract(address to);
 
     /**
+     * @dev Emitted when the admin enables or disables public uint256 operations.
+     */
+    event PublicAmountsEnabledSet(bool enabled);
+
+    /**
      * @dev Sets the values for {name} and {symbol}.
      *
      * All two of these values are immutable: they can only be set once during
@@ -280,6 +285,7 @@ abstract contract PrivateERC20 is
      */
     function setPublicAmountsEnabled(bool enabled) external onlyRole(DEFAULT_ADMIN_ROLE) {
         publicAmountsEnabled = enabled;
+        emit PublicAmountsEnabledSet(enabled);
     }
 
     /**
