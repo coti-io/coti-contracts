@@ -309,7 +309,7 @@ abstract contract PrivateERC20 is
     }
 
     /// @notice Transfer with garbled-text (gtUint256) amount
-    function TransferGT(
+    function transferGT(
         address to,
         gtUint256 value
     ) public virtual returns (gtBool) {
@@ -459,7 +459,7 @@ abstract contract PrivateERC20 is
     }
 
     /// @notice transferFrom with garbled-text (gtUint256) amount
-    function TransferFromGT(
+    function transferFromGT(
         address from,
         address to,
         gtUint256 value
