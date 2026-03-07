@@ -57,7 +57,8 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
             );
             require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
 
-            privateCoti.mint(sender, encryptedAmount);
+            gtBool mintOk = privateCoti.mint(sender, encryptedAmount);
+            require(MpcCore.decrypt(mintOk), "Mint failed");
         } else {
             privateCoti.mint(sender, amountAfterFee);
         }
@@ -248,8 +249,9 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
 
     /**
      * @dev Rescue native COTI coins mistakenly sent to the contract.
-     *      Only excess over the accumulated fee reserve can be rescued; must not be used to withdraw
-     *      liquidity required for user withdrawals.
+     *      Only excess over the accumulated fee reserve can be rescued.
+     *      Owner must NOT rescue amounts that would remove liquidity needed for user withdrawals;
+     *      doing so would break withdraw() and onTokenReceived() until new deposits restore balance.
      * @param to Address to send the coins to
      * @param amount Amount of coins to rescue
      * @notice Only the owner can call this function

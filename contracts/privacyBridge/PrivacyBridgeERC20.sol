@@ -48,6 +48,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
     /**
      * @notice Deposit public ERC20 tokens to receive equivalent private tokens
      * @param amount Amount of public ERC20 tokens to deposit
+     * @dev Native COTI fee: send msg.value >= nativeCotiFee; excess is refunded to caller.
      */
     function deposit(
         uint256 amount
@@ -63,6 +64,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
      * @notice Deposit public ERC20 tokens with an encrypted amount for the private minting event
      * @param amount Public amount of tokens to lock
      * @param encryptedAmount Encrypted amount to mint
+     * @dev Native COTI fee: send msg.value >= nativeCotiFee; excess is refunded to caller.
      */
     function deposit(
         uint256 amount,
@@ -78,12 +80,12 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
     ) internal {
         if (!isDepositEnabled) revert DepositDisabled();
         if (amount == 0) revert AmountZero();
-        if (msg.value != nativeCotiFee) revert InsufficientCotiFee();
+        if (msg.value < nativeCotiFee) revert InsufficientCotiFee();
 
         _checkDepositLimits(amount);
 
-        // Handle native COTI fee (exact fee enforced)
-        accumulatedCotiFees += msg.value;
+        // Handle native COTI fee (excess refunded to sender)
+        accumulatedCotiFees += nativeCotiFee;
 
         token.safeTransferFrom(msg.sender, address(this), amount);
 
@@ -101,19 +103,27 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
             );
             require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
 
-            privateToken.mint(msg.sender, encryptedAmount);
+            gtBool mintOk = privateToken.mint(msg.sender, encryptedAmount);
+            require(MpcCore.decrypt(mintOk), "Mint failed");
         } else {
             privateToken.mint(msg.sender, amountAfterFee);
         }
 
         // Emit gross deposit amount and net private tokens minted
         emit Deposit(msg.sender, amount, amountAfterFee);
+
+        // Refund excess native COTI fee
+        if (msg.value > nativeCotiFee) {
+            uint256 excess = msg.value - nativeCotiFee;
+            (bool ok, ) = msg.sender.call{value: excess}("");
+            require(ok, "Refund failed");
+        }
     }
 
     /**
      * @notice Withdraw public ERC20 tokens by burning private tokens
      * @param amount Amount of private tokens to burn
-     * @dev This function requires prior approval on the private token and a native COTI fee.
+     * @dev Requires prior approval on the private token. Native COTI fee: send msg.value >= nativeCotiFee; excess is refunded.
      */
     function withdraw(
         uint256 amount
@@ -129,6 +139,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
      * @notice Withdraw public ERC20 tokens by burning private tokens with an encrypted amount
      * @param amount Public amount to release
      * @param encryptedAmount Encrypted amount to burn
+     * @dev Native COTI fee: send msg.value >= nativeCotiFee; excess is refunded to caller.
      */
     function withdraw(
         uint256 amount,
@@ -143,11 +154,11 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
         itUint256 memory encryptedAmount
     ) internal {
         if (amount == 0) revert AmountZero();
-        if (msg.value != nativeCotiFee) revert InsufficientCotiFee();
+        if (msg.value < nativeCotiFee) revert InsufficientCotiFee();
         _checkWithdrawLimits(amount);
 
-        // Handle native COTI fee
-        accumulatedCotiFees += msg.value;
+        // Handle native COTI fee (excess refunded to sender)
+        accumulatedCotiFees += nativeCotiFee;
 
         // Calculate fee on the public side
         uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
@@ -181,6 +192,13 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
         token.safeTransfer(msg.sender, amountAfterFee);
 
         emit Withdraw(msg.sender, amount, amountAfterFee);
+
+        // Refund excess native COTI fee
+        if (msg.value > nativeCotiFee) {
+            uint256 excess = msg.value - nativeCotiFee;
+            (bool ok, ) = msg.sender.call{value: excess}("");
+            require(ok, "Refund failed");
+        }
     }
 
     /**

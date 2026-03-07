@@ -197,7 +197,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
     }
 
     /**
-     * @notice Set the native COTI fee
+     * @notice Set the native COTI fee (used by ERC20 bridges; send msg.value >= this value; excess is refunded)
      * @param _fee Amount in native tokens (wei-equivalent)
      */
     function setNativeCotiFee(uint256 _fee) external onlyOwner {
