@@ -171,6 +171,7 @@ abstract contract PrivateERC20 is
         address to,
         uint256 amount
     ) public virtual override onlyRole(MINTER_ROLE) returns (bool) {
+        if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
         gtBool success = _mint(to, gtAmount);
@@ -188,6 +189,7 @@ abstract contract PrivateERC20 is
         address to,
         gtUint256 gtAmount
     ) public virtual onlyRole(MINTER_ROLE) returns (gtBool) {
+        if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         return _mint(to, gtAmount);
     }
 
@@ -195,6 +197,7 @@ abstract contract PrivateERC20 is
         address to,
         itUint256 calldata amount
     ) public virtual override onlyRole(MINTER_ROLE) returns (gtBool) {
+        if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         gtUint256 gtAmount = MpcCore.validateCiphertext(amount);
         return _mint(to, gtAmount);
     }
@@ -232,12 +235,13 @@ abstract contract PrivateERC20 is
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
 
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
-        gtBool success = _transfer(msg.sender, to, gtAmount);
+        address sender = _msgSender();
+        gtBool success = _transfer(sender, to, gtAmount);
         bool ok = MpcCore.decrypt(success);
         require(ok, "Transfer failed");
 
         require(
-            ITokenReceiver(to).onTokenReceived(msg.sender, amount, data),
+            ITokenReceiver(to).onTokenReceived(sender, amount, data),
             "Callback failed"
         );
         return ok;
@@ -251,11 +255,12 @@ abstract contract PrivateERC20 is
         if (to.code.length == 0) revert TransferAndCallRequiresContract(to);
 
         gtUint256 gtAmount = MpcCore.validateCiphertext(amount);
-        gtBool success = _transfer(msg.sender, to, gtAmount);
+        address sender = _msgSender();
+        gtBool success = _transfer(sender, to, gtAmount);
         require(MpcCore.decrypt(success), "Transfer failed");
 
         require(
-            ITokenReceiver(to).onTokenReceived(msg.sender, 0, data),
+            ITokenReceiver(to).onTokenReceived(sender, 0, data),
             "Callback failed"
         );
         return success;
@@ -349,6 +354,7 @@ abstract contract PrivateERC20 is
         address to,
         itUint256 calldata value
     ) public virtual override returns (gtBool) {
+        if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         address owner = _msgSender();
 
         gtUint256 gtValue = MpcCore.validateCiphertext(value);
@@ -361,6 +367,7 @@ abstract contract PrivateERC20 is
         address to,
         gtUint256 value
     ) public virtual override returns (gtBool) {
+        if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         address owner = _msgSender();
 
         return _transfer(owner, to, value);
@@ -371,6 +378,7 @@ abstract contract PrivateERC20 is
         address to,
         uint256 value
     ) public virtual override returns (bool) {
+        if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         address owner = _msgSender();
 
