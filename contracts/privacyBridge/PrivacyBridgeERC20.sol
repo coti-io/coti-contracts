@@ -10,6 +10,7 @@ import "../utils/mpc/MpcCore.sol";
 /**
  * @dev Abstract base contract for ERC20 Token Privacy Bridges
  * @dev Handles the logic for bridging ERC20 tokens to their private counterparts.
+ * @dev The public ERC20 token must be standard (no fee-on-transfer, no rebasing); same decimals as private token.
  */
 contract PrivacyBridgeERC20 is PrivacyBridge {
     using SafeERC20 for IERC20;
@@ -168,7 +169,8 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
 
             // Transfer and burn (encrypted input)
             privateToken.transferFrom(msg.sender, address(this), encryptedAmount);
-            privateToken.burn(encryptedAmount);
+            gtBool burnOk = privateToken.burn(encryptedAmount);
+            require(MpcCore.decrypt(burnOk), "Burn failed");
         } else {
             // Standard withdrawal (public amount)
             privateToken.transferFrom(msg.sender, address(this), amount);

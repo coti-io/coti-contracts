@@ -9,6 +9,9 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 /**
  * @title PrivacyBridge
  * @notice Base contract for Privacy Bridge contracts containing common logic
+ * @dev Trust assumptions: (1) MPC precompile at expected address is correct and non-malicious.
+ *      (2) Private token implementation is trusted and only authorized minters can mint.
+ *      (3) Owner operations (limits, fees, pause, withdraw fees, rescue) are centralized; consider timelock/multisig for sensitive actions.
  */
 abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
     /// @notice Maximum amount that can be deposited in a single transaction
@@ -32,7 +35,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
     /// @notice Accumulated fees collected by the bridge (in bridged asset units)
     uint256 public accumulatedFees;
 
-    /// @notice Accumulated native COTI fees
+    /// @notice Accumulated native COTI fees (used only by ERC20 bridges for per-operation native fee; not used by native bridge)
     uint256 public accumulatedCotiFees;
 
     /// @notice Fee divisor (1,000,000)
@@ -165,7 +168,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
 
     /**
      * @notice Set the deposit fee
-     * @param _feeBasisPoints New deposit fee in basis points (max 1000 = 10%)
+     * @param _feeBasisPoints New deposit fee in basis points (max 100,000 = 10%)
      * @dev Only the owner can call this function
      */
     function setDepositFee(uint256 _feeBasisPoints) external onlyOwner {
@@ -233,7 +236,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
     }
 
     /**
-     * @notice Withdraw accumulated native COTI fees
+     * @notice Withdraw accumulated native COTI fees (ERC20 bridges only; native bridge does not increment this)
      * @param to Address to send the native COTI fees to
      * @param amount Amount of native COTI fees to withdraw
      * @dev Only the owner can call this function

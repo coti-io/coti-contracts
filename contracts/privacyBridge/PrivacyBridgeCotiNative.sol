@@ -13,6 +13,8 @@ import "../utils/mpc/MpcCore.sol";
 contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
     PrivateCOTI public privateCoti;
 
+    error ExceedsRescueableAmount();
+
     // Scaling factor removed (using native 18 decimals due to uint256 upgrade)
 
     /**
@@ -91,15 +93,14 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
      */
     /**
      * @notice Handle callback from PrivateCoti.transferAndCall
-     * @dev Called when user transfers tokens to the bridge to withdraw
+     * @dev Called when user transfers tokens to the bridge to withdraw. Third parameter (data) is required by ITokenReceiver but unused.
      * @param from Address of the sender
      * @param amount Amount of tokens received
-     * @param data Additional data (unused)
      */
     function onTokenReceived(
         address from,
         uint256 amount,
-        bytes calldata data
+        bytes calldata
     ) external nonReentrant whenNotPaused returns (bool) {
         if (msg.sender != address(privateCoti)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
@@ -184,7 +185,8 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
                 address(this),
                 encryptedAmount
             );
-            privateCoti.burn(encryptedAmount);
+            gtBool burnOk = privateCoti.burn(encryptedAmount);
+            require(MpcCore.decrypt(burnOk), "Burn failed");
         } else {
             // Standard withdrawal (public amount)
             IPrivateERC20(address(privateCoti)).transferFrom(
@@ -245,7 +247,9 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
     }
 
     /**
-     * @dev Rescue native COTI coins sent to the contract
+     * @dev Rescue native COTI coins mistakenly sent to the contract.
+     *      Only excess over the accumulated fee reserve can be rescued; must not be used to withdraw
+     *      liquidity required for user withdrawals.
      * @param to Address to send the coins to
      * @param amount Amount of coins to rescue
      * @notice Only the owner can call this function
@@ -254,6 +258,8 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
         if (to == address(0)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
         if (amount > address(this).balance) revert InsufficientEthBalance();
+        if (address(this).balance < accumulatedFees) revert InsufficientEthBalance();
+        if (amount > address(this).balance - accumulatedFees) revert ExceedsRescueableAmount();
 
         (bool success, ) = to.call{value: amount}("");
         if (!success) revert EthTransferFailed();
