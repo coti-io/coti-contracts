@@ -89,7 +89,7 @@ abstract contract PrivateERC20 is
     /**
      * @dev Sets the values for {name} and {symbol}.
      *
-     * All two of these values are immutable: they can only be set once during
+     * Both of these values are immutable: they can only be set once during
      * construction.
      */
     constructor(string memory name_, string memory symbol_) {
@@ -134,7 +134,7 @@ abstract contract PrivateERC20 is
     /**
      * @dev See {IPrivateERC20-totalSupply}.
      */
-    function totalSupply() public view virtual returns (uint256) {
+    function totalSupply() public view virtual override returns (uint256) {
         return 0;
     }
 
@@ -193,7 +193,7 @@ abstract contract PrivateERC20 is
         address to,
         uint256 amount,
         bytes calldata data
-    ) public virtual returns (bool) {
+    ) public virtual override returns (bool) {
         if (to.code.length == 0) revert TransferAndCallRequiresContract(to);
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
 
@@ -213,11 +213,12 @@ abstract contract PrivateERC20 is
         address to,
         itUint256 calldata amount,
         bytes calldata data
-    ) public virtual returns (gtBool) {
+    ) public virtual override returns (gtBool) {
         if (to.code.length == 0) revert TransferAndCallRequiresContract(to);
 
         gtUint256 gtAmount = MpcCore.validateCiphertext(amount);
         gtBool success = _transfer(msg.sender, to, gtAmount);
+        require(MpcCore.decrypt(success), "Transfer failed");
 
         require(
             ITokenReceiver(to).onTokenReceived(msg.sender, 0, data),
@@ -245,14 +246,14 @@ abstract contract PrivateERC20 is
      */
     function balanceOf(
         address account
-    ) public view virtual returns (ctUint256 memory) {
+    ) public view virtual override returns (ctUint256 memory) {
         return _balances[account].userCiphertext;
     }
 
     /**
      * @dev See {IPrivateERC20-balanceOf}.
      */
-    function balanceOf() public virtual returns (gtUint256) {
+    function balanceOf() public virtual override returns (gtUint256) {
         return _getBalance(_msgSender());
     }
 
@@ -263,7 +264,7 @@ abstract contract PrivateERC20 is
      */
     function setAccountEncryptionAddress(
         address offBoardAddress
-    ) public virtual returns (bool) {
+    ) public virtual override returns (bool) {
         if (offBoardAddress == address(0)) revert ERC20InvalidReceiver(address(0));
 
         gtUint256 gtBalance = _getBalance(_msgSender());
@@ -339,7 +340,7 @@ abstract contract PrivateERC20 is
     function allowance(
         address owner,
         address spender
-    ) public view virtual returns (Allowance memory) {
+    ) public view virtual override returns (Allowance memory) {
         return _allowances[owner][spender];
     }
 
@@ -349,7 +350,7 @@ abstract contract PrivateERC20 is
     function allowance(
         address account,
         bool isSpender
-    ) public virtual returns (gtUint256) {
+    ) public virtual override returns (gtUint256) {
         if (isSpender) {
             return _safeOnboard(_allowances[_msgSender()][account].ciphertext);
         } else {
@@ -362,6 +363,7 @@ abstract contract PrivateERC20 is
         bool isSpender
     ) public virtual returns (bool) {
         address encryptionAddress = _getAccountEncryptionAddress(_msgSender());
+        if (encryptionAddress == address(0)) revert ERC20InvalidReceiver(address(0));
 
         if (isSpender) {
             Allowance storage allowance_ = _allowances[_msgSender()][account];
@@ -396,7 +398,7 @@ abstract contract PrivateERC20 is
     function approve(
         address spender,
         itUint256 calldata value
-    ) public virtual returns (bool) {
+    ) public virtual override returns (bool) {
         address owner = _msgSender();
 
         gtUint256 gtValue = MpcCore.validateCiphertext(value);
@@ -422,7 +424,7 @@ abstract contract PrivateERC20 is
     function approve(
         address spender,
         uint256 value
-    ) public virtual returns (bool) {
+    ) public virtual override returns (bool) {
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         address owner = _msgSender();
 
@@ -448,7 +450,7 @@ abstract contract PrivateERC20 is
         address from,
         address to,
         itUint256 calldata value
-    ) public virtual returns (gtBool) {
+    ) public virtual override returns (gtBool) {
         address spender = _msgSender();
 
         gtUint256 gtValue = MpcCore.validateCiphertext(value);
@@ -477,7 +479,7 @@ abstract contract PrivateERC20 is
         address from,
         address to,
         uint256 value
-    ) public virtual returns (bool) {
+    ) public virtual override returns (bool) {
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         address spender = _msgSender();
 
