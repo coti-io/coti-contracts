@@ -21,9 +21,16 @@ Key Features:
 - Encrypted Operations (Mint, Burn, Transfer, Approve)
 
 Trust assumptions (deploy only when these hold):
-- MPC precompile at address(0x64) is correct and non-malicious; all balances/transfers depend on it.
-- MINTER_ROLE must only pass valid amounts to mint/mintGt/mint(itUint256).
-- Encrypted/GT variants (transfer, burn, mint with itUint256/gtUint256) return success as gtBool and do not revert; callers must check or decrypt.
+- Deploy only on chains where the MPC precompile at address(0x64) is part of the trusted base.
+  The precompile is correct and non-malicious; all balances/transfers depend on it. If the chain
+  allows precompile upgrades, consider monitoring or circuit-breakers.
+- MINTER_ROLE must only pass valid amounts to mint/mintGt/mint(itUint256). If the MPC layer
+  enforces bounds or validity, that dependency applies.
+- Encrypted/GT variants (transfer, burn, mint with itUint256/gtUint256) return success as gtBool
+  and do not revert; callers must check or decrypt the return value. Integrators should use
+  helpers that revert on failure when appropriate.
+- Gas: multiple precompile calls per transfer/approve; no unbounded loops. Document expected
+  gas ranges for common operations if needed for integrators.
 */
 
 abstract contract PrivateERC20 is
@@ -162,6 +169,7 @@ abstract contract PrivateERC20 is
     /**
      * @dev See {IPrivateERC20-totalSupply}.
      *      For privacy, always returns 0; actual total supply is stored encrypted in _totalSupply.
+     *      Integrators: use for display only; do not rely on this for supply accounting.
      */
     function totalSupply() public view virtual override returns (uint256) {
         return 0;
@@ -183,7 +191,8 @@ abstract contract PrivateERC20 is
     /**
      * @dev Mint an already-garbled amount without re-wrapping.
      * Intended for contract-to-contract flows that already hold a gtUint256.
-     * Trust: MINTER_ROLE is responsible for passing a valid gtAmount.
+     * Trust: MINTER_ROLE must only pass valid amounts. Does not revert on MPC failure;
+     * returns gtBool — callers must check or decrypt.
      */
     function mintGt(
         address to,
@@ -193,6 +202,11 @@ abstract contract PrivateERC20 is
         return _mint(to, gtAmount);
     }
 
+    /**
+     * @dev Mint with encrypted (itUint256) amount.
+     * Trust: MINTER_ROLE must only pass valid amounts. Does not revert on MPC failure;
+     * returns gtBool — callers must check or decrypt.
+     */
     function mint(
         address to,
         itUint256 calldata amount
@@ -226,6 +240,11 @@ abstract contract PrivateERC20 is
         return _burn(_msgSender(), gtAmount);
     }
 
+    /**
+     * @dev Transfers tokens to `to` then calls onTokenReceived(to, amount, data).
+     *      Only use with trusted receivers; the callback cannot re-enter the token (nonReentrant)
+     *      but must behave correctly for protocol logic.
+     */
     function transferAndCall(
         address to,
         uint256 amount,
@@ -248,6 +267,12 @@ abstract contract PrivateERC20 is
         return ok;
     }
 
+    /**
+     * @dev Transfers encrypted amount to `to` then calls onTokenReceived(to, 0, data).
+     *      For privacy, the callback receives 0 as the amount argument; the actual amount is not passed.
+     *      Only use with trusted receivers; the callback cannot re-enter the token (nonReentrant)
+     *      but must behave correctly for protocol logic.
+     */
     function transferAndCall(
         address to,
         itUint256 calldata amount,
@@ -304,7 +329,8 @@ abstract contract PrivateERC20 is
 
     /**
      * @dev See {IPrivateERC20-balanceOf}.
-     *      May perform external calls to the MPC precompile via _getBalance; do not use in staticcall/view contexts.
+     *      May perform external calls to the MPC precompile via _getBalance.
+     *      Do not use in staticcall or view contexts; off-chain code must not assume this is view-safe.
      */
     function balanceOf() public virtual override returns (gtUint256) {
         return _getBalance(_msgSender());
@@ -416,7 +442,8 @@ abstract contract PrivateERC20 is
 
     /**
      * @dev See {IPrivateERC20-allowance}.
-     *      May perform external calls to the MPC precompile via _safeOnboard; do not use in staticcall/view contexts.
+     *      May perform external calls to the MPC precompile via _safeOnboard.
+     *      Do not use in staticcall or view contexts; off-chain code must not assume this is view-safe.
      *
      * Requirements:
      * - `account` must not be the zero address.
