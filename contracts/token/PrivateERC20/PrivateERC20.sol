@@ -145,8 +145,9 @@ abstract contract PrivateERC20 is
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
         gtBool success = _mint(to, gtAmount);
+        require(MpcCore.decrypt(success), "ERC20: mint failed");
 
-        return MpcCore.decrypt(success);
+        return true;
     }
 
     /**
@@ -172,8 +173,9 @@ abstract contract PrivateERC20 is
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
         gtBool success = _burn(msg.sender, gtAmount);
+        require(MpcCore.decrypt(success), "ERC20: burn failed");
 
-        return MpcCore.decrypt(success);
+        return true;
     }
 
     /**
@@ -330,8 +332,9 @@ abstract contract PrivateERC20 is
         gtUint256 gtValue = MpcCore.setPublic256(value);
 
         gtBool success = _transfer(owner, to, gtValue);
+        require(MpcCore.decrypt(success), "ERC20: transfer failed");
 
-        return MpcCore.decrypt(success);
+        return true;
     }
 
     /**
@@ -362,6 +365,7 @@ abstract contract PrivateERC20 is
         address account,
         bool isSpender
     ) public virtual returns (bool) {
+        if (account == address(0)) revert ERC20InvalidReceiver(address(0));
         address encryptionAddress = _getAccountEncryptionAddress(_msgSender());
         if (encryptionAddress == address(0)) revert ERC20InvalidReceiver(address(0));
 
@@ -635,10 +639,19 @@ abstract contract PrivateERC20 is
     function _updateBalance(address account, gtUint256 balance) internal {
         address encryptionAddress = _getAccountEncryptionAddress(account);
 
-        _balances[account] = MpcCore.offBoardCombined(
-            balance,
-            encryptionAddress
-        );
+        if (encryptionAddress == address(0)) {
+            // Contract accounts have no AES key; store ciphertext only, no user reencryption.
+            _balances[account].ciphertext = MpcCore.offBoard(balance);
+            _balances[account].userCiphertext = ctUint256({
+                ciphertextHigh: ctUint128.wrap(0),
+                ciphertextLow: ctUint128.wrap(0)
+            });
+        } else {
+            _balances[account] = MpcCore.offBoardCombined(
+                balance,
+                encryptionAddress
+            );
+        }
     }
 
     /**
