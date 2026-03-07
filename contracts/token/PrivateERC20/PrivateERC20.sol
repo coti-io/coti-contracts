@@ -284,12 +284,15 @@ abstract contract PrivateERC20 is
 
         gtUint256 gtBalance = _getBalance(_msgSender());
 
-        _accountEncryptionAddress[_msgSender()] = offBoardAddress;
-
-        _balances[_msgSender()].userCiphertext = MpcCore.offBoardToUser(
+        // Compute new user ciphertext first; reverts if precompile fails. Only then update storage
+        // so that we never leave _accountEncryptionAddress and userCiphertext out of sync.
+        ctUint256 memory newUserCiphertext = MpcCore.offBoardToUser(
             gtBalance,
             offBoardAddress
         );
+
+        _accountEncryptionAddress[_msgSender()] = offBoardAddress;
+        _balances[_msgSender()].userCiphertext = newUserCiphertext;
 
         return true;
     }
