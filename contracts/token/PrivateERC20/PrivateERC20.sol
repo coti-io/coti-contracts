@@ -313,7 +313,7 @@ abstract contract PrivateERC20 is
     function transferGT(
         address to,
         gtUint256 value
-    ) public virtual returns (gtBool) {
+    ) public virtual override returns (gtBool) {
         address owner = _msgSender();
 
         return _transfer(owner, to, value);
@@ -455,9 +455,12 @@ abstract contract PrivateERC20 is
 
         gtUint256 gtValue = MpcCore.validateCiphertext(value);
 
+        gtBool success = _transfer(from, to, gtValue);
+        require(MpcCore.decrypt(success), "ERC20: transfer failed");
+
         _spendAllowance(from, spender, gtValue);
 
-        return _transfer(from, to, gtValue);
+        return success;
     }
 
     /// @notice transferFrom with garbled-text (gtUint256) amount
@@ -465,12 +468,15 @@ abstract contract PrivateERC20 is
         address from,
         address to,
         gtUint256 value
-    ) public virtual returns (gtBool) {
+    ) public virtual override returns (gtBool) {
         address spender = _msgSender();
+
+        gtBool success = _transfer(from, to, value);
+        require(MpcCore.decrypt(success), "ERC20: transfer failed");
 
         _spendAllowance(from, spender, value);
 
-        return _transfer(from, to, value);
+        return success;
     }
 
 

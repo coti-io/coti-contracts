@@ -98,6 +98,15 @@ event Transfer(
     function transfer(address to, uint256 amount) external returns (bool);
 
     /**
+     * @dev Moves a garbled-text `value` amount of tokens from the caller's account to `to`.
+     *
+     * Returns an encrypted boolean value indicating whether the operation succeeded.
+     *
+     * Emits a {Transfer} event.
+     */
+    function transferGT(address to, gtUint256 value) external returns (gtBool);
+
+    /**
      * @dev Returns the remaining number of tokens that `spender` will be
      * allowed to spend on behalf of `owner` through {transferFrom}. This is
      * zero by default.
@@ -173,6 +182,16 @@ event Transfer(
      * Emits a {Transfer} event.
      */
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
+
+    /**
+     * @dev Moves a garbled-text `value` amount of tokens from `from` to `to` using the
+     * allowance mechanism. `value` is then deducted from the caller's allowance.
+     *
+     * Returns an encrypted boolean value indicating whether the operation succeeded.
+     *
+     * Emits a {Transfer} event.
+     */
+    function transferFromGT(address from, address to, gtUint256 value) external returns (gtBool);
 
     /**
      * @dev Moves a `value` amount of tokens from the caller's account to `to`, and then calls `onTokenReceived` on `to`.
