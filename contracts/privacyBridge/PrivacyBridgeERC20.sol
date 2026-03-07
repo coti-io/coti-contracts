@@ -34,7 +34,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
 
     /**
      * @notice Initialize the PrivacyBridgeERC20 contract
-     * @param _token Address of the public ERC20 token
+     * @param _token Address of the public ERC20 token (must be standard: no fee-on-transfer, no rebasing; same decimals as private token)
      * @param _privateToken Address of the private token
      */
     constructor(address _token, address _privateToken) PrivacyBridge() {
@@ -48,7 +48,9 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
     /**
      * @notice Deposit public ERC20 tokens to receive equivalent private tokens
      * @param amount Amount of public ERC20 tokens to deposit
-     * @dev Native COTI fee: send msg.value >= nativeCotiFee; excess is refunded to caller.
+     * @dev Native COTI fee: send msg.value >= nativeCotiFee. Excess is refunded best-effort;
+     *      if refund fails (e.g. sender cannot receive native token), excess remains in the contract and deposit still succeeds.
+     *      Send exactly nativeCotiFee or ensure sender can receive native token to avoid leaving excess in the contract.
      */
     function deposit(
         uint256 amount
@@ -64,7 +66,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
      * @notice Deposit public ERC20 tokens with an encrypted amount for the private minting event
      * @param amount Public amount of tokens to lock
      * @param encryptedAmount Encrypted amount to mint
-     * @dev Native COTI fee: send msg.value >= nativeCotiFee; excess is refunded to caller.
+     * @dev Native COTI fee: send msg.value >= nativeCotiFee. Excess refunded best-effort (see deposit(uint256)).
      */
     function deposit(
         uint256 amount,
@@ -112,18 +114,20 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
         // Emit gross deposit amount and net private tokens minted
         emit Deposit(msg.sender, amount, amountAfterFee);
 
-        // Refund excess native COTI fee
+        // Refund excess native COTI fee (best-effort: do not revert so deposit succeeds even if sender cannot receive)
         if (msg.value > nativeCotiFee) {
             uint256 excess = msg.value - nativeCotiFee;
             (bool ok, ) = msg.sender.call{value: excess}("");
-            require(ok, "Refund failed");
+            if (!ok) {
+                // Excess remains in contract; deposit still succeeds
+            }
         }
     }
 
     /**
      * @notice Withdraw public ERC20 tokens by burning private tokens
      * @param amount Amount of private tokens to burn
-     * @dev Requires prior approval on the private token. Native COTI fee: send msg.value >= nativeCotiFee; excess is refunded.
+     * @dev Requires prior approval on the private token. Native COTI fee: send msg.value >= nativeCotiFee; excess refunded best-effort (see deposit).
      */
     function withdraw(
         uint256 amount
@@ -139,7 +143,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
      * @notice Withdraw public ERC20 tokens by burning private tokens with an encrypted amount
      * @param amount Public amount to release
      * @param encryptedAmount Encrypted amount to burn
-     * @dev Native COTI fee: send msg.value >= nativeCotiFee; excess is refunded to caller.
+     * @dev Native COTI fee: send msg.value >= nativeCotiFee; excess refunded best-effort (see deposit).
      */
     function withdraw(
         uint256 amount,
@@ -193,11 +197,13 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
 
         emit Withdraw(msg.sender, amount, amountAfterFee);
 
-        // Refund excess native COTI fee
+        // Refund excess native COTI fee (best-effort: do not revert so withdraw succeeds even if sender cannot receive)
         if (msg.value > nativeCotiFee) {
             uint256 excess = msg.value - nativeCotiFee;
             (bool ok, ) = msg.sender.call{value: excess}("");
-            require(ok, "Refund failed");
+            if (!ok) {
+                // Excess remains in contract; withdraw still succeeds
+            }
         }
     }
 

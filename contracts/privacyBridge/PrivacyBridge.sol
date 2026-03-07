@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
  * @dev Trust assumptions: (1) MPC precompile at expected address is correct and non-malicious.
  *      (2) Private token implementation is trusted and only authorized minters can mint.
  *      (3) Owner operations (limits, fees, pause, withdraw fees, rescue) are centralized; consider timelock/multisig for sensitive actions.
+ *      (4) Any new derived bridge must override withdrawFees to perform the actual transfer; base implementation reverts.
  */
 abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
     /// @notice Maximum amount that can be deposited in a single transaction
@@ -197,8 +198,9 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
     }
 
     /**
-     * @notice Set the native COTI fee (used by ERC20 bridges; send msg.value >= this value; excess is refunded)
+     * @notice Set the native COTI fee
      * @param _fee Amount in native tokens (wei-equivalent)
+     * @dev Used by ERC20 bridges: they require msg.value >= this value and refund excess to the caller (best-effort).
      */
     function setNativeCotiFee(uint256 _fee) external onlyOwner {
         nativeCotiFee = _fee;
@@ -236,10 +238,11 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
     }
 
     /**
-     * @notice Withdraw accumulated native COTI fees (ERC20 bridges only; native bridge does not increment this)
+     * @notice Withdraw accumulated native COTI fees
      * @param to Address to send the native COTI fees to
      * @param amount Amount of native COTI fees to withdraw
-     * @dev Only the owner can call this function
+     * @dev Only the owner can call this function. Derived ERC20 bridges use this inherited implementation to withdraw
+     *      accumulated native COTI fees; native bridge does not use this (accumulatedCotiFees remains 0).
      */
     function withdrawCotiFees(address to, uint256 amount) external onlyOwner {
         if (to == address(0)) revert InvalidAddress();
