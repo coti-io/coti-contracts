@@ -193,9 +193,9 @@ abstract contract PrivateERC20 is
 
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
         gtBool success = _transfer(msg.sender, to, gtAmount);
-        require(MpcCore.decrypt(success), "Transfer failed");
-
-        return MpcCore.decrypt(success);
+        bool ok = MpcCore.decrypt(success);
+        require(ok, "Transfer failed");
+        return ok;
     }
 
     function transferAndCall(
@@ -252,6 +252,8 @@ abstract contract PrivateERC20 is
     function setAccountEncryptionAddress(
         address offBoardAddress
     ) public virtual returns (bool) {
+        if (offBoardAddress == address(0)) revert ERC20InvalidReceiver(address(0));
+
         gtUint256 gtBalance = _getBalance(_msgSender());
 
         _accountEncryptionAddress[_msgSender()] = offBoardAddress;
@@ -468,11 +470,12 @@ abstract contract PrivateERC20 is
 
         gtUint256 gtValue = MpcCore.setPublic256(value);
 
+        gtBool success = _transfer(from, to, gtValue);
+        require(MpcCore.decrypt(success), "ERC20: transfer failed");
+
         _spendAllowance(from, spender, gtValue);
 
-        gtBool success = _transfer(from, to, gtValue);
-
-        return MpcCore.decrypt(success);
+        return true;
     }
 
     /**
