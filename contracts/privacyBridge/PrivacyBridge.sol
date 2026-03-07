@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
  * @title PrivacyBridge
@@ -61,6 +62,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
     error WithdrawExceedsMaximum();
     error InvalidFee();
     error InsufficientAccumulatedFees();
+    error WithdrawFeesMustBeOverridden();
 
     /// @notice Emitted when a user deposits tokens
     /// @param user        Address of the user
@@ -97,7 +99,8 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
 
     /**
      * @notice Update deposit and withdrawal limits
-     * @dev Ensures min values are less than or equal to max values
+     * @dev Ensures min values are less than or equal to max values.
+     *      Setting _maxDeposit or _maxWithdraw to 0 effectively disables deposits or withdrawals.
      * @param _minDeposit New minimum deposit amount
      * @param _maxDeposit New maximum deposit amount
      * @param _minWithdraw New minimum withdrawal amount
@@ -209,14 +212,15 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
         uint256 feeBasisPoints
     ) internal pure returns (uint256) {
         if (feeBasisPoints == 0) return 0;
-        return (amount * feeBasisPoints) / FEE_DIVISOR;
+        return Math.mulDiv(amount, feeBasisPoints, FEE_DIVISOR);
     }
 
     /**
      * @notice Withdraw accumulated fees
      * @param to Address to send the fees to
      * @param amount Amount of fees to withdraw
-     * @dev Only the owner can call this function
+     * @dev Only the owner can call this function. Must be overridden in derived contracts
+     *      to perform the actual token/native transfer; base implementation reverts.
      */
     function withdrawFees(
         address to,
@@ -225,12 +229,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
         if (to == address(0)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
         if (amount > accumulatedFees) revert InsufficientAccumulatedFees();
-
-        accumulatedFees -= amount;
-        emit FeesWithdrawn(to, amount);
-
-        // Note: Actual transfer implementation will be in derived contracts
-        // since they handle the specific token type (ETH, ERC20, etc.)
+        revert WithdrawFeesMustBeOverridden();
     }
 
     /**

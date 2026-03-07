@@ -68,7 +68,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
      * @notice Deposit native COTI to receive private COTI (COTI.p)
      * @dev User sends native COTI with the transaction
      */
-    function deposit() external payable {
+    function deposit() external payable nonReentrant whenNotPaused {
         _deposit(
             msg.sender,
             false,
@@ -80,7 +80,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
      * @notice Deposit native COTI with an encrypted amount for the private minting event
      * @param encryptedAmount Encrypted amount to mint
      */
-    function deposit(itUint256 calldata encryptedAmount) external payable {
+    function deposit(itUint256 calldata encryptedAmount) external payable nonReentrant whenNotPaused {
         _deposit(msg.sender, true, encryptedAmount);
     }
 
@@ -198,13 +198,13 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
         (bool success, ) = to.call{value: publicAmount}("");
         if (!success) revert EthTransferFailed();
 
-        emit Withdraw(msg.sender, amount, publicAmount);
+        emit Withdraw(to, amount, publicAmount);
     }
 
     /**
      * @notice Fallback function to handle direct COTI transfers as deposits
      */
-    receive() external payable {
+    receive() external payable nonReentrant whenNotPaused {
         _deposit(
             msg.sender,
             false,
@@ -233,6 +233,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
         if (to == address(0)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
         if (amount > accumulatedFees) revert InsufficientAccumulatedFees();
+        if (amount > address(this).balance) revert InsufficientEthBalance();
 
         accumulatedFees -= amount;
 

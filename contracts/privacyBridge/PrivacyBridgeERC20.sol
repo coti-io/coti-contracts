@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 import "./PrivacyBridge.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../token/PrivateERC20/IPrivateERC20.sol";
 import "../utils/mpc/MpcCore.sol";
 
@@ -11,6 +12,8 @@ import "../utils/mpc/MpcCore.sol";
  * @dev Handles the logic for bridging ERC20 tokens to their private counterparts.
  */
 contract PrivacyBridgeERC20 is PrivacyBridge {
+    using SafeERC20 for IERC20;
+
     /// @notice The public ERC20 token being bridged (e.g., USDC, WETH)
     IERC20 public token;
 
@@ -19,6 +22,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
 
     error InvalidTokenAddress();
     error InvalidPrivateTokenAddress();
+    error CannotRescueBridgeToken();
     error InvalidScalingFactor();
     error AmountTooLarge();
     error AmountTooSmall();
@@ -80,8 +84,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
         // Handle native COTI fee (exact fee enforced)
         accumulatedCotiFees += msg.value;
 
-        bool success = token.transferFrom(msg.sender, address(this), amount);
-        if (!success) revert TokenTransferFailed();
+        token.safeTransferFrom(msg.sender, address(this), amount);
 
         // Calculate and deduct deposit fee (in tokens)
         uint256 feeAmount = _calculateFeeAmount(amount, depositFeeBasisPoints);
@@ -173,8 +176,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
         }
 
         // Transfer public tokens
-        bool success = token.transfer(msg.sender, amountAfterFee);
-        if (!success) revert TokenTransferFailed();
+        token.safeTransfer(msg.sender, amountAfterFee);
 
         emit Withdraw(msg.sender, amount, amountAfterFee);
     }
@@ -196,14 +198,13 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
         accumulatedFees -= amount;
 
         // Transfer public ERC20 tokens
-        bool success = token.transfer(to, amount);
-        if (!success) revert TokenTransferFailed();
+        token.safeTransfer(to, amount);
 
         emit FeesWithdrawn(to, amount);
     }
 
     /**
-     * @dev Rescue ERC20 tokens sent to the contract
+     * @dev Rescue ERC20 tokens sent to the contract (excluding bridge and private tokens)
      */
     function rescueERC20(
         address _token,
@@ -212,8 +213,8 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
     ) external onlyOwner {
         if (to == address(0)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
+        if (_token == address(token) || _token == address(privateToken)) revert CannotRescueBridgeToken();
 
-        bool success = IERC20(_token).transfer(to, amount);
-        if (!success) revert TokenTransferFailed();
+        IERC20(_token).safeTransfer(to, amount);
     }
 }
