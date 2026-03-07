@@ -231,6 +231,7 @@ abstract contract PrivateERC20 is
         uint256 amount,
         bytes calldata data
     ) public virtual override nonReentrant returns (bool) {
+        if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         if (to.code.length == 0) revert TransferAndCallRequiresContract(to);
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
 
@@ -252,6 +253,7 @@ abstract contract PrivateERC20 is
         itUint256 calldata amount,
         bytes calldata data
     ) public virtual override nonReentrant returns (gtBool) {
+        if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         if (to.code.length == 0) revert TransferAndCallRequiresContract(to);
 
         gtUint256 gtAmount = MpcCore.validateCiphertext(amount);
@@ -274,9 +276,16 @@ abstract contract PrivateERC20 is
             super.supportsInterface(interfaceId);
     }
 
+    /**
+     * @dev Returns the encryption address set for `account` for balance reencryption.
+     *
+     * Requirements:
+     * - `account` must not be the zero address.
+     */
     function accountEncryptionAddress(
         address account
     ) public view returns (address) {
+        if (account == address(0)) revert ERC20InvalidReceiver(address(0));
         return _accountEncryptionAddress[account];
     }
 
@@ -473,6 +482,7 @@ abstract contract PrivateERC20 is
         address spender,
         itUint256 calldata value
     ) public virtual override returns (bool) {
+        if (spender == address(0)) revert ERC20InvalidSpender(address(0));
         address owner = _msgSender();
 
         gtUint256 gtValue = MpcCore.validateCiphertext(value);
@@ -487,6 +497,7 @@ abstract contract PrivateERC20 is
         address spender,
         gtUint256 value
     ) public virtual override returns (bool) {
+        if (spender == address(0)) revert ERC20InvalidSpender(address(0));
         address owner = _msgSender();
 
         _approve(owner, spender, value);
@@ -499,6 +510,7 @@ abstract contract PrivateERC20 is
         address spender,
         uint256 value
     ) public virtual override returns (bool) {
+        if (spender == address(0)) revert ERC20InvalidSpender(address(0));
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         address owner = _msgSender();
 
