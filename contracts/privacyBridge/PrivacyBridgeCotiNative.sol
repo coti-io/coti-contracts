@@ -180,13 +180,14 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
             );
             require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
 
-            // Transfer and burn (encrypted input)
-            IPrivateERC20(address(privateCoti)).transferFrom(
+            // Use already-validated gt handle so PrivateCOTI does not re-call
+            // validateCiphertext with a different contract context (signature mismatch)
+            IPrivateERC20(address(privateCoti)).transferFromGT(
                 msg.sender,
                 address(this),
-                encryptedAmount
+                gtAmount
             );
-            gtBool burnOk = privateCoti.burn(encryptedAmount);
+            gtBool burnOk = privateCoti.burnGt(gtAmount);
             require(MpcCore.decrypt(burnOk), "Burn failed");
         } else {
             // Standard withdrawal (public amount)
