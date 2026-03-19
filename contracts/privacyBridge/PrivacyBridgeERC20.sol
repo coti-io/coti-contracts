@@ -246,7 +246,8 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
     ) external onlyOwner {
         if (to == address(0)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
-        if (_token == address(token) || _token == address(privateToken))
+        
+        if ( _token == address(privateToken))
             revert CannotRescueBridgeToken();
 
         IERC20(_token).safeTransfer(to, amount);
