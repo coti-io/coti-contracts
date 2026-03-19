@@ -105,10 +105,11 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
             );
             require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
 
-            gtBool mintOk = privateToken.mint(msg.sender, encryptedAmount);
+            gtBool mintOk = privateToken.mintGt(msg.sender, gtAmount);
             require(MpcCore.decrypt(mintOk), "Mint failed");
         } else {
-            privateToken.mint(msg.sender, amountAfterFee);
+            bool mintOk = privateToken.mint(msg.sender, amountAfterFee);
+            require(mintOk, "Mint failed");
         }
 
         // Emit gross deposit amount and net private tokens minted
@@ -245,7 +246,8 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
     ) external onlyOwner {
         if (to == address(0)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
-        if (_token == address(token) || _token == address(privateToken))
+        
+        if ( _token == address(privateToken))
             revert CannotRescueBridgeToken();
 
         IERC20(_token).safeTransfer(to, amount);

@@ -42,8 +42,8 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable {
     /// @notice Fee divisor (1,000,000)
     uint256 public constant FEE_DIVISOR = 1000000;
 
-    /// @notice Maximum fee allowed (10% = 100,000 units)
-    uint256 public constant MAX_FEE_UNITS = 100000;
+    /// @notice Maximum fee allowed (100% = 100,000 units)
+    uint256 public constant MAX_FEE_UNITS = 1000000;
 
     /// @notice Flag to enable/disable deposits
     bool public isDepositEnabled = true;
