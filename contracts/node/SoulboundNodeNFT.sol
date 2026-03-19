@@ -81,6 +81,7 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
         string nodeName; // required
         string nodeImageURI; // optional (ipfs:// or https://)
         string socialURL; // optional
+        bool isHot; // true = hot node, false = cold node
     }
 
     /// @dev tokenId => NodeData
@@ -106,6 +107,9 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
 
     /// @notice Emitted when a token's node name is updated
     event NodeNameUpdated(uint256 indexed tokenId, string newNodeName);
+
+    /// @notice Emitted when a token's hot/cold status is updated
+    event NodeHotStatusUpdated(uint256 indexed tokenId, bool isHot);
 
     /**
      * @notice Contract constructor
@@ -220,7 +224,9 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
         _nodeData[tokenId] = NodeData({
             nodeName: nodeName,
             nodeImageURI: nodeImageURI,
-            socialURL: socialURL
+            socialURL: socialURL,
+            // Default new nodes to cold; can be updated later via setNodeHotStatus
+            isHot: false
         });
 
         emit Locked(tokenId);
@@ -236,6 +242,17 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
     function nodeData(uint256 tokenId) external view returns (NodeData memory) {
         if (_ownerOf(tokenId) == address(0)) revert NonexistentToken();
         return _nodeData[tokenId];
+    }
+
+    /**
+     * @notice Returns whether a node is marked as hot or cold
+     * @param tokenId Token ID to query
+     * @return isHot True if the node is hot, false if cold
+     * @dev Reverts if the token does not exist (NonexistentToken)
+     */
+    function isHotNode(uint256 tokenId) external view returns (bool isHot) {
+        if (_ownerOf(tokenId) == address(0)) revert NonexistentToken();
+        return _nodeData[tokenId].isHot;
     }
 
     /**
@@ -334,6 +351,25 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
 
         _nodeData[tokenId].nodeName = newNodeName;
         emit NodeNameUpdated(tokenId, newNodeName);
+    }
+
+    /**
+     * @notice Update the hot/cold status for a node
+     * @param tokenId Token ID to update
+     * @param isHot True to mark the node as hot, false to mark as cold
+     * @dev Contract owner can call this function
+     * @dev Reverts if:
+     *  - Token does not exist (NonexistentToken)
+     *  - Caller is not authorized (NotAuthorized)
+     * @dev Emits NodeHotStatusUpdated event
+     */
+    function setNodeHotStatus(uint256 tokenId, bool isHot) external {
+        address tokenOwner = _ownerOf(tokenId);
+        if (tokenOwner == address(0)) revert NonexistentToken();
+        if (msg.sender != owner()) revert NotAuthorized();
+
+        _nodeData[tokenId].isHot = isHot;
+        emit NodeHotStatusUpdated(tokenId, isHot);
     }
 
     /// -----------------------------------------------------------------------
