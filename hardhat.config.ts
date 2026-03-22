@@ -1,8 +1,11 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-verify";
 
 import dotenv from "dotenv"
 dotenv.config()
+
+const accounts = process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [];
 
 const config: HardhatUserConfig = {
   defaultNetwork: "coti-testnet",
@@ -41,11 +44,37 @@ const config: HardhatUserConfig = {
     "coti-testnet": {
       url: "https://testnet.coti.io/rpc",
       chainId: 7082400,
+      accounts,
     },
     "coti-mainnet": {
       url: "https://mainnet.coti.io/rpc",
       chainId: 2632500,
+      accounts,
     },
+  },
+  etherscan: {
+    apiKey: {
+      "coti-testnet": "placeholder",
+      "coti-mainnet": "placeholder",
+    },
+    customChains: [
+      {
+        network: "coti-testnet",
+        chainId: 7082400,
+        urls: {
+          apiURL: "https://testnet.cotiscan.io/api",
+          browserURL: "https://testnet.cotiscan.io/",
+        },
+      },
+      {
+        network: "coti-mainnet",
+        chainId: 2632500,
+        urls: {
+          apiURL: "https://cotiscan.io/api",
+          browserURL: "https://cotiscan.io/",
+        },
+      },
+    ],
   },
   mocha: {
     timeout: 100000000
