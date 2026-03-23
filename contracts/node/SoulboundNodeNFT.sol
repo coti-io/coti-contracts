@@ -225,8 +225,8 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
             nodeName: nodeName,
             nodeImageURI: nodeImageURI,
             socialURL: socialURL,
-            // Default new nodes to cold; can be updated later via setNodeHotStatus
-            isHot: false
+            // Default new nodes to hot; can be updated later via setNodeHotStatus
+            isHot: true
         });
 
         emit Locked(tokenId);
