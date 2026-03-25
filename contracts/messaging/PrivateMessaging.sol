@@ -4,7 +4,6 @@ pragma solidity ^0.8.19;
 import "../utils/mpc/MpcCore.sol";
 
 contract PrivateMessaging {
-    error NotOwner();
     error InvalidEpochDuration();
     error InvalidRecipient();
     error MessageNotFound();
@@ -27,7 +26,6 @@ contract PrivateMessaging {
     );
     event RewardFunded(uint256 indexed epoch, address indexed funder, uint256 amount);
     event RewardClaimed(uint256 indexed epoch, address indexed agent, uint256 amount);
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     struct MessageRecord {
         bool exists;
@@ -51,7 +49,6 @@ contract PrivateMessaging {
     uint8 public constant MAX_CHUNK_CELLS = 3;
     uint32 public constant MAX_CHUNKS_PER_MESSAGE = 64;
 
-    address public owner;
     uint64 public immutable epochDuration;
     uint64 public immutable genesisTimestamp;
 
@@ -71,23 +68,13 @@ contract PrivateMessaging {
     mapping(uint256 => uint256) public epochClaimedUsageUnits;
     mapping(uint256 => mapping(address => bool)) public epochHasClaimed;
 
-    modifier onlyOwner() {
-        if (msg.sender != owner) {
-            revert NotOwner();
-        }
-        _;
-    }
-
     constructor(uint64 epochDurationSeconds) payable {
         if (epochDurationSeconds == 0) {
             revert InvalidEpochDuration();
         }
 
-        owner = msg.sender;
         epochDuration = epochDurationSeconds;
         genesisTimestamp = uint64(block.timestamp);
-
-        emit OwnershipTransferred(address(0), msg.sender);
 
         if (msg.value > 0) {
             _fundEpoch(currentEpoch(), msg.sender, msg.value);
@@ -96,15 +83,6 @@ contract PrivateMessaging {
 
     receive() external payable {
         _fundEpoch(currentEpoch(), msg.sender, msg.value);
-    }
-
-    function transferOwnership(address newOwner) external onlyOwner {
-        if (newOwner == address(0)) {
-            revert InvalidRecipient();
-        }
-
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
     }
 
     function currentEpoch() public view returns (uint256) {
