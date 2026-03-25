@@ -233,7 +233,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
     function withdrawFees(
         address to,
         uint256 amount
-    ) external override onlyOwner {
+    ) external override onlyOperator {
         if (to == address(0)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
         if (amount > accumulatedFees) revert InsufficientAccumulatedFees();
