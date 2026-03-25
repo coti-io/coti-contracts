@@ -57,7 +57,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
             );
             require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
 
-            gtBool mintOk = privateCoti.mint(sender, encryptedAmount);
+            gtBool mintOk = privateCoti.mintGt(sender, gtAmount);
             require(MpcCore.decrypt(mintOk), "Mint failed");
         } else {
             privateCoti.mint(sender, amountAfterFee);
