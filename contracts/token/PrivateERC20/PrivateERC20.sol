@@ -582,10 +582,10 @@ abstract contract PrivateERC20 is
             );
         }
 
+        _spendAllowance(from, spender, gtValue);
+
         gtBool success = _transfer(from, to, gtValue);
         require(MpcCore.decrypt(success), "ERC20: transfer failed");
-
-        _spendAllowance(from, spender, gtValue);
 
         return success;
     }
@@ -610,10 +610,10 @@ abstract contract PrivateERC20 is
             );
         }
 
+        _spendAllowance(from, spender, value);
+
         gtBool success = _transfer(from, to, value);
         require(MpcCore.decrypt(success), "ERC20: transfer failed");
-
-        _spendAllowance(from, spender, value);
 
         return success;
     }
@@ -642,10 +642,10 @@ abstract contract PrivateERC20 is
             );
         }
 
+        _spendAllowance(from, spender, gtValue);
+
         gtBool success = _transfer(from, to, gtValue);
         require(MpcCore.decrypt(success), "ERC20: transfer failed");
-
-        _spendAllowance(from, spender, gtValue);
 
         return true;
     }
