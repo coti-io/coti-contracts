@@ -20,8 +20,6 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
 
     event OperatorAdded(address indexed account, address indexed by);
     event OperatorRemoved(address indexed account, address indexed by);
-    event DepositEnabledUpdated(bool enabled, address indexed by);
-    event NativeCotiFeeUpdated(uint256 fee, address indexed by);
 
     /// @notice Maximum amount that can be deposited in a single transaction
     uint256 public maxDepositAmount;
@@ -50,8 +48,8 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     /// @notice Fee divisor (1,000,000)
     uint256 public constant FEE_DIVISOR = 1000000;
 
-    /// @notice Maximum fee allowed (10% = 100,000 units)
-    uint256 public constant MAX_FEE_UNITS = 100000;
+    /// @notice Maximum fee allowed (100% = 100,000 units)
+    uint256 public constant MAX_FEE_UNITS = 1000000;
 
     /// @notice Flag to enable/disable deposits
     bool public isDepositEnabled = true;
@@ -65,7 +63,6 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     error InvalidAddress();
     error DepositDisabled();
     error InsufficientCotiFee();
-    error BridgePaused();
 
     // Limits errors
     error InvalidLimitConfiguration();
@@ -75,7 +72,6 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     error WithdrawExceedsMaximum();
     error InvalidFee();
     error InsufficientAccumulatedFees();
-    error WithdrawFeesMustBeOverridden();
 
     /// @notice Emitted when a user deposits tokens
     /// @param user        Address of the user
@@ -100,8 +96,14 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     /// @notice Emitted when fees are updated
     event FeeUpdated(string feeType, uint256 newFeeBasisPoints);
 
+    /// @notice Emitted when deposit enabled state changes
+    event DepositEnabledUpdated(bool enabled);
+
     /// @notice Emitted when accumulated fees are withdrawn
     event FeesWithdrawn(address indexed to, uint256 amount);
+
+    /// @notice Emitted when accumulated native COTI fees are withdrawn
+    event CotiFeesWithdrawn(address indexed to, uint256 amount);
 
     constructor() Ownable() {
         maxDepositAmount = type(uint256).max;
@@ -139,12 +141,12 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
      */
     function transferOwnership(address newOwner) public override onlyOwner {
         if (newOwner == address(0)) revert InvalidAddress();
-        address oldOwner = owner();
+        address previousOwner = owner();
         super.transferOwnership(newOwner);
         _grantRole(DEFAULT_ADMIN_ROLE, newOwner);
         _grantRole(OPERATOR_ROLE, newOwner);
-        _revokeRole(DEFAULT_ADMIN_ROLE, oldOwner);
-        _revokeRole(OPERATOR_ROLE, oldOwner);
+        _revokeRole(DEFAULT_ADMIN_ROLE, previousOwner);
+        _revokeRole(OPERATOR_ROLE, previousOwner);
     }
 
     /**
@@ -214,8 +216,29 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     }
 
     /**
+     * @notice Validate all deposit pre-conditions
+     * @param amount The deposit amount to validate
+     * @dev Checks deposit-enabled flag, zero amount, and deposit limits
+     */
+    function _validateDeposit(uint256 amount) internal view {
+        if (!isDepositEnabled) revert DepositDisabled();
+        if (amount == 0) revert AmountZero();
+        _checkDepositLimits(amount);
+    }
+
+    /**
+     * @notice Validate all withdraw pre-conditions
+     * @param amount The withdrawal amount to validate
+     * @dev Checks zero amount and withdrawal limits
+     */
+    function _validateWithdraw(uint256 amount) internal view {
+        if (amount == 0) revert AmountZero();
+        _checkWithdrawLimits(amount);
+    }
+
+    /**
      * @notice Set the deposit fee
-     * @param _feeBasisPoints New deposit fee in fee units (max 100,000 = 10%)
+     * @param _feeBasisPoints New deposit fee in basis points (max 100,000 = 10%)
      * @dev Only the operator can call this function
      */
     function setDepositFee(uint256 _feeBasisPoints) external onlyOperator {
@@ -226,7 +249,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
 
     /**
      * @notice Set the withdrawal fee
-     * @param _feeBasisPoints New withdrawal fee in fee units (max 100,000 = 10%)
+     * @param _feeBasisPoints New withdrawal fee in basis points (max 10% = 100,000)
      * @dev Only the operator can call this function
      */
     function setWithdrawFee(uint256 _feeBasisPoints) external onlyOperator {
@@ -242,7 +265,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
      */
     function setIsDepositEnabled(bool _enabled) external onlyOperator {
         isDepositEnabled = _enabled;
-        emit DepositEnabledUpdated(_enabled, msg.sender);
+        emit DepositEnabledUpdated(_enabled);
     }
 
     /**
@@ -250,21 +273,10 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
      * @param _fee Amount in native tokens (wei-equivalent)
      * @dev Used by ERC20 bridges: they require msg.value >= this value and refund excess to the caller (best-effort). Only the operator can call this function.
      */
-    function setNativeCotiFee(uint256 _fee) external onlyOperator {
+    function setNativeCotiFee(uint256 _fee) external virtual onlyOperator {
         nativeCotiFee = _fee;
-        emit NativeCotiFeeUpdated(_fee, msg.sender);
+        emit FeeUpdated("nativeCoti", _fee);
     }
-
-    /**
-     * @notice Deposit preflight checks (for derived contracts)
-     * @dev Enforces pause state, deposit toggle, and amount limits.
-     */
-    function _preflightDeposit(uint256 amount) internal view {
-        if (paused()) revert BridgePaused();
-        if (!isDepositEnabled) revert DepositDisabled();
-        _checkDepositLimits(amount);
-    }
-
 
     /**
      * @notice Calculate fee amount based on the input amount and fee basis points
@@ -284,18 +296,12 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
      * @notice Withdraw accumulated fees
      * @param to Address to send the fees to
      * @param amount Amount of fees to withdraw
-     * @dev Only the operator can call this function. Must be overridden in derived contracts
-     *      to perform the actual token/native transfer; base implementation reverts.
+     * @dev Must be implemented by derived contracts to perform the actual transfer.
      */
     function withdrawFees(
         address to,
         uint256 amount
-    ) external virtual onlyOperator {
-        if (to == address(0)) revert InvalidAddress();
-        if (amount == 0) revert AmountZero();
-        if (amount > accumulatedFees) revert InsufficientAccumulatedFees();
-        revert WithdrawFeesMustBeOverridden();
-    }
+    ) external virtual;
 
     /**
      * @notice Withdraw accumulated native COTI fees
@@ -314,5 +320,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
 
         (bool success, ) = to.call{value: amount}("");
         if (!success) revert EthTransferFailed();
+
+        emit CotiFeesWithdrawn(to, amount);
     }
 }

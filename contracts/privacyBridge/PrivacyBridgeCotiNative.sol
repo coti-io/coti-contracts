@@ -14,6 +14,9 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
     PrivateCOTI public privateCoti;
 
     error ExceedsRescueableAmount();
+    error NativeCotiFeeNotApplicable();
+
+    event NativeRescued(address indexed to, uint256 amount);
 
     // Scaling factor removed (using native 18 decimals due to uint256 upgrade)
 
@@ -35,10 +38,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
         bool isEncrypted,
         itUint256 memory encryptedAmount
     ) internal {
-        if (!isDepositEnabled) revert DepositDisabled();
-        if (msg.value == 0) revert AmountZero();
-
-        _checkDepositLimits(msg.value);
+        _validateDeposit(msg.value);
 
         // Calculate and deduct deposit fee
         uint256 feeAmount = _calculateFeeAmount(
@@ -104,9 +104,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
         bytes calldata
     ) external nonReentrant whenNotPaused returns (bool) {
         if (msg.sender != address(privateCoti)) revert InvalidAddress();
-        if (amount == 0) revert AmountZero();
-
-        _checkWithdrawLimits(amount);
+        _validateWithdraw(amount);
 
         // Calculate fee
         uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
@@ -160,8 +158,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
         bool isEncrypted,
         itUint256 memory encryptedAmount
     ) internal {
-        if (amount == 0) revert AmountZero();
-        _checkWithdrawLimits(amount);
+        _validateWithdraw(amount);
 
         // Calculate fee on the public side
         uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
@@ -182,20 +179,22 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
 
             // Use already-validated gt handle so PrivateCOTI does not re-call
             // validateCiphertext with a different contract context (signature mismatch)
-            IPrivateERC20(address(privateCoti)).transferFromGT(
+            gtBool transferOk = IPrivateERC20(address(privateCoti)).transferFromGT(
                 msg.sender,
                 address(this),
                 gtAmount
             );
+            require(MpcCore.decrypt(transferOk), "Transfer failed");
             gtBool burnOk = privateCoti.burnGt(gtAmount);
             require(MpcCore.decrypt(burnOk), "Burn failed");
         } else {
             // Standard withdrawal (public amount)
-            IPrivateERC20(address(privateCoti)).transferFrom(
+            bool transferOk = IPrivateERC20(address(privateCoti)).transferFrom(
                 msg.sender,
                 address(this),
                 amount
             );
+            require(transferOk, "Transfer failed");
             privateCoti.burn(amount);
         }
 
@@ -233,7 +232,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
     function withdrawFees(
         address to,
         uint256 amount
-    ) external override onlyOperator {
+    ) external override onlyOperator nonReentrant {
         if (to == address(0)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
         if (amount > accumulatedFees) revert InsufficientAccumulatedFees();
@@ -257,7 +256,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
      * @param amount Amount of coins to rescue
      * @notice Only the owner can call this function
      */
-    function rescueNative(address to, uint256 amount) external onlyOwner {
+    function rescueNative(address to, uint256 amount) external onlyOwner nonReentrant {
         if (to == address(0)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
         if (amount > address(this).balance) revert InsufficientEthBalance();
@@ -266,5 +265,15 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
 
         (bool success, ) = to.call{value: amount}("");
         if (!success) revert EthTransferFailed();
+
+        emit NativeRescued(to, amount);
+    }
+
+    /**
+     * @notice Set the native COTI fee
+     * @dev Native bridge does not use nativeCotiFee; always reverts.
+     */
+    function setNativeCotiFee(uint256) external pure override {
+        revert NativeCotiFeeNotApplicable();
     }
 }
