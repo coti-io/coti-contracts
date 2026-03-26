@@ -20,6 +20,8 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
 
     event OperatorAdded(address indexed account, address indexed by);
     event OperatorRemoved(address indexed account, address indexed by);
+    event DepositEnabledUpdated(bool enabled, address indexed by);
+    event NativeCotiFeeUpdated(uint256 fee, address indexed by);
 
     /// @notice Maximum amount that can be deposited in a single transaction
     uint256 public maxDepositAmount;
@@ -48,8 +50,8 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     /// @notice Fee divisor (1,000,000)
     uint256 public constant FEE_DIVISOR = 1000000;
 
-    /// @notice Maximum fee allowed (100% = 100,000 units)
-    uint256 public constant MAX_FEE_UNITS = 1000000;
+    /// @notice Maximum fee allowed (10% = 100,000 units)
+    uint256 public constant MAX_FEE_UNITS = 100000;
 
     /// @notice Flag to enable/disable deposits
     bool public isDepositEnabled = true;
@@ -63,6 +65,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     error InvalidAddress();
     error DepositDisabled();
     error InsufficientCotiFee();
+    error BridgePaused();
 
     // Limits errors
     error InvalidLimitConfiguration();
@@ -136,9 +139,12 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
      */
     function transferOwnership(address newOwner) public override onlyOwner {
         if (newOwner == address(0)) revert InvalidAddress();
+        address oldOwner = owner();
         super.transferOwnership(newOwner);
         _grantRole(DEFAULT_ADMIN_ROLE, newOwner);
         _grantRole(OPERATOR_ROLE, newOwner);
+        _revokeRole(DEFAULT_ADMIN_ROLE, oldOwner);
+        _revokeRole(OPERATOR_ROLE, oldOwner);
     }
 
     /**
@@ -209,7 +215,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
 
     /**
      * @notice Set the deposit fee
-     * @param _feeBasisPoints New deposit fee in basis points (max 100,000 = 10%)
+     * @param _feeBasisPoints New deposit fee in fee units (max 100,000 = 10%)
      * @dev Only the operator can call this function
      */
     function setDepositFee(uint256 _feeBasisPoints) external onlyOperator {
@@ -220,7 +226,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
 
     /**
      * @notice Set the withdrawal fee
-     * @param _feeBasisPoints New withdrawal fee in basis points (max 10% = 100,000)
+     * @param _feeBasisPoints New withdrawal fee in fee units (max 100,000 = 10%)
      * @dev Only the operator can call this function
      */
     function setWithdrawFee(uint256 _feeBasisPoints) external onlyOperator {
@@ -236,6 +242,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
      */
     function setIsDepositEnabled(bool _enabled) external onlyOperator {
         isDepositEnabled = _enabled;
+        emit DepositEnabledUpdated(_enabled, msg.sender);
     }
 
     /**
@@ -245,7 +252,19 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
      */
     function setNativeCotiFee(uint256 _fee) external onlyOperator {
         nativeCotiFee = _fee;
+        emit NativeCotiFeeUpdated(_fee, msg.sender);
     }
+
+    /**
+     * @notice Deposit preflight checks (for derived contracts)
+     * @dev Enforces pause state, deposit toggle, and amount limits.
+     */
+    function _preflightDeposit(uint256 amount) internal view {
+        if (paused()) revert BridgePaused();
+        if (!isDepositEnabled) revert DepositDisabled();
+        _checkDepositLimits(amount);
+    }
+
 
     /**
      * @notice Calculate fee amount based on the input amount and fee basis points
@@ -285,7 +304,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
      * @dev Only the operator can call this function. Derived ERC20 bridges use this inherited implementation to withdraw
      *      accumulated native COTI fees; native bridge does not use this (accumulatedCotiFees remains 0).
      */
-    function withdrawCotiFees(address to, uint256 amount) external onlyOperator {
+    function withdrawCotiFees(address to, uint256 amount) external onlyOperator nonReentrant {
         if (to == address(0)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
         if (amount > accumulatedCotiFees) revert InsufficientAccumulatedFees();
