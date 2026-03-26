@@ -917,7 +917,6 @@ abstract contract PrivateERC20 is
         address spender,
         gtUint256 value
     ) internal virtual {
-        gtUint256 currentBalance = _safeOnboard(_balances[owner].ciphertext);
         gtUint256 currentAllowance = _safeOnboard(
             _allowances[owner][spender].ciphertext
         );
@@ -926,16 +925,14 @@ abstract contract PrivateERC20 is
             currentAllowance,
             MpcCore.setPublic256(MAX_UINT_256)
         );
-        gtBool insufficientBalance = MpcCore.lt(currentBalance, value);
         gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, value);
 
         gtUint256 newAllowance = MpcCore.mux(
-            MpcCore.or(
-                maxAllowance,
-                MpcCore.or(insufficientBalance, inSufficientAllowance)
-            ),
-            MpcCore.sub(currentAllowance, value),
-            currentAllowance
+            // If allowance is infinite, do not decrease it.
+            // If allowance is insufficient (should be prevented by transferFrom checks), do not decrease it.
+            MpcCore.or(maxAllowance, inSufficientAllowance),
+            currentAllowance,
+            MpcCore.sub(currentAllowance, value)
         );
 
         _approve(owner, spender, newAllowance);
