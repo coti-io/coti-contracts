@@ -26,6 +26,7 @@ Trust assumptions (deploy only when these hold):
   allows precompile upgrades, consider monitoring or circuit-breakers.
 - MINTER_ROLE must only pass valid amounts to mint/mintGt/mint(itUint256). If the MPC layer
   enforces bounds or validity, that dependency applies.
+- Minting is bounded by {supplyCap} (override in concrete tokens like {decimals}); enforced in {_update}.
 - Encrypted/GT variants (transfer, burn, mint with itUint256/gtUint256) return success as gtBool
   and do not revert; callers must check or decrypt the return value. Integrators should use
   helpers that revert on failure when appropriate.
@@ -169,6 +170,14 @@ abstract contract PrivateERC20 is
     }
 
     /**
+     * @dev Maximum aggregate supply that may exist from minting (enforced in {_update} against encrypted total).
+     *      Override in concrete tokens with a fixed cap; default is `type(uint256).max` (bounded only by uint256 overflow checks).
+     */
+    function supplyCap() public view virtual returns (uint256) {
+        return type(uint256).max;
+    }
+
+    /**
      * @dev See {IPrivateERC20-totalSupply}.
      *      For privacy, always returns 0; aggregate supply is not exposed on-chain by default so
      *      holder amounts stay private. Integrators: use for display only; do not rely on this for
@@ -178,6 +187,8 @@ abstract contract PrivateERC20 is
      *      maintaining an encrypted total and exposing it via reencryption to a designated owner or
      *      role—if they wish to track total supply off the public path. That is not enabled here
      *      by default.
+     *
+     *      For the configured mint ceiling, see {supplyCap}; minting enforces it against the encrypted total in storage.
      */
     function totalSupply() public view virtual override returns (uint256) {
         return 0;
@@ -696,7 +707,7 @@ abstract contract PrivateERC20 is
      * this function.
      *
      * Storage and {Transfer} are updated only when the MPC operation succeeds (transfer success bit, or mint
-     * add without overflow). On failure, balances and aggregate supply are unchanged and no event is emitted.
+     * add without overflow and within {supplyCap}). On failure, balances and aggregate supply are unchanged and no event is emitted.
      */
     function _update(
         address from,
@@ -710,19 +721,25 @@ abstract contract PrivateERC20 is
 
         if (from == address(0)) {
             gtUint256 currentBalance = _getBalance(to);
-            gtBool overflow;
-            (overflow, newToBalance) = MpcCore.checkedAddWithOverflowBit(
+            gtBool balanceOverflow;
+            (balanceOverflow, newToBalance) = MpcCore.checkedAddWithOverflowBit(
                 currentBalance,
                 value
             );
-            result = MpcCore.not(overflow);
+            gtBool balanceOk = MpcCore.not(balanceOverflow);
+
+            gtUint256 totalSupply_ = _safeOnboard(_totalSupply);
+            (gtBool supplyOverflow, gtUint256 newTotalSupply) = MpcCore.checkedAddWithOverflowBit(
+                totalSupply_,
+                value
+            );
+            gtBool supplyOk = MpcCore.not(supplyOverflow);
+            gtBool withinCap = MpcCore.le(newTotalSupply, supplyCap());
+
+            result = MpcCore.and(balanceOk, MpcCore.and(supplyOk, withinCap));
             ok = MpcCore.decrypt(result);
             if (ok) {
-                gtUint256 totalSupply_ = _safeOnboard(_totalSupply);
-
-                totalSupply_ = MpcCore.add(totalSupply_, value);
-
-                _totalSupply = MpcCore.offBoard(totalSupply_);
+                _totalSupply = MpcCore.offBoard(newTotalSupply);
 
                 _updateBalance(to, newToBalance);
             }
