@@ -763,7 +763,11 @@ abstract contract PrivateERC20 is
             }
         } else {
             gtUint256 fromBalance = _getBalance(from);
-            gtUint256 toBalance = _getBalance(to);
+            // Burn (`to == address(0)`): use canonical public zero as the sink balance. Do not read
+            // `_balances[address(0)]` — that slot must never affect burn accounting if it were ever corrupted.
+            gtUint256 toBalance = to == address(0)
+                ? MpcCore.setPublic256(0)
+                : _getBalance(to);
 
             gtUint256 newFromBalance;
 
