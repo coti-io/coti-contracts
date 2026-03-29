@@ -12,15 +12,15 @@ contract PrivateERC20WalletMock {
         return IPrivateERC20(token).setAccountEncryptionAddress(accountEncryptionAddress);
     }
 
-    function transfer(address token, address to, uint256 value) public returns (bool) {
-        return IPrivateERC20(token).transfer(to, value);
+    function transfer(address token, address to, uint256 value) public {
+        IPrivateERC20(token).transfer(to, value);
     }
 
-    function approve(address token, address spender, uint256 value) public returns (bool) {
-        return IPrivateERC20(token).approve(spender, value);
+    function approve(address token, address spender, uint256 value) public {
+        IPrivateERC20(token).approve(spender, value);
     }
 
-    function transferFrom(address token, address from, address to, uint256 value) public returns (bool) {
-        return IPrivateERC20(token).transferFrom(from, to, value);
+    function transferFrom(address token, address from, address to, uint256 value) public {
+        IPrivateERC20(token).transferFrom(from, to, value);
     }
 }

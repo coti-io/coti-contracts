@@ -57,8 +57,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
             );
             require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
 
-            gtBool mintOk = privateCoti.mintGt(sender, gtAmount);
-            require(MpcCore.decrypt(mintOk), "Mint failed");
+            privateCoti.mintGt(sender, gtAmount);
         } else {
             privateCoti.mint(sender, amountAfterFee);
         }
@@ -187,8 +186,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
                 address(this),
                 gtAmount
             );
-            gtBool burnOk = privateCoti.burnGt(gtAmount);
-            require(MpcCore.decrypt(burnOk), "Burn failed");
+            privateCoti.burnGt(gtAmount);
         } else {
             // Standard withdrawal (public amount)
             IPrivateERC20(address(privateCoti)).transferFrom(

@@ -105,11 +105,9 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
             );
             require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
 
-            gtBool mintOk = privateToken.mintGt(msg.sender, gtAmount);
-            require(MpcCore.decrypt(mintOk), "Mint failed");
+            privateToken.mintGt(msg.sender, gtAmount);
         } else {
-            bool mintOk = privateToken.mint(msg.sender, amountAfterFee);
-            require(mintOk, "Mint failed");
+            privateToken.mint(msg.sender, amountAfterFee);
         }
 
         // Emit gross deposit amount and net private tokens minted
@@ -185,14 +183,12 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
 
             // Use already-validated gt handle so PrivateERC20 does not re-call
             // validateCiphertext with a different contract context (signature mismatch)
-            gtBool transferOk = privateToken.transferFromGT(
+            privateToken.transferFromGT(
                 msg.sender,
                 address(this),
                 gtAmount
             );
-            require(MpcCore.decrypt(transferOk), "Transfer failed");
-            gtBool burnOk = privateToken.burnGt(gtAmount);
-            require(MpcCore.decrypt(burnOk), "Burn failed");
+            privateToken.burnGt(gtAmount);
         } else {
             // Standard withdrawal (public amount)
             privateToken.transferFrom(msg.sender, address(this), amount);

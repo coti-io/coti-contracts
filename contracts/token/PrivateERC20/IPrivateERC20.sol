@@ -6,6 +6,12 @@ import "../../utils/mpc/MpcCore.sol";
 
 /**
  * @dev Interface of the COTI Private ERC-20 standard.
+ *
+ * Failure semantics: implementations are expected to use a revert-on-failure model for
+ * balance/supply/allowance-changing operations. If the MPC layer reports failure for a core
+ * update, the call reverts unless otherwise noted. View/pure reads are not token "operations"
+ * in that sense. Encrypted boolean (`gtBool`) is not used as a return type on this interface;
+ * success is indicated by the transaction completing without revert.
  */
 interface IPrivateERC20 {
     struct Allowance {
@@ -98,34 +104,32 @@ interface IPrivateERC20 {
     /**
      * @dev Moves a `value` amount of tokens from the caller's account to `to`.
      *
-     * Returns an encrypted boolean value indicating whether the operation succeeded.
-     * Callers must check or decrypt the return value; this variant does not revert on failure.
+     * Reverts if the transfer does not succeed.
      *
      * Emits a {Transfer} event.
      */
     function transfer(
         address to,
         itUint256 calldata value
-    ) external returns (gtBool);
+    ) external;
 
     /**
      * @dev Moves a public `amount` of tokens from the caller's account to `to`.
      *
-     * Returns a boolean value indicating whether the operation succeeded.
+     * Reverts if the transfer does not succeed.
      *
      * Emits a {Transfer} event.
      */
-    function transfer(address to, uint256 amount) external returns (bool);
+    function transfer(address to, uint256 amount) external;
 
     /**
      * @dev Moves a garbled-text `value` amount of tokens from the caller's account to `to`.
      *
-     * Returns an encrypted boolean value indicating whether the operation succeeded.
-     * Callers must check or decrypt the return value; this variant does not revert on failure.
+     * Reverts if the transfer does not succeed.
      *
      * Emits a {Transfer} event.
      */
-    function transferGT(address to, gtUint256 value) external returns (gtBool);
+    function transferGT(address to, gtUint256 value) external;
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
@@ -152,7 +156,7 @@ interface IPrivateERC20 {
      * @dev Sets a `value` amount of tokens as the allowance of `spender` over the
      * caller's tokens.
      *
-     * Returns an encrypted boolean value indicating whether the operation succeeded.
+     * Reverts if approval cannot be completed.
      *
      * IMPORTANT: Beware that changing an allowance with this method brings the risk
      * that someone may use both the old and the new allowance by unfortunate
@@ -166,13 +170,11 @@ interface IPrivateERC20 {
     function approve(
         address spender,
         itUint256 calldata value
-    ) external returns (bool);
+    ) external;
 
     /**
      * @dev Sets a public `amount` as the allowance of `spender` over the
      * caller's tokens.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
      *
      * Reverts with {ERC20UnsafeApprove} if both the current allowance and `amount` are non-zero
      * (mitigation for the ERC-20 approve race). To change a non-zero allowance, first approve zero,
@@ -180,22 +182,24 @@ interface IPrivateERC20 {
      *
      * Emits an {Approval} event.
      */
-    function approve(address spender, uint256 amount) external returns (bool);
+    function approve(address spender, uint256 amount) external;
 
     /**
      * @dev Sets a garbled-text `value` as the allowance of `spender` over the
      * caller's tokens.
      *
+     * Reverts if approval cannot be completed.
+     *
      * Emits an {Approval} event.
      */
-    function approveGT(address spender, gtUint256 value) external returns (bool);
+    function approveGT(address spender, gtUint256 value) external;
 
     /**
      * @dev Moves a `value` amount of tokens from `from` to `to` using the
      * allowance mechanism. `value` is then deducted from the caller's
      * allowance.
      *
-     * Reverts if the transfer fails. On success, returns an encrypted true.
+     * Reverts if the transfer fails.
      *
      * Emits a {Transfer} event.
      */
@@ -203,41 +207,40 @@ interface IPrivateERC20 {
         address from,
         address to,
         itUint256 calldata value
-    ) external returns (gtBool);
+    ) external;
 
     /**
      * @dev Moves a public `amount` of tokens from `from` to `to` using the
      * allowance mechanism. `amount` is then deducted from the caller's
      * allowance.
      *
-     * Reverts if the transfer fails. Returns true on success.
+     * Reverts if the transfer fails.
      *
      * Emits a {Transfer} event.
      */
-    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+    function transferFrom(address from, address to, uint256 amount) external;
 
     /**
      * @dev Moves a garbled-text `value` amount of tokens from `from` to `to` using the
      * allowance mechanism. `value` is then deducted from the caller's allowance.
      *
-     * Reverts if the transfer fails. On success, returns an encrypted true.
+     * Reverts if the transfer fails.
      *
      * Emits a {Transfer} event.
      */
-    function transferFromGT(address from, address to, gtUint256 value) external returns (gtBool);
+    function transferFromGT(address from, address to, gtUint256 value) external;
 
     /**
      * @dev Moves a `value` amount of tokens from the caller's account to `to`, and then calls `onTokenReceived` on `to`.
      * @param to The address of the recipient
      * @param amount The amount of tokens to be transferred
      * @param data Additional data with no specified format, sent in call to `to`
-     * @return A boolean value indicating whether the operation succeeded
      */
     function transferAndCall(
         address to,
         uint256 amount,
         bytes calldata data
-    ) external returns (bool);
+    ) external;
 
     /**
      * @dev Moves an input-text (encrypted) `amount` of tokens from the caller's account to `to`,
@@ -247,55 +250,52 @@ interface IPrivateERC20 {
      * @param to The address of the recipient
      * @param amount Encrypted input-text amount to be transferred
      * @param data Additional data with no specified format, sent in call to `to`
-     * @return An encrypted boolean value indicating whether the operation succeeded
      */
     function transferAndCall(
         address to,
         itUint256 calldata amount,
         bytes calldata data
-    ) external returns (gtBool);
+    ) external;
 
     /**
      * @dev Creates `amount` public tokens and assigns them to `to`, increasing the total supply.
      *
-     * Returns a boolean value indicating whether the operation succeeded (decrypted from gtBool).
+     * Reverts if minting does not succeed.
      */
-    function mint(address to, uint256 amount) external returns (bool);
+    function mint(address to, uint256 amount) external;
 
     /**
      * @dev Creates `amount` input-text (encrypted) tokens and assigns them to `to`, increasing the total supply.
      *
-     * Returns an encrypted boolean value indicating whether the operation succeeded.
+     * Reverts if minting does not succeed.
      */
-    function mint(address to, itUint256 calldata amount) external returns (gtBool);
+    function mint(address to, itUint256 calldata amount) external;
 
     /**
      * @dev Creates `amount` garbled-text tokens and assigns them to `to` without re-wrapping.
      *
-     * Returns an encrypted boolean value indicating whether the operation succeeded.
+     * Reverts if minting does not succeed.
      */
-    function mintGt(address to, gtUint256 amount) external returns (gtBool);
+    function mintGt(address to, gtUint256 amount) external;
 
     /**
      * @dev Destroys `amount` public tokens from the caller.
      *
-     * Returns a boolean value indicating whether the operation succeeded (decrypted from gtBool).
+     * Reverts if burning does not succeed.
      */
-    function burn(uint256 amount) external returns (bool);
+    function burn(uint256 amount) external;
 
     /**
      * @dev Destroys `amount` input-text (encrypted) tokens from the caller.
      *
-     * Returns an encrypted boolean value indicating whether the operation succeeded.
-     * Callers must check or decrypt the return value; this variant does not revert on failure.
+     * Reverts if the burn fails.
      */
-    function burn(itUint256 calldata amount) external returns (gtBool);
+    function burn(itUint256 calldata amount) external;
 
     /**
      * @dev Destroys `amount` garbled-text tokens from the caller without re-wrapping.
      *
-     * Returns an encrypted boolean value indicating whether the operation succeeded.
-     * Callers must check or decrypt the return value; this variant does not revert on failure.
+     * Reverts if burning does not succeed.
      */
-    function burnGt(gtUint256 amount) external returns (gtBool);
+    function burnGt(gtUint256 amount) external;
 }

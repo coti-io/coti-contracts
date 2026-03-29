@@ -20,6 +20,14 @@ Key Features:
 - Payable Tokens with TransferAndCall (ERC677-like callback pattern)
 - Encrypted Operations (Mint, Burn, Transfer, Approve)
 
+Failure semantics (integrators and contract callers):
+- State-changing operations that move value or change supply/allowances are designed to follow a
+  revert-on-failure model: if the MPC layer reports that the core update did not succeed, the
+  transaction reverts (enforced in {_update} for mint/transfer/burn, and via explicit requires
+  where an operation composes multiple steps). Success is therefore implied by a completed call
+  that did not revert. Pure/view helpers and read paths that only return ciphertext or onboarded
+  values are not “success/failure” token operations in that sense.
+
 Trust assumptions (deploy only when these hold):
 - Deploy only on chains where the MPC precompile at address(0x64) is part of the trusted base.
   You explicitly trust that network: its consensus, node/precompile implementation, and upgrade
@@ -31,9 +39,6 @@ Trust assumptions (deploy only when these hold):
 - MINTER_ROLE must only pass valid amounts to mint/mintGt/mint(itUint256). If the MPC layer
   enforces bounds or validity, that dependency applies.
 - Minting is bounded by {supplyCap} (override in concrete tokens like {decimals}); enforced in {_update}.
-- Encrypted/GT variants (transfer, burn, mint with itUint256/gtUint256) return success as gtBool
-  and do not revert; callers must check or decrypt the return value. Integrators should use
-  helpers that revert on failure when appropriate.
 - Gas: multiple precompile calls per transfer/approve; no unbounded loops. Document expected
   gas ranges for common operations if needed for integrators.
 - Reentrancy: balance/allowance-changing entry points use nonReentrant so a transferAndCall
@@ -201,66 +206,58 @@ abstract contract PrivateERC20 is
     function mint(
         address to,
         uint256 amount
-    ) public virtual override onlyRole(MINTER_ROLE) nonReentrant returns (bool) {
+    ) public virtual override onlyRole(MINTER_ROLE) nonReentrant {
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
-        gtBool success = _mint(to, gtAmount);
-        require(MpcCore.decrypt(success), "ERC20: mint failed");
-
-        return true;
+        _mint(to, gtAmount);
     }
 
     /**
      * @dev Mint an already-garbled amount without re-wrapping.
      * Intended for contract-to-contract flows that already hold a gtUint256.
-     * Trust: MINTER_ROLE must only pass valid amounts. Does not revert on MPC failure;
-     * returns gtBool — callers must check or decrypt.
+     * Trust: MINTER_ROLE must only pass valid amounts. Reverts if {_update} reports MPC failure.
      */
     function mintGt(
         address to,
         gtUint256 gtAmount
-    ) public virtual onlyRole(MINTER_ROLE) nonReentrant returns (gtBool) {
+    ) public virtual override onlyRole(MINTER_ROLE) nonReentrant {
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
-        return _mint(to, gtAmount);
+        _mint(to, gtAmount);
     }
 
     /**
      * @dev Mint with encrypted (itUint256) amount.
-     * Trust: MINTER_ROLE must only pass valid amounts. Does not revert on MPC failure;
-     * returns gtBool — callers must check or decrypt.
+     * Trust: MINTER_ROLE must only pass valid amounts. Reverts if {_update} reports MPC failure.
      */
     function mint(
         address to,
         itUint256 calldata amount
-    ) public virtual override onlyRole(MINTER_ROLE) nonReentrant returns (gtBool) {
+    ) public virtual override onlyRole(MINTER_ROLE) nonReentrant {
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         gtUint256 gtAmount = MpcCore.validateCiphertext(amount);
-        return _mint(to, gtAmount);
+        _mint(to, gtAmount);
     }
 
-    function burn(uint256 amount) public virtual override nonReentrant returns (bool) {
+    function burn(uint256 amount) public virtual override nonReentrant {
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
-        gtBool success = _burn(_msgSender(), gtAmount);
-        require(MpcCore.decrypt(success), "ERC20: burn failed");
-
-        return true;
+        _burn(_msgSender(), gtAmount);
     }
 
     /**
      * @dev Burn an already-garbled amount without re-wrapping.
      * Intended for contract-to-contract flows that already hold a gtUint256.
-     * Returns encrypted success; callers must check or decrypt. Does not revert on failure.
+     * Reverts if {_update} reports MPC failure.
      */
-    function burnGt(gtUint256 gtAmount) public virtual nonReentrant returns (gtBool) {
-        return _burn(_msgSender(), gtAmount);
+    function burnGt(gtUint256 gtAmount) public virtual override nonReentrant {
+        _burn(_msgSender(), gtAmount);
     }
 
-    /// @dev Does not revert on failure; returns encrypted boolean. Callers must check or decrypt.
-    function burn(itUint256 calldata amount) public virtual override nonReentrant returns (gtBool) {
+    /// @dev Reverts if {_update} reports MPC failure.
+    function burn(itUint256 calldata amount) public virtual override nonReentrant {
         gtUint256 gtAmount = MpcCore.validateCiphertext(amount);
-        return _burn(_msgSender(), gtAmount);
+        _burn(_msgSender(), gtAmount);
     }
 
     /**
@@ -273,22 +270,19 @@ abstract contract PrivateERC20 is
         address to,
         uint256 amount,
         bytes calldata data
-    ) public virtual override nonReentrant returns (bool) {
+    ) public virtual override nonReentrant {
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         if (to.code.length == 0) revert TransferAndCallRequiresContract(to);
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
 
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
         address sender = _msgSender();
-        gtBool success = _transfer(sender, to, gtAmount);
-        bool ok = MpcCore.decrypt(success);
-        require(ok, "Transfer failed");
+        _transfer(sender, to, gtAmount);
 
         require(
             ITokenReceiver(to).onTokenReceived(sender, amount, data),
             "Callback failed"
         );
-        return ok;
     }
 
     /**
@@ -300,20 +294,18 @@ abstract contract PrivateERC20 is
         address to,
         itUint256 calldata amount,
         bytes calldata data
-    ) public virtual override nonReentrant returns (gtBool) {
+    ) public virtual override nonReentrant {
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         if (to.code.length == 0) revert TransferAndCallRequiresContract(to);
 
         gtUint256 gtAmount = MpcCore.validateCiphertext(amount);
         address sender = _msgSender();
-        gtBool success = _transfer(sender, to, gtAmount);
-        require(MpcCore.decrypt(success), "Transfer failed");
+        _transfer(sender, to, gtAmount);
 
         require(
             ITokenReceiver(to).onTokenReceived(sender, 0, data),
             "Callback failed"
         );
-        return success;
     }
 
     function supportsInterface(
@@ -405,47 +397,44 @@ abstract contract PrivateERC20 is
      * - `to` cannot be the zero address.
      * - the caller must have a balance of at least `value`.
      *
-     * Does not revert on failure; returns encrypted boolean. Callers must check or decrypt.
+     * Reverts if {_update} reports MPC failure. Success is implied by absence of revert.
      */
     /// @notice Transfer with encrypted (itUint256) amount
     function transfer(
         address to,
         itUint256 calldata value
-    ) public virtual override nonReentrant returns (gtBool) {
+    ) public virtual override nonReentrant {
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         address owner = _msgSender();
 
         gtUint256 gtValue = MpcCore.validateCiphertext(value);
 
-        return _transfer(owner, to, gtValue);
+        _transfer(owner, to, gtValue);
     }
 
-    /// @notice Transfer with garbled-text (gtUint256) amount. Does not revert on failure; returns encrypted boolean.
+    /// @notice Transfer with garbled-text (gtUint256) amount. Reverts if {_update} reports MPC failure.
     function transferGT(
         address to,
         gtUint256 value
-    ) public virtual override nonReentrant returns (gtBool) {
+    ) public virtual override nonReentrant {
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         address owner = _msgSender();
 
-        return _transfer(owner, to, value);
+        _transfer(owner, to, value);
     }
 
     /// @notice Transfer with plain public uint256 amount
     function transfer(
         address to,
         uint256 value
-    ) public virtual override nonReentrant returns (bool) {
+    ) public virtual override nonReentrant {
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         address owner = _msgSender();
 
         gtUint256 gtValue = MpcCore.setPublic256(value);
 
-        gtBool success = _transfer(owner, to, gtValue);
-        require(MpcCore.decrypt(success), "ERC20: transfer failed");
-
-        return true;
+        _transfer(owner, to, gtValue);
     }
 
     /**
@@ -497,7 +486,7 @@ abstract contract PrivateERC20 is
     function reencryptAllowance(
         address account,
         bool isSpender
-    ) public virtual nonReentrant returns (bool) {
+    ) public virtual nonReentrant {
         if (account == address(0)) revert ERC20InvalidReceiver(address(0));
         address encryptionAddress = _getAccountEncryptionAddress(_msgSender());
         if (encryptionAddress == address(0)) revert ERC20InvalidReceiver(address(0));
@@ -528,8 +517,6 @@ abstract contract PrivateERC20 is
         }
 
         emit AllowanceReencrypted(owner_, spender_, isSpender);
-
-        return true;
     }
 
     /**
@@ -546,7 +533,7 @@ abstract contract PrivateERC20 is
     function approve(
         address spender,
         itUint256 calldata value
-    ) public virtual override nonReentrant returns (bool) {
+    ) public virtual override nonReentrant  {
         if (spender == address(0)) revert ERC20InvalidSpender(address(0));
         address owner = _msgSender();
 
@@ -554,27 +541,25 @@ abstract contract PrivateERC20 is
 
         _approve(owner, spender, gtValue);
 
-        return true;
     }
 
     /// @notice Approve with garbled-text (gtUint256) amount
     function approveGT(
         address spender,
         gtUint256 value
-    ) public virtual override nonReentrant returns (bool) {
+    ) public virtual override nonReentrant {
         if (spender == address(0)) revert ERC20InvalidSpender(address(0));
         address owner = _msgSender();
 
         _approve(owner, spender, value);
 
-        return true;
     }
 
     /// @notice Approve with plain public uint256 amount
     function approve(
         address spender,
         uint256 value
-    ) public virtual override nonReentrant returns (bool) {
+    ) public virtual override nonReentrant {
         if (spender == address(0)) revert ERC20InvalidSpender(address(0));
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         address owner = _msgSender();
@@ -591,8 +576,6 @@ abstract contract PrivateERC20 is
         gtUint256 gtValue = MpcCore.setPublic256(value);
 
         _approve(owner, spender, gtValue);
-
-        return true;
     }
 
     /**
@@ -612,7 +595,7 @@ abstract contract PrivateERC20 is
         address from,
         address to,
         itUint256 calldata value
-    ) public virtual override nonReentrant returns (gtBool) {
+    ) public virtual override nonReentrant {
         if (from == address(0)) revert ERC20InvalidSender(address(0));
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         address spender = _msgSender();
@@ -630,11 +613,8 @@ abstract contract PrivateERC20 is
         }
 
         _spendAllowance(from, spender, gtValue);
-
-        gtBool success = _transfer(from, to, gtValue);
-        require(MpcCore.decrypt(success), "ERC20: transfer failed");
-
-        return success;
+    
+        _transfer(from, to, gtValue);
     }
 
     /// @notice transferFrom with garbled-text (gtUint256) amount
@@ -642,7 +622,7 @@ abstract contract PrivateERC20 is
         address from,
         address to,
         gtUint256 value
-    ) public virtual override nonReentrant returns (gtBool) {
+    ) public virtual override nonReentrant {
         if (from == address(0)) revert ERC20InvalidSender(address(0));
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         address spender = _msgSender();
@@ -659,10 +639,7 @@ abstract contract PrivateERC20 is
 
         _spendAllowance(from, spender, value);
 
-        gtBool success = _transfer(from, to, value);
-        require(MpcCore.decrypt(success), "ERC20: transfer failed");
-
-        return success;
+        _transfer(from, to, value);
     }
 
 
@@ -671,7 +648,7 @@ abstract contract PrivateERC20 is
         address from,
         address to,
         uint256 value
-    ) public virtual override nonReentrant returns (bool) {
+    ) public virtual override nonReentrant {
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         if (from == address(0)) revert ERC20InvalidSender(address(0));
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
@@ -691,10 +668,7 @@ abstract contract PrivateERC20 is
 
         _spendAllowance(from, spender, gtValue);
 
-        gtBool success = _transfer(from, to, gtValue);
-        require(MpcCore.decrypt(success), "ERC20: transfer failed");
-
-        return true;
+        _transfer(from, to, gtValue);
     }
 
     /**
@@ -705,7 +679,8 @@ abstract contract PrivateERC20 is
      *
      * Self-transfer (from == to) is not allowed and reverts.
      *
-     * On success, emits a {Transfer} event via {_update}; on MPC transfer failure, no event is emitted.
+     * On success, emits a {Transfer} event via {_update}; on MPC transfer failure, {_update} reverts
+     * and no event is emitted.
      *
      * NOTE: This function is not virtual, {_update} should be overridden instead.
      */
@@ -713,7 +688,7 @@ abstract contract PrivateERC20 is
         address from,
         address to,
         gtUint256 value
-    ) internal returns (gtBool) {
+    ) internal {
         if (from == address(0)) {
             revert ERC20InvalidSender(address(0));
         }
@@ -726,7 +701,7 @@ abstract contract PrivateERC20 is
             revert ERC20SelfTransferNotAllowed(from);
         }
 
-        return _update(from, to, value);
+        _update(from, to, value);
     }
 
     /**
@@ -735,13 +710,14 @@ abstract contract PrivateERC20 is
      * this function.
      *
      * Storage and {Transfer} are updated only when the MPC operation succeeds (transfer success bit, or mint
-     * add without overflow and within {supplyCap}). On failure, balances and aggregate supply are unchanged and no event is emitted.
+     * add without overflow and within {supplyCap}). On failure, balances and aggregate supply are unchanged,
+     * no event is emitted, and this function reverts so the failed operation does not succeed silently.
      */
     function _update(
         address from,
         address to,
         gtUint256 value
-    ) internal virtual returns (gtBool) {
+    ) internal virtual {
         gtUint256 newToBalance;
         gtUint256 valueTransferred = value;
         gtBool result;
@@ -828,8 +804,7 @@ abstract contract PrivateERC20 is
 
             emit Transfer(from, to, senderCt, receiverCt);
         }
-
-        return result;
+        require(MpcCore.decrypt(result), "ERC20: update failed");
     }
 
     function _getBalance(address account) internal returns (gtUint256) {
@@ -883,12 +858,12 @@ abstract contract PrivateERC20 is
      *
      * NOTE: This function is not virtual, {_update} should be overridden instead.
      */
-    function _mint(address account, gtUint256 value) internal returns (gtBool) {
+    function _mint(address account, gtUint256 value) internal {
         if (account == address(0)) {
             revert ERC20InvalidReceiver(address(0));
         }
 
-        return _update(address(0), account, value);
+        _update(address(0), account, value);
     }
 
     /**
@@ -899,12 +874,12 @@ abstract contract PrivateERC20 is
      *
      * NOTE: This function is not virtual, {_update} should be overridden instead
      */
-    function _burn(address account, gtUint256 value) internal returns (gtBool) {
+    function _burn(address account, gtUint256 value) internal {
         if (account == address(0)) {
             revert ERC20InvalidSender(address(0));
         }
 
-        return _update(account, address(0), value);
+        _update(account, address(0), value);
     }
 
     /**
