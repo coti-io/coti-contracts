@@ -680,7 +680,8 @@ abstract contract PrivateERC20 is
      * - the caller must have allowance for ``from``'s tokens of at least
      * `value`.
      *
-     * Order: (1) check allowance and revert if insufficient, (2) deduct via _spendAllowance, (3) _transfer.
+     * Order: (1) check allowance and revert if insufficient, (2) deduct via {_spendAllowance}
+     * (reusing the onboarded allowance from step 1), (3) _transfer.
      */
     /// @notice transferFrom with encrypted (itUint256) amount
     function transferFrom(
@@ -694,18 +695,17 @@ abstract contract PrivateERC20 is
 
         gtUint256 gtValue = MpcCore.validateCiphertext(value);
 
-        {
-            gtUint256 currentAllowance = _safeOnboard(_allowances[from][spender].ciphertext);
-            gtBool maxAllowance = _isMaxAllowance(currentAllowance);
-            gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, gtValue);
-            require(
-                MpcCore.decrypt(MpcCore.or(maxAllowance, MpcCore.not(inSufficientAllowance))),
-                "ERC20: insufficient allowance"
-            );
-        }
+        gtUint256 currentAllowance = _safeOnboard(_allowances[from][spender].ciphertext);
+        gtBool maxAllowance = _isMaxAllowance(currentAllowance);
+        gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, gtValue);
+        require(
+            MpcCore.decrypt(MpcCore.or(maxAllowance, MpcCore.not(inSufficientAllowance))),
+            "ERC20: insufficient allowance"
+        );
+        bool unlimitedAllowance = MpcCore.decrypt(maxAllowance);
 
-        _spendAllowance(from, spender, gtValue);
-    
+        _spendAllowance(from, spender, gtValue, currentAllowance, unlimitedAllowance);
+
         _transfer(from, to, gtValue);
     }
 
@@ -719,17 +719,16 @@ abstract contract PrivateERC20 is
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         address spender = _msgSender();
 
-        {
-            gtUint256 currentAllowance = _safeOnboard(_allowances[from][spender].ciphertext);
-            gtBool maxAllowance = _isMaxAllowance(currentAllowance);
-            gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, value);
-            require(
-                MpcCore.decrypt(MpcCore.or(maxAllowance, MpcCore.not(inSufficientAllowance))),
-                "ERC20: insufficient allowance"
-            );
-        }
+        gtUint256 currentAllowance = _safeOnboard(_allowances[from][spender].ciphertext);
+        gtBool maxAllowance = _isMaxAllowance(currentAllowance);
+        gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, value);
+        require(
+            MpcCore.decrypt(MpcCore.or(maxAllowance, MpcCore.not(inSufficientAllowance))),
+            "ERC20: insufficient allowance"
+        );
+        bool unlimitedAllowance = MpcCore.decrypt(maxAllowance);
 
-        _spendAllowance(from, spender, value);
+        _spendAllowance(from, spender, value, currentAllowance, unlimitedAllowance);
 
         _transfer(from, to, value);
     }
@@ -748,17 +747,16 @@ abstract contract PrivateERC20 is
 
         gtUint256 gtValue = MpcCore.setPublic256(value);
 
-        {
-            gtUint256 currentAllowance = _safeOnboard(_allowances[from][spender].ciphertext);
-            gtBool maxAllowance = _isMaxAllowance(currentAllowance);
-            gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, gtValue);
-            require(
-                MpcCore.decrypt(MpcCore.or(maxAllowance, MpcCore.not(inSufficientAllowance))),
-                "ERC20: insufficient allowance"
-            );
-        }
+        gtUint256 currentAllowance = _safeOnboard(_allowances[from][spender].ciphertext);
+        gtBool maxAllowance = _isMaxAllowance(currentAllowance);
+        gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, gtValue);
+        require(
+            MpcCore.decrypt(MpcCore.or(maxAllowance, MpcCore.not(inSufficientAllowance))),
+            "ERC20: insufficient allowance"
+        );
+        bool unlimitedAllowance = MpcCore.decrypt(maxAllowance);
 
-        _spendAllowance(from, spender, gtValue);
+        _spendAllowance(from, spender, gtValue, currentAllowance, unlimitedAllowance);
 
         _transfer(from, to, gtValue);
     }
@@ -1129,13 +1127,6 @@ abstract contract PrivateERC20 is
     }
 
     /**
-     * @dev Updates `owner` s allowance for `spender` based on spent `value`.
-     *
-     * Does not decrease the allowance value in case of infinite allowance.
-     * Does not decrease the allowance if not enough allowance is available.
-     *
-     */
-    /**
      * @dev Unlimited allowance: semantic equality to `type(uint256).max` via secret-vs-public
      *      `eq` (MPC RHS_PUBLIC). Using this instead of `eq(allowance, setPublic256(max))` ensures
      *      any valid garbled encoding of max is recognized, not only one canonical pair.
@@ -1144,26 +1135,25 @@ abstract contract PrivateERC20 is
         return MpcCore.eq(gtAllowance, MAX_UINT_256);
     }
 
+    /**
+     * @dev Deducts `value` from `owner`/`spender` allowance after {transferFrom} prechecks.
+     * @param currentAllowance Garbled allowance from the same `_safeOnboard` pass as the insufficient-allowance check (avoids a second onboard + duplicate `eq`/`lt`).
+     * @param unlimitedAllowance Result of `MpcCore.decrypt(_isMaxAllowance(currentAllowance))` for the same slot.
+     *
+     * If unlimited, returns without writing storage or emitting {Approval} (OZ-style). Otherwise
+     * subtracts `value`, which is safe because {transferFrom} already enforced sufficiency when not unlimited.
+     */
     function _spendAllowance(
         address owner,
         address spender,
-        gtUint256 value
+        gtUint256 value,
+        gtUint256 currentAllowance,
+        bool unlimitedAllowance
     ) internal virtual {
-        gtUint256 currentAllowance = _safeOnboard(
-            _allowances[owner][spender].ciphertext
-        );
-
-        gtBool maxAllowance = _isMaxAllowance(currentAllowance);
-        gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, value);
-
-        gtUint256 newAllowance = MpcCore.mux(
-            // If allowance is infinite, do not decrease it.
-            // If allowance is insufficient (should be prevented by transferFrom checks), do not decrease it.
-            MpcCore.or(maxAllowance, inSufficientAllowance),
-            currentAllowance,
-            MpcCore.sub(currentAllowance, value)
-        );
-
+        if (unlimitedAllowance) {
+            return;
+        }
+        gtUint256 newAllowance = MpcCore.sub(currentAllowance, value);
         _approve(owner, spender, newAllowance);
     }
 
