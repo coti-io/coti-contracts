@@ -19,6 +19,11 @@ import "../../utils/mpc/MpcCore.sol";
  * - Client-side encryption (ciphertext formats, AES keys, wallet/SDK behavior) must stay consistent
  *   with the chain’s MPC expectations; malformed or adversarial off-chain inputs are not fully
  *   recoverable by the contract alone.
+ * - **Canonical empty ciphertext:** an all-zero `ctUint256` in storage (uninitialized or cleared)
+ *   is read as numeric **zero** using the implementation’s `_safeOnboard` shortcut (`setPublic256(0)`
+ *   without an extra `onBoard` round-trip). Any other bit pattern is onboarded via `MpcCore.onBoard`.
+ *   Do not rely on writing raw ciphertext to token storage outside the implementation’s normal
+ *   `offBoard` paths unless it matches MPC encoding rules.
  *
  * Failure semantics: implementations are expected to use a revert-on-failure model for
  * balance/supply/allowance-changing operations. If the MPC layer reports failure for a core

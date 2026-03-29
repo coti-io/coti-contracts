@@ -29,6 +29,13 @@ Failure semantics (integrators and contract callers):
   that did not revert. Pure/view helpers and read paths that only return ciphertext or onboarded
   values are not “success/failure” token operations in that sense.
 
+Storage encoding ({_safeOnboard} — see implementation NatSpec):
+- Uninitialized or zeroed `ctUint256` slots read as both 128-bit limbs zero. The implementation
+  treats that as **canonical empty** and maps it to `MpcCore.setPublic256(0)` without calling
+  `MpcCore.onBoard` (gas). Any other pattern is onboarded with `MpcCore.onBoard`.
+- Successful updates in this contract only write ciphertext via `MpcCore.offBoard` after MPC
+  success, so balances, allowances, and aggregate supply stay consistent with the precompile.
+
 Trust assumptions (deploy only when these hold):
 - Deploy only on chains where the MPC precompile at address(0x64) is part of the trusted base.
   You explicitly trust that network: its consensus, node/precompile implementation, and upgrade
@@ -1160,15 +1167,31 @@ abstract contract PrivateERC20 is
         _approve(owner, spender, newAllowance);
     }
 
+    /// @dev EVM-uninitialized or fully cleared `ctUint256` storage reads as both limbs zero.
+    function _isCanonicalEmptyCtUint256(
+        ctUint256 memory ct
+    ) private pure returns (bool) {
+        return
+            ctUint128.unwrap(ct.ciphertextHigh) == 0 &&
+            ctUint128.unwrap(ct.ciphertextLow) == 0;
+    }
+
+    /**
+     * @dev Converts persisted `ctUint256` into garbled `gtUint256` for MPC operations.
+     *
+     * **Canonical zero:** Storage that has never been written, or reads as all-zero limbs, is
+     * treated as semantic zero via `MpcCore.setPublic256(0)` without `MpcCore.onBoard`, to avoid a
+     * precompile round-trip on empty balances/allowances/supply. Any non–all-zero encoding is
+     * onboarded with `MpcCore.onBoard`.
+     *
+     * Invariant: values persisted by this contract come from `MpcCore.offBoard` after successful MPC
+     * updates, so normal state is consistent with the precompile. Subclasses or integrations must not
+     * inject arbitrary ciphertext into these slots unless it matches MPC encoding expectations.
+     */
     function _safeOnboard(ctUint256 memory value) internal returns (gtUint256) {
-        // If both 128-bit ciphertext halves are zero, treat as canonical encoding of zero (public 0).
-        if (
-            ctUint128.unwrap(value.ciphertextHigh) == 0 &&
-            ctUint128.unwrap(value.ciphertextLow) == 0
-        ) {
+        if (_isCanonicalEmptyCtUint256(value)) {
             return MpcCore.setPublic256(0);
         }
-
         return MpcCore.onBoard(value);
     }
 }
