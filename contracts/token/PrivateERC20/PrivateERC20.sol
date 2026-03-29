@@ -611,7 +611,7 @@ abstract contract PrivateERC20 is
 
         {
             gtUint256 currentAllowance = _safeOnboard(_allowances[from][spender].ciphertext);
-            gtBool maxAllowance = MpcCore.eq(currentAllowance, MpcCore.setPublic256(MAX_UINT_256));
+            gtBool maxAllowance = _isMaxAllowance(currentAllowance);
             gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, gtValue);
             require(
                 MpcCore.decrypt(MpcCore.or(maxAllowance, MpcCore.not(inSufficientAllowance))),
@@ -636,7 +636,7 @@ abstract contract PrivateERC20 is
 
         {
             gtUint256 currentAllowance = _safeOnboard(_allowances[from][spender].ciphertext);
-            gtBool maxAllowance = MpcCore.eq(currentAllowance, MpcCore.setPublic256(MAX_UINT_256));
+            gtBool maxAllowance = _isMaxAllowance(currentAllowance);
             gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, value);
             require(
                 MpcCore.decrypt(MpcCore.or(maxAllowance, MpcCore.not(inSufficientAllowance))),
@@ -665,7 +665,7 @@ abstract contract PrivateERC20 is
 
         {
             gtUint256 currentAllowance = _safeOnboard(_allowances[from][spender].ciphertext);
-            gtBool maxAllowance = MpcCore.eq(currentAllowance, MpcCore.setPublic256(MAX_UINT_256));
+            gtBool maxAllowance = _isMaxAllowance(currentAllowance);
             gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, gtValue);
             require(
                 MpcCore.decrypt(MpcCore.or(maxAllowance, MpcCore.not(inSufficientAllowance))),
@@ -985,6 +985,15 @@ abstract contract PrivateERC20 is
      * Does not decrease the allowance if not enough allowance is available.
      *
      */
+    /**
+     * @dev Unlimited allowance: semantic equality to `type(uint256).max` via secret-vs-public
+     *      `eq` (MPC RHS_PUBLIC). Using this instead of `eq(allowance, setPublic256(max))` ensures
+     *      any valid garbled encoding of max is recognized, not only one canonical pair.
+     */
+    function _isMaxAllowance(gtUint256 gtAllowance) internal returns (gtBool) {
+        return MpcCore.eq(gtAllowance, MAX_UINT_256);
+    }
+
     function _spendAllowance(
         address owner,
         address spender,
@@ -994,10 +1003,7 @@ abstract contract PrivateERC20 is
             _allowances[owner][spender].ciphertext
         );
 
-        gtBool maxAllowance = MpcCore.eq(
-            currentAllowance,
-            MpcCore.setPublic256(MAX_UINT_256)
-        );
+        gtBool maxAllowance = _isMaxAllowance(currentAllowance);
         gtBool inSufficientAllowance = MpcCore.lt(currentAllowance, value);
 
         gtUint256 newAllowance = MpcCore.mux(
