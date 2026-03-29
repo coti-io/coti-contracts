@@ -37,6 +37,9 @@ Trust assumptions (deploy only when these hold):
   in ways Solidity cannot fix on-chain. Optional mitigations (e.g. admin pause, monitoring) only
   limit further damage after suspicion; they do not prove past MPC correctness or roll back state.
   If the chain allows precompile upgrades, consider monitoring and circuit-breakers.
+- There is **no** trust-minimized substitute on-chain: auditors and integrators should record which
+  chain ID, precompile address, and build/version they rely on, and treat MPC upgrades as **trusted**
+  migrations unless your organization runs independent off-chain verification against published specs.
 - MINTER_ROLE must only pass valid amounts to mint/mintGt/mint(itUint256). If the MPC layer
   enforces bounds or validity, that dependency applies.
 - Minting is bounded by {supplyCap} (override in concrete tokens like {decimals}); enforced in {_update}.
@@ -53,6 +56,15 @@ Trust assumptions (deploy only when these hold):
   for callback behavior.
 */
 
+/**
+ * @title PrivateERC20
+ * @notice Privacy-oriented ERC-20 base whose balances and transfer rules are enforced through MPC (`MpcCore`), not plain EVM arithmetic on cleartext balances.
+ * @dev **MPC trust model:** This contract treats the MPC precompile as the source of truth for
+ *      garbled/encrypted `uint256` operations. There is no on-chain fallback that validates MPC
+ *      soundness. See {IPrivateERC20} trust assumptions and the file-level comment block above for
+ *      deployment and integration requirements. Pausing and `AccessControl` mitigate operational
+ *      risk; they do not prove MPC correctness retroactively.
+ */
 abstract contract PrivateERC20 is
     Context,
     ERC165,

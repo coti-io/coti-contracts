@@ -7,6 +7,19 @@ import "../../utils/mpc/MpcCore.sol";
 /**
  * @dev Interface of the COTI Private ERC-20 standard.
  *
+ * Trust assumptions (MPC — read before deploying or integrating):
+ * - Confidential balances, allowances, and transfer arithmetic are executed via `MpcCore` and the
+ *   chain’s MPC precompile. This interface does not specify a verification layer: **token accounting
+ *   ultimately follows whatever the precompile returns.** Solidity cannot re-prove MPC soundness on-chain.
+ * - Deploying or holding this token means accepting **trust in the network operator**, consensus,
+ *   precompile implementation, versioning, and any upgrade path that may replace or alter MPC behavior.
+ * - Operational controls on the token (e.g. pausing, roles, supply caps) **contain** misuse or
+ *   incident response; they do **not** substitute for MPC trust and cannot roll back or audit past
+ *   precompile outputs cryptographically.
+ * - Client-side encryption (ciphertext formats, AES keys, wallet/SDK behavior) must stay consistent
+ *   with the chain’s MPC expectations; malformed or adversarial off-chain inputs are not fully
+ *   recoverable by the contract alone.
+ *
  * Failure semantics: implementations are expected to use a revert-on-failure model for
  * balance/supply/allowance-changing operations. If the MPC layer reports failure for a core
  * update, the call reverts unless otherwise noted. View/pure reads are not token "operations"
