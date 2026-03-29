@@ -677,7 +677,7 @@ abstract contract PrivateERC20 is
      *
      * Self-transfer (from == to) is not allowed and reverts.
      *
-     * Emits a {Transfer} event.
+     * On success, emits a {Transfer} event via {_update}; on MPC transfer failure, no event is emitted.
      *
      * NOTE: This function is not virtual, {_update} should be overridden instead.
      */

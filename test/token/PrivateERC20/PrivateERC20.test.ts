@@ -26,6 +26,25 @@ async function deploy() {
     }
 }
 
+/** True if the receipt includes a Transfer event from this contract (SAY-04 / MPC failure must not emit). */
+function receiptEmitsTransfer(
+    contract: PrivateERC20Mock,
+    receipt: { logs: readonly { topics: readonly string[]; data: string }[] }
+): boolean {
+    for (const log of receipt.logs) {
+        try {
+            const parsed = contract.interface.parseLog({
+                topics: log.topics as string[],
+                data: log.data
+            })
+            if (parsed?.name === "Transfer") return true
+        } catch {
+            continue
+        }
+    }
+    return false
+}
+
 describe("Private ERC20", function () {
     let contract: PrivateERC20Mock
     let contractAddress: string
@@ -112,12 +131,14 @@ describe("Private ERC20", function () {
                     .withArgs(ZeroAddress)
             })
 
-            it('does not update balance when burning more than balance', async function () {
+            it('does not update balance or emit Transfer when burning more than balance', async function () {
                 const tx = await contract
                     .connect(owner)
                     .burn(owner.address, value + 1n, { gasLimit: GAS_LIMIT })
-                
-                await tx.wait()
+
+                const receipt = await tx.wait()
+                expect(receipt).to.not.be.null
+                expect(receiptEmitsTransfer(contract, receipt!)).to.equal(false)
                 
                 const ctBalance = await contract["balanceOf(address)"](owner.address)
 
@@ -174,14 +195,16 @@ describe("Private ERC20", function () {
                     .withArgs(ZeroAddress)
             })
 
-            it('does not transfer tokens when amount exceeds balance', async function () {
+            it('does not transfer tokens or emit Transfer when amount exceeds balance', async function () {
                 const itValue = await owner.encryptValue256(value + 1n, contractAddress, contract.interface.getFunction("transfer(address,((uint256,uint256),bytes))").selector) as itUint256
 
                 const tx = await contract
                     .connect(owner)
                     .getFunction("transfer(address,((uint256,uint256),bytes))")(otherAccount.address, itValue, { gasLimit: GAS_LIMIT })
-                
-                await tx.wait()
+
+                const receipt = await tx.wait()
+                expect(receipt).to.not.be.null
+                expect(receiptEmitsTransfer(contract, receipt!)).to.equal(false)
 
                 let ctBalance = await contract["balanceOf(address)"](owner.address)
 
