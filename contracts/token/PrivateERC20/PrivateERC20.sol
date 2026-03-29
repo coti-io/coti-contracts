@@ -22,8 +22,12 @@ Key Features:
 
 Trust assumptions (deploy only when these hold):
 - Deploy only on chains where the MPC precompile at address(0x64) is part of the trusted base.
-  The precompile is correct and non-malicious; all balances/transfers depend on it. If the chain
-  allows precompile upgrades, consider monitoring or circuit-breakers.
+  You explicitly trust that network: its consensus, node/precompile implementation, and upgrade
+  policy. All balances and transfers are ultimately defined by MPC results this contract cannot
+  independently verify. If the precompile were malicious or buggy, accounting integrity could fail
+  in ways Solidity cannot fix on-chain. Optional mitigations (e.g. admin pause, monitoring) only
+  limit further damage after suspicion; they do not prove past MPC correctness or roll back state.
+  If the chain allows precompile upgrades, consider monitoring and circuit-breakers.
 - MINTER_ROLE must only pass valid amounts to mint/mintGt/mint(itUint256). If the MPC layer
   enforces bounds or validity, that dependency applies.
 - Minting is bounded by {supplyCap} (override in concrete tokens like {decimals}); enforced in {_update}.
