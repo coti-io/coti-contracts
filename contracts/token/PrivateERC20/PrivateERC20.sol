@@ -47,7 +47,7 @@ Trust assumptions (deploy only when these hold):
 - Gas: multiple precompile calls per transfer/approve; no unbounded loops. Document expected
   gas ranges for common operations if needed for integrators.
 - Reentrancy: balance/allowance-changing entry points use nonReentrant so a transferAndCall
-  receiver cannot nest transferFrom/transfer/approve/mint/burn in the same transaction.
+  receiver cannot nest transferFrom/transfer/approve/increaseAllowance/decreaseAllowance/mint/burn in the same transaction.
 - transferAndCall: public-amount overload uses {ITokenReceiver}; encrypted-amount overload uses
   {ITokenReceiverEncrypted} (no plaintext amount in callback). Receivers are still fully trusted
   for callback behavior.
@@ -533,7 +533,8 @@ abstract contract PrivateERC20 is
      * `transferFrom`. This is semantically equivalent to an infinite approval.
      *
      * Reverts with {ERC20UnsafeApprove} if both the current allowance and the new value are
-     * non-zero (same mitigation as {approve(address,uint256)}).
+     * non-zero (same mitigation as {approve(address,uint256)}). Prefer {increaseAllowance} or
+     * {decreaseAllowance} to change a non-zero allowance without a two-step reset.
      *
      * Requirements:
      *
@@ -590,6 +591,64 @@ abstract contract PrivateERC20 is
         gtUint256 gtValue = MpcCore.setPublic256(value);
 
         _approve(owner, spender, gtValue);
+    }
+
+    /// @inheritdoc IPrivateERC20
+    function increaseAllowance(
+        address spender,
+        itUint256 calldata addedValue
+    ) public virtual override nonReentrant {
+        if (spender == address(0)) revert ERC20InvalidSpender(address(0));
+        gtUint256 gtAdded = MpcCore.validateCiphertext(addedValue);
+        _increaseAllowance(_msgSender(), spender, gtAdded);
+    }
+
+    /// @inheritdoc IPrivateERC20
+    function increaseAllowance(
+        address spender,
+        uint256 addedValue
+    ) public virtual override nonReentrant {
+        if (spender == address(0)) revert ERC20InvalidSpender(address(0));
+        if (!publicAmountsEnabled) revert PublicAmountsDisabled();
+        _increaseAllowance(_msgSender(), spender, MpcCore.setPublic256(addedValue));
+    }
+
+    /// @inheritdoc IPrivateERC20
+    function increaseAllowanceGT(
+        address spender,
+        gtUint256 addedValue
+    ) public virtual override nonReentrant {
+        if (spender == address(0)) revert ERC20InvalidSpender(address(0));
+        _increaseAllowance(_msgSender(), spender, addedValue);
+    }
+
+    /// @inheritdoc IPrivateERC20
+    function decreaseAllowance(
+        address spender,
+        itUint256 calldata subtractedValue
+    ) public virtual override nonReentrant {
+        if (spender == address(0)) revert ERC20InvalidSpender(address(0));
+        gtUint256 gtSub = MpcCore.validateCiphertext(subtractedValue);
+        _decreaseAllowance(_msgSender(), spender, gtSub);
+    }
+
+    /// @inheritdoc IPrivateERC20
+    function decreaseAllowance(
+        address spender,
+        uint256 subtractedValue
+    ) public virtual override nonReentrant {
+        if (spender == address(0)) revert ERC20InvalidSpender(address(0));
+        if (!publicAmountsEnabled) revert PublicAmountsDisabled();
+        _decreaseAllowance(_msgSender(), spender, MpcCore.setPublic256(subtractedValue));
+    }
+
+    /// @inheritdoc IPrivateERC20
+    function decreaseAllowanceGT(
+        address spender,
+        gtUint256 subtractedValue
+    ) public virtual override nonReentrant {
+        if (spender == address(0)) revert ERC20InvalidSpender(address(0));
+        _decreaseAllowance(_msgSender(), spender, subtractedValue);
     }
 
     /**
@@ -945,6 +1004,58 @@ abstract contract PrivateERC20 is
         if (!MpcCore.decrypt(MpcCore.eq(currentAllowance, uint256(0)))) {
             revert ERC20UnsafeApprove();
         }
+    }
+
+    /**
+     * @dev Atomically adds `added` to the current allowance. Reverts on overflow (mirrors
+     *      ERC-20 reference behavior for `type(uint256).max + x`). Does not use
+     *      {_requireSafeEncryptedApprove} — intended as the safe alternative to resetting via {approve}.
+     */
+    function _increaseAllowance(
+        address owner,
+        address spender,
+        gtUint256 added
+    ) internal {
+        if (owner == address(0)) revert ERC20InvalidApprover(address(0));
+        if (spender == address(0)) revert ERC20InvalidSpender(address(0));
+
+        gtUint256 currentAllowance = _safeOnboard(
+            _allowances[owner][spender].ciphertext
+        );
+        (gtBool overflow, gtUint256 newAllowance) = MpcCore.checkedAddWithOverflowBit(
+            currentAllowance,
+            added
+        );
+        require(
+            MpcCore.decrypt(MpcCore.not(overflow)),
+            "ERC20: allowance overflow"
+        );
+        _approve(owner, spender, newAllowance);
+    }
+
+    /**
+     * @dev Atomically subtracts `subtracted` from the current allowance. Reverts on underflow.
+     */
+    function _decreaseAllowance(
+        address owner,
+        address spender,
+        gtUint256 subtracted
+    ) internal {
+        if (owner == address(0)) revert ERC20InvalidApprover(address(0));
+        if (spender == address(0)) revert ERC20InvalidSpender(address(0));
+
+        gtUint256 currentAllowance = _safeOnboard(
+            _allowances[owner][spender].ciphertext
+        );
+        (gtBool underflow, gtUint256 newAllowance) = MpcCore.checkedSubWithOverflowBit(
+            currentAllowance,
+            subtracted
+        );
+        require(
+            MpcCore.decrypt(MpcCore.not(underflow)),
+            "ERC20: insufficient allowance"
+        );
+        _approve(owner, spender, newAllowance);
     }
 
     function _approve(

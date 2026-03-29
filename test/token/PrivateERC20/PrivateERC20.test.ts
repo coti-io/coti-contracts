@@ -515,4 +515,72 @@ describe("Private ERC20", function () {
             await expect(allowance).to.equal(value)
         })
     })
+
+    describe("increaseAllowance and decreaseAllowance", function () {
+        let localContract: PrivateERC20Mock
+        let localAddress: string
+        let localOwner: Wallet
+        let localOther: Wallet
+
+        before(async function () {
+            const deployment = await deploy()
+            localContract = deployment.contract
+            localAddress = deployment.contractAddress
+            localOwner = deployment.owner
+            localOther = deployment.otherAccount
+            await localContract
+                .connect(localOwner)
+                .getFunction("mint(address,uint256)")(localOwner.address, 100000n, { gasLimit: GAS_LIMIT })
+        })
+
+        it("increases allowance from zero", async function () {
+            const add = 1234n
+            const itAdd = await localOwner.encryptValue256(
+                add,
+                localAddress,
+                localContract.interface.getFunction("increaseAllowance(address,((uint256,uint256),bytes))").selector
+            ) as itUint256
+            await localContract
+                .connect(localOwner)
+                .getFunction("increaseAllowance(address,((uint256,uint256),bytes))")(localOther.address, itAdd, {
+                    gasLimit: GAS_LIMIT
+                })
+            const ctAllowance = await localContract["allowance(address,address)"](localOwner.address, localOther.address)
+            const allowance = await localOwner.decryptValue256(ctAllowance[1])
+            await expect(allowance).to.equal(add)
+        })
+
+        it("decreases allowance", async function () {
+            const sub = 234n
+            const itSub = await localOwner.encryptValue256(
+                sub,
+                localAddress,
+                localContract.interface.getFunction("decreaseAllowance(address,((uint256,uint256),bytes))").selector
+            ) as itUint256
+            await localContract
+                .connect(localOwner)
+                .getFunction("decreaseAllowance(address,((uint256,uint256),bytes))")(localOther.address, itSub, {
+                    gasLimit: GAS_LIMIT
+                })
+            const ctAllowance = await localContract["allowance(address,address)"](localOwner.address, localOther.address)
+            const allowance = await localOwner.decryptValue256(ctAllowance[1])
+            await expect(allowance).to.equal(1234n - 234n)
+        })
+
+        it("reverts decrease when allowance is insufficient", async function () {
+            const tooMuch = 100000n
+            const itSub = await localOwner.encryptValue256(
+                tooMuch,
+                localAddress,
+                localContract.interface.getFunction("decreaseAllowance(address,((uint256,uint256),bytes))").selector
+            ) as itUint256
+            await expect(
+                localContract
+                    .connect(localOwner)
+                    .getFunction("decreaseAllowance(address,((uint256,uint256),bytes))")(localOther.address, itSub, {
+                        gasLimit: GAS_LIMIT
+                    })
+            ).to.be.revertedWith("ERC20: insufficient allowance")
+        })
+    })
 })

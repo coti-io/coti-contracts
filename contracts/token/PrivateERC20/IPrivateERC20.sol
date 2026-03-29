@@ -170,7 +170,7 @@ interface IPrivateERC20 {
      *
      * Reverts with {ERC20UnsafeApprove} if both the current allowance and the new `value` are
      * non-zero (mitigation for the ERC-20 approve race). To change a non-zero allowance, first
-     * approve zero, then set the new amount.
+     * approve zero, then set the new amount, **or** use {increaseAllowance}/{decreaseAllowance}.
      *
      * Emits an {Approval} event.
      */
@@ -185,7 +185,7 @@ interface IPrivateERC20 {
      *
      * Reverts with {ERC20UnsafeApprove} if both the current allowance and `amount` are non-zero
      * (mitigation for the ERC-20 approve race). To change a non-zero allowance, first approve zero,
-     * then set the new amount.
+     * then set the new amount, **or** use {increaseAllowance}/{decreaseAllowance}.
      *
      * Emits an {Approval} event.
      */
@@ -199,11 +199,57 @@ interface IPrivateERC20 {
      *
      * Reverts with {ERC20UnsafeApprove} if both the current allowance and the new `value` are
      * non-zero (mitigation for the ERC-20 approve race). To change a non-zero allowance, first
-     * approve zero, then set the new amount.
+     * approve zero, then set the new amount, **or** use {increaseAllowance}/{decreaseAllowance}.
      *
      * Emits an {Approval} event.
      */
     function approveGT(address spender, gtUint256 value) external;
+
+    /**
+     * @dev Increases the allowance granted to `spender` by the caller by `addedValue`.
+     *      Use this (or {decreaseAllowance}) to change a non-zero allowance without the unsafe
+     *      “approve non-zero over non-zero” pattern. Reverts on uint256 overflow (including when the
+     *      current allowance is already unlimited).
+     *
+     * Emits an {Approval} event.
+     */
+    function increaseAllowance(
+        address spender,
+        itUint256 calldata addedValue
+    ) external;
+
+    /**
+     * @dev Same as {increaseAllowance(address,(itUint256))} with a public `addedValue`.
+     *      Requires {publicAmountsEnabled}.
+     */
+    function increaseAllowance(address spender, uint256 addedValue) external;
+
+    /**
+     * @dev Same as {increaseAllowance(address,(itUint256))} with a garbled `addedValue`.
+     */
+    function increaseAllowanceGT(address spender, gtUint256 addedValue) external;
+
+    /**
+     * @dev Decreases the allowance granted to `spender` by the caller by `subtractedValue`.
+     *      Reverts if the current allowance is less than `subtractedValue`.
+     *
+     * Emits an {Approval} event.
+     */
+    function decreaseAllowance(
+        address spender,
+        itUint256 calldata subtractedValue
+    ) external;
+
+    /**
+     * @dev Same as {decreaseAllowance(address,(itUint256))} with a public `subtractedValue`.
+     *      Requires {publicAmountsEnabled}.
+     */
+    function decreaseAllowance(address spender, uint256 subtractedValue) external;
+
+    /**
+     * @dev Same as {decreaseAllowance(address,(itUint256))} with a garbled `subtractedValue`.
+     */
+    function decreaseAllowanceGT(address spender, gtUint256 subtractedValue) external;
 
     /**
      * @dev Moves a `value` amount of tokens from `from` to `to` using the
