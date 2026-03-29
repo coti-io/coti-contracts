@@ -525,6 +525,9 @@ abstract contract PrivateERC20 is
      * NOTE: If `value` is the maximum `itUint256`, the allowance is not updated on
      * `transferFrom`. This is semantically equivalent to an infinite approval.
      *
+     * Reverts with {ERC20UnsafeApprove} if both the current allowance and the new value are
+     * non-zero (same mitigation as {approve(address,uint256)}).
+     *
      * Requirements:
      *
      * - `spender` cannot be the zero address.
@@ -539,6 +542,8 @@ abstract contract PrivateERC20 is
 
         gtUint256 gtValue = MpcCore.validateCiphertext(value);
 
+        _requireSafeEncryptedApprove(owner, spender, gtValue);
+
         _approve(owner, spender, gtValue);
 
     }
@@ -550,6 +555,8 @@ abstract contract PrivateERC20 is
     ) public virtual override nonReentrant {
         if (spender == address(0)) revert ERC20InvalidSpender(address(0));
         address owner = _msgSender();
+
+        _requireSafeEncryptedApprove(owner, spender, value);
 
         _approve(owner, spender, value);
 
@@ -897,6 +904,29 @@ abstract contract PrivateERC20 is
      *
      * Overrides to this logic should be done to the variant with an additional `bool emitEvent` argument.
      */
+
+    /**
+     * @dev If the new allowance is non-zero, requires the current allowance to be zero.
+     *      Same mitigation as {approve(address,uint256)} / {ERC20UnsafeApprove} for the encrypted and GT approve paths.
+     */
+    function _requireSafeEncryptedApprove(
+        address owner,
+        address spender,
+        gtUint256 gtNewValue
+    ) internal {
+        gtBool newIsZero = MpcCore.eq(gtNewValue, MpcCore.setPublic256(0));
+        if (MpcCore.decrypt(newIsZero)) {
+            return;
+        }
+
+        gtUint256 currentAllowance = _safeOnboard(
+            _allowances[owner][spender].ciphertext
+        );
+        if (!MpcCore.decrypt(MpcCore.eq(currentAllowance, uint256(0)))) {
+            revert ERC20UnsafeApprove();
+        }
+    }
+
     function _approve(
         address owner,
         address spender,
