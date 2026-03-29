@@ -12,6 +12,15 @@ import "../../utils/mpc/MpcCore.sol";
  * update, the call reverts unless otherwise noted. View/pure reads are not token "operations"
  * in that sense. Encrypted boolean (`gtBool`) is not used as a return type on this interface;
  * success is indicated by the transaction completing without revert.
+ *
+ * Supply and {totalSupply} (integration rule — read before integrating):
+ * - {totalSupply} in the reference implementation does **not** return circulating aggregate supply.
+ *   It is not a substitute for standard ERC-20 `totalSupply` in vaults, oracles, or pro-rata logic.
+ * - For the **maximum mintable** amount (ceiling), use {supplyCap} and the enforcement described in
+ *   the implementation’s `_update` / mint path — not {totalSupply}.
+ * - For **actual** aggregate supply, use off-chain indexing, a privileged operational dashboard,
+ *   or a concrete extension that exposes encrypted supply to designated parties (see project mocks
+ *   such as `PrivateERC20AuditorSupplyMock`).
  */
 interface IPrivateERC20 {
     struct Allowance {
@@ -61,11 +70,12 @@ interface IPrivateERC20 {
     );
 
     /**
-     * @dev Returns the value of tokens in existence.
-     *      For privacy, the base implementation always returns 0; aggregate supply is not exposed
-     *      on-chain by default. Implementations may optionally add encrypted supply tracking and
-     *      reencryption for a designated party (e.g. owner) if they accept the reduced privacy
-     *      tradeoff for that metric.
+     * @dev **Not** standard ERC-20 aggregate circulating supply in the base implementation.
+     *
+     * The reference implementation returns `0` on purpose: public aggregate supply is withheld for privacy.
+     * Do **not** use this value for collateral math, reward distribution, or any logic that assumes
+     * it reflects tokens in existence. For a mint **ceiling**, see {supplyCap}. For real supply metrics,
+     * integrate off-chain or via an extended contract that defines explicit semantics.
      */
     function totalSupply() external view returns (uint256);
 

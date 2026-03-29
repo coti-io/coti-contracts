@@ -39,6 +39,10 @@ Trust assumptions (deploy only when these hold):
 - MINTER_ROLE must only pass valid amounts to mint/mintGt/mint(itUint256). If the MPC layer
   enforces bounds or validity, that dependency applies.
 - Minting is bounded by {supplyCap} (override in concrete tokens like {decimals}); enforced in {_update}.
+- Integrators — {totalSupply} vs supply: the default {totalSupply} returns 0 and does **not** reflect
+  circulating aggregate supply (see {totalSupply} NatSpec). Do not plug this token into protocols that
+  assume ERC-20 `totalSupply` semantics. Use {supplyCap} only as the **mint ceiling** parameter; for
+  actual supply, use off-chain indexing or a dedicated extension (e.g. auditor reencryption mocks).
 - Gas: multiple precompile calls per transfer/approve; no unbounded loops. Document expected
   gas ranges for common operations if needed for integrators.
 - Reentrancy: balance/allowance-changing entry points use nonReentrant so a transferAndCall
@@ -179,25 +183,23 @@ abstract contract PrivateERC20 is
     }
 
     /**
-     * @dev Maximum aggregate supply that may exist from minting (enforced in {_update} against encrypted total).
-     *      Override in concrete tokens with a fixed cap; default is `type(uint256).max` (bounded only by uint256 overflow checks).
+     * @dev Configurable **upper bound** on how much can be minted in aggregate (checked in {_update} against
+     *      the encrypted total in storage). This is **not** “current circulating supply” and **not** a live
+     *      substitute for {totalSupply} on a normal ERC-20. Default: `type(uint256).max`.
+     *
+     *      Override in concrete tokens when a fixed cap is required (e.g. with {decimals} or tokenomics).
      */
     function supplyCap() public view virtual returns (uint256) {
         return type(uint256).max;
     }
 
     /**
-     * @dev See {IPrivateERC20-totalSupply}.
-     *      For privacy, always returns 0; aggregate supply is not exposed on-chain by default so
-     *      holder amounts stay private. Integrators: use for display only; do not rely on this for
-     *      supply accounting.
+     * @inheritdoc IPrivateERC20
+     * @notice Deliberately **not** standard ERC-20 circulating supply: returns `0` in this implementation.
      *
-     *      Dev note: a concrete implementation may choose to extend this pattern—for example by
-     *      maintaining an encrypted total and exposing it via reencryption to a designated owner or
-     *      role—if they wish to track total supply off the public path. That is not enabled here
-     *      by default.
-     *
-     *      For the configured mint ceiling, see {supplyCap}; minting enforces it against the encrypted total in storage.
+     * Do **not** use for vault share math, pro-rata rewards, or oracles that expect `totalSupply` to reflect
+     * aggregate issuance. For the mint **ceiling**, use {supplyCap}. For optional encrypted aggregate supply
+     * to a designated party, see examples under `contracts/mocks/token/PrivateERC20/`.
      */
     function totalSupply() public view virtual override returns (uint256) {
         return 0;
@@ -812,6 +814,15 @@ abstract contract PrivateERC20 is
             emit Transfer(from, to, senderCt, receiverCt);
         }
         require(MpcCore.decrypt(result), "ERC20: update failed");
+    }
+
+    /**
+     * @dev Aggregate supply as a garbled value (on-boarded from storage ciphertext).
+     *      Intended for subclasses that expose encrypted total supply to a designated party
+     *      (e.g. via `MpcCore.offBoardToUser`) without putting plaintext aggregate supply in {totalSupply}.
+     */
+    function _getTotalSupplyGarbled() internal returns (gtUint256) {
+        return _safeOnboard(_totalSupply);
     }
 
     function _getBalance(address account) internal returns (gtUint256) {
