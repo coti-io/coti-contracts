@@ -40,7 +40,10 @@ interface IPrivateERC20 {
 
     /**
      * @dev Returns the value of tokens in existence.
-     *      For privacy, this implementation always returns 0; actual supply is stored encrypted.
+     *      For privacy, the base implementation always returns 0; aggregate supply is not exposed
+     *      on-chain by default. Implementations may optionally add encrypted supply tracking and
+     *      reencryption for a designated party (e.g. owner) if they accept the reduced privacy
+     *      tradeoff for that metric.
      */
     function totalSupply() external view returns (uint256);
 

@@ -168,8 +168,14 @@ abstract contract PrivateERC20 is
 
     /**
      * @dev See {IPrivateERC20-totalSupply}.
-     *      For privacy, always returns 0; actual total supply is stored encrypted in _totalSupply.
-     *      Integrators: use for display only; do not rely on this for supply accounting.
+     *      For privacy, always returns 0; aggregate supply is not exposed on-chain by default so
+     *      holder amounts stay private. Integrators: use for display only; do not rely on this for
+     *      supply accounting.
+     *
+     *      Dev note: a concrete implementation may choose to extend this pattern—for example by
+     *      maintaining an encrypted total and exposing it via reencryption to a designated owner or
+     *      role—if they wish to track total supply off the public path. That is not enabled here
+     *      by default.
      */
     function totalSupply() public view virtual override returns (uint256) {
         return 0;
