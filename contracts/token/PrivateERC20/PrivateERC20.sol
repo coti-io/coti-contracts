@@ -693,7 +693,8 @@ abstract contract PrivateERC20 is
      * (or `to`) is the zero address. All customizations to transfers, mints, and burns should be done by overriding
      * this function.
      *
-     * Emits a {Transfer} event.
+     * Storage and {Transfer} are updated only when the MPC operation succeeds (transfer success bit, or mint
+     * add without overflow). On failure, balances and aggregate supply are unchanged and no event is emitted.
      */
     function _update(
         address from,
@@ -702,18 +703,27 @@ abstract contract PrivateERC20 is
     ) internal virtual returns (gtBool) {
         gtUint256 newToBalance;
         gtUint256 valueTransferred = value;
-        gtBool result = MpcCore.setPublic(true);
+        gtBool result;
+        bool ok;
 
         if (from == address(0)) {
-            gtUint256 totalSupply_ = _safeOnboard(_totalSupply);
-
-            totalSupply_ = MpcCore.add(totalSupply_, value);
-
-            _totalSupply = MpcCore.offBoard(totalSupply_);
-
             gtUint256 currentBalance = _getBalance(to);
+            gtBool overflow;
+            (overflow, newToBalance) = MpcCore.checkedAddWithOverflowBit(
+                currentBalance,
+                value
+            );
+            result = MpcCore.not(overflow);
+            ok = MpcCore.decrypt(result);
+            if (ok) {
+                gtUint256 totalSupply_ = _safeOnboard(_totalSupply);
 
-            newToBalance = MpcCore.add(currentBalance, value);
+                totalSupply_ = MpcCore.add(totalSupply_, value);
+
+                _totalSupply = MpcCore.offBoard(totalSupply_);
+
+                _updateBalance(to, newToBalance);
+            }
         } else {
             gtUint256 fromBalance = _getBalance(from);
             gtUint256 toBalance = _getBalance(to);
@@ -726,46 +736,51 @@ abstract contract PrivateERC20 is
                 value
             );
 
-            _updateBalance(from, newFromBalance);
+            ok = MpcCore.decrypt(result);
+            if (ok) {
+                _updateBalance(from, newFromBalance);
 
-            valueTransferred = MpcCore.sub(newToBalance, toBalance);
+                valueTransferred = MpcCore.sub(newToBalance, toBalance);
+
+                if (to == address(0)) {
+                    gtUint256 totalSupply_ = _safeOnboard(_totalSupply);
+
+                    totalSupply_ = MpcCore.sub(totalSupply_, valueTransferred);
+
+                    _totalSupply = MpcCore.offBoard(totalSupply_);
+                } else {
+                    _updateBalance(to, newToBalance);
+                }
+            }
         }
 
-        if (to == address(0)) {
-            gtUint256 totalSupply_ = _safeOnboard(_totalSupply);
+        if (ok) {
+            // When minting or transferring to/from a smart contract (which has no AES key),
+            // we must bypass offBoardToUser to prevent on-chain reverts.
+            ctUint256 memory senderCt;
+            address fromEnc = _getAccountEncryptionAddress(from);
+            if (fromEnc != address(0)) {
+                senderCt = MpcCore.offBoardToUser(valueTransferred, fromEnc);
+            } else {
+                senderCt = ctUint256({
+                    ciphertextHigh: ctUint128.wrap(0),
+                    ciphertextLow: ctUint128.wrap(0)
+                });
+            }
 
-            totalSupply_ = MpcCore.sub(totalSupply_, valueTransferred);
+            ctUint256 memory receiverCt;
+            address toEnc = _getAccountEncryptionAddress(to);
+            if (toEnc != address(0)) {
+                receiverCt = MpcCore.offBoardToUser(valueTransferred, toEnc);
+            } else {
+                receiverCt = ctUint256({
+                    ciphertextHigh: ctUint128.wrap(0),
+                    ciphertextLow: ctUint128.wrap(0)
+                });
+            }
 
-            _totalSupply = MpcCore.offBoard(totalSupply_);
-        } else {
-            _updateBalance(to, newToBalance);
+            emit Transfer(from, to, senderCt, receiverCt);
         }
-
-        // When minting or transferring to/from a smart contract (which has no AES key),
-        // we must bypass offBoardToUser to prevent on-chain reverts.
-        ctUint256 memory senderCt;
-        address fromEnc = _getAccountEncryptionAddress(from);
-        if (fromEnc != address(0)) {
-            senderCt = MpcCore.offBoardToUser(valueTransferred, fromEnc);
-        } else {
-            senderCt = ctUint256({
-                ciphertextHigh: ctUint128.wrap(0),
-                ciphertextLow: ctUint128.wrap(0)
-            });
-        }
-
-        ctUint256 memory receiverCt;
-        address toEnc = _getAccountEncryptionAddress(to);
-        if (toEnc != address(0)) {
-            receiverCt = MpcCore.offBoardToUser(valueTransferred, toEnc);
-        } else {
-            receiverCt = ctUint256({
-                ciphertextHigh: ctUint128.wrap(0),
-                ciphertextLow: ctUint128.wrap(0)
-            });
-        }
-
-        emit Transfer(from, to, senderCt, receiverCt);
 
         return result;
     }
