@@ -5,6 +5,7 @@ pragma solidity ^0.8.19;
 import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 import {IPrivateERC20} from "./IPrivateERC20.sol";
 import {ITokenReceiver} from "./ITokenReceiver.sol";
+import {ITokenReceiverEncrypted} from "./ITokenReceiverEncrypted.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
@@ -47,6 +48,9 @@ Trust assumptions (deploy only when these hold):
   gas ranges for common operations if needed for integrators.
 - Reentrancy: balance/allowance-changing entry points use nonReentrant so a transferAndCall
   receiver cannot nest transferFrom/transfer/approve/mint/burn in the same transaction.
+- transferAndCall: public-amount overload uses {ITokenReceiver}; encrypted-amount overload uses
+  {ITokenReceiverEncrypted} (no plaintext amount in callback). Receivers are still fully trusted
+  for callback behavior.
 */
 
 abstract contract PrivateERC20 is
@@ -288,9 +292,10 @@ abstract contract PrivateERC20 is
     }
 
     /**
-     * @dev Transfers encrypted amount to `to` then calls onTokenReceived(to, 0, data).
-     *      For privacy, the callback receives 0 as the amount argument; the actual amount is not passed.
-     *      Only use with trusted receivers; see {transferAndCall(address,uint256,bytes)} for reentrancy scope.
+     * @dev Transfers an encrypted amount to `to`, then calls {ITokenReceiverEncrypted-onPrivateTransferReceived}.
+     *      The callback does **not** receive a plaintext amount (privacy). Receivers must implement
+     *      {ITokenReceiverEncrypted}; do not use {ITokenReceiver} for this overload.
+     *      Only use with **trusted** receivers; see {transferAndCall(address,uint256,bytes)} for reentrancy scope.
      */
     function transferAndCall(
         address to,
@@ -305,7 +310,7 @@ abstract contract PrivateERC20 is
         _transfer(sender, to, gtAmount);
 
         require(
-            ITokenReceiver(to).onTokenReceived(sender, 0, data),
+            ITokenReceiverEncrypted(to).onPrivateTransferReceived(sender, data),
             "Callback failed"
         );
     }

@@ -255,12 +255,11 @@ interface IPrivateERC20 {
 
     /**
      * @dev Moves an input-text (encrypted) `amount` of tokens from the caller's account to `to`,
-     *      and then calls `onTokenReceived(sender, 0, data)` on `to`. For privacy, the callback
-     *      receives 0 as the amount argument; integrators must not rely on the amount parameter
-     *      in the callback for this variant.
-     * @param to The address of the recipient
+     *      then calls `ITokenReceiverEncrypted.onPrivateTransferReceived(sender, data)` on `to`.
+     *      The callback has **no** plaintext amount parameter — receivers must implement {ITokenReceiverEncrypted}.
+     * @param to The address of the recipient (must implement {ITokenReceiverEncrypted})
      * @param amount Encrypted input-text amount to be transferred
-     * @param data Additional data with no specified format, sent in call to `to`
+     * @param data Forwarded to the callback; use for app-specific context (not a substitute for amount)
      */
     function transferAndCall(
         address to,
