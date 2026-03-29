@@ -473,9 +473,11 @@ abstract contract PrivateERC20 is
     ) public virtual override returns (gtUint256) {
         if (account == address(0)) revert ERC20InvalidReceiver(address(0));
         if (isSpender) {
-            return _safeOnboard(_allowances[_msgSender()][account].ciphertext);
-        } else {
+            // Caller is spender; `account` is owner — read _allowances[owner][spender]
             return _safeOnboard(_allowances[account][_msgSender()].ciphertext);
+        } else {
+            // Caller is owner; `account` is spender — read _allowances[owner][spender]
+            return _safeOnboard(_allowances[_msgSender()][account].ciphertext);
         }
     }
 
@@ -495,16 +497,18 @@ abstract contract PrivateERC20 is
         if (encryptionAddress == address(0)) revert ERC20InvalidReceiver(address(0));
 
         if (isSpender) {
-            Allowance storage allowance_ = _allowances[_msgSender()][account];
+            // Caller is spender; `account` is owner — _allowances[owner][spender]
+            Allowance storage allowance_ = _allowances[account][_msgSender()];
 
-            allowance_.ownerCiphertext = MpcCore.offBoardToUser(
+            allowance_.spenderCiphertext = MpcCore.offBoardToUser(
                 _safeOnboard(allowance_.ciphertext),
                 encryptionAddress
             );
         } else {
-            Allowance storage allowance_ = _allowances[account][_msgSender()];
+            // Caller is owner; `account` is spender — _allowances[owner][spender]
+            Allowance storage allowance_ = _allowances[_msgSender()][account];
 
-            allowance_.spenderCiphertext = MpcCore.offBoardToUser(
+            allowance_.ownerCiphertext = MpcCore.offBoardToUser(
                 _safeOnboard(allowance_.ciphertext),
                 encryptionAddress
             );
@@ -559,6 +563,15 @@ abstract contract PrivateERC20 is
         if (spender == address(0)) revert ERC20InvalidSpender(address(0));
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         address owner = _msgSender();
+
+        if (value != 0) {
+            gtUint256 currentAllowance = _safeOnboard(
+                _allowances[owner][spender].ciphertext
+            );
+            if (!MpcCore.decrypt(MpcCore.eq(currentAllowance, uint256(0)))) {
+                revert ERC20UnsafeApprove();
+            }
+        }
 
         gtUint256 gtValue = MpcCore.setPublic256(value);
 

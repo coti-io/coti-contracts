@@ -15,6 +15,12 @@ interface IPrivateERC20 {
     }
 
     /**
+     * @dev Plain {approve} with a non-zero value was called while the current allowance is non-zero.
+     *      Mitigates the ERC-20 approve race: first set allowance to zero, then set the new value.
+     */
+    error ERC20UnsafeApprove();
+
+    /**
      * @dev Emitted when `senderValue/receiverValue` tokens are moved from one account (`from`) to
      * another (`to`).
      *
@@ -157,6 +163,10 @@ interface IPrivateERC20 {
      * caller's tokens.
      *
      * Returns a boolean value indicating whether the operation succeeded.
+     *
+     * Reverts with {ERC20UnsafeApprove} if both the current allowance and `amount` are non-zero
+     * (mitigation for the ERC-20 approve race). To change a non-zero allowance, first approve zero,
+     * then set the new amount.
      *
      * Emits an {Approval} event.
      */
