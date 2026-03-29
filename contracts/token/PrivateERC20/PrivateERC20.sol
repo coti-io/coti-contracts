@@ -31,6 +31,8 @@ Trust assumptions (deploy only when these hold):
   helpers that revert on failure when appropriate.
 - Gas: multiple precompile calls per transfer/approve; no unbounded loops. Document expected
   gas ranges for common operations if needed for integrators.
+- Reentrancy: balance/allowance-changing entry points use nonReentrant so a transferAndCall
+  receiver cannot nest transferFrom/transfer/approve/mint/burn in the same transaction.
 */
 
 abstract contract PrivateERC20 is
@@ -184,7 +186,7 @@ abstract contract PrivateERC20 is
     function mint(
         address to,
         uint256 amount
-    ) public virtual override onlyRole(MINTER_ROLE) returns (bool) {
+    ) public virtual override onlyRole(MINTER_ROLE) nonReentrant returns (bool) {
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
@@ -203,7 +205,7 @@ abstract contract PrivateERC20 is
     function mintGt(
         address to,
         gtUint256 gtAmount
-    ) public virtual onlyRole(MINTER_ROLE) returns (gtBool) {
+    ) public virtual onlyRole(MINTER_ROLE) nonReentrant returns (gtBool) {
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         return _mint(to, gtAmount);
     }
@@ -216,13 +218,13 @@ abstract contract PrivateERC20 is
     function mint(
         address to,
         itUint256 calldata amount
-    ) public virtual override onlyRole(MINTER_ROLE) returns (gtBool) {
+    ) public virtual override onlyRole(MINTER_ROLE) nonReentrant returns (gtBool) {
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         gtUint256 gtAmount = MpcCore.validateCiphertext(amount);
         return _mint(to, gtAmount);
     }
 
-    function burn(uint256 amount) public virtual override returns (bool) {
+    function burn(uint256 amount) public virtual override nonReentrant returns (bool) {
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         gtUint256 gtAmount = MpcCore.setPublic256(amount);
         gtBool success = _burn(_msgSender(), gtAmount);
@@ -236,20 +238,21 @@ abstract contract PrivateERC20 is
      * Intended for contract-to-contract flows that already hold a gtUint256.
      * Returns encrypted success; callers must check or decrypt. Does not revert on failure.
      */
-    function burnGt(gtUint256 gtAmount) public virtual returns (gtBool) {
+    function burnGt(gtUint256 gtAmount) public virtual nonReentrant returns (gtBool) {
         return _burn(_msgSender(), gtAmount);
     }
 
     /// @dev Does not revert on failure; returns encrypted boolean. Callers must check or decrypt.
-    function burn(itUint256 calldata amount) public virtual override returns (gtBool) {
+    function burn(itUint256 calldata amount) public virtual override nonReentrant returns (gtBool) {
         gtUint256 gtAmount = MpcCore.validateCiphertext(amount);
         return _burn(_msgSender(), gtAmount);
     }
 
     /**
      * @dev Transfers tokens to `to` then calls onTokenReceived(to, amount, data).
-     *      Only use with trusted receivers; the callback cannot re-enter the token (nonReentrant)
-     *      but must behave correctly for protocol logic.
+     *      Only use with trusted receivers. `nonReentrant` blocks re-entry into this function and
+     *      into other guarded entry points (transfer, transferFrom, approve, burn, mint, etc.);
+     *      the receiver must still be trusted for protocol correctness.
      */
     function transferAndCall(
         address to,
@@ -276,8 +279,7 @@ abstract contract PrivateERC20 is
     /**
      * @dev Transfers encrypted amount to `to` then calls onTokenReceived(to, 0, data).
      *      For privacy, the callback receives 0 as the amount argument; the actual amount is not passed.
-     *      Only use with trusted receivers; the callback cannot re-enter the token (nonReentrant)
-     *      but must behave correctly for protocol logic.
+     *      Only use with trusted receivers; see {transferAndCall(address,uint256,bytes)} for reentrancy scope.
      */
     function transferAndCall(
         address to,
@@ -349,7 +351,7 @@ abstract contract PrivateERC20 is
      */
     function setAccountEncryptionAddress(
         address offBoardAddress
-    ) public virtual override returns (bool) {
+    ) public virtual override nonReentrant returns (bool) {
         if (offBoardAddress == address(0)) revert ERC20InvalidReceiver(address(0));
 
         gtUint256 gtBalance = _getBalance(_msgSender());
@@ -394,7 +396,7 @@ abstract contract PrivateERC20 is
     function transfer(
         address to,
         itUint256 calldata value
-    ) public virtual override returns (gtBool) {
+    ) public virtual override nonReentrant returns (gtBool) {
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         address owner = _msgSender();
 
@@ -407,7 +409,7 @@ abstract contract PrivateERC20 is
     function transferGT(
         address to,
         gtUint256 value
-    ) public virtual override returns (gtBool) {
+    ) public virtual override nonReentrant returns (gtBool) {
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         address owner = _msgSender();
 
@@ -418,7 +420,7 @@ abstract contract PrivateERC20 is
     function transfer(
         address to,
         uint256 value
-    ) public virtual override returns (bool) {
+    ) public virtual override nonReentrant returns (bool) {
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         address owner = _msgSender();
@@ -476,7 +478,7 @@ abstract contract PrivateERC20 is
     function reencryptAllowance(
         address account,
         bool isSpender
-    ) public virtual returns (bool) {
+    ) public virtual nonReentrant returns (bool) {
         if (account == address(0)) revert ERC20InvalidReceiver(address(0));
         address encryptionAddress = _getAccountEncryptionAddress(_msgSender());
         if (encryptionAddress == address(0)) revert ERC20InvalidReceiver(address(0));
@@ -514,7 +516,7 @@ abstract contract PrivateERC20 is
     function approve(
         address spender,
         itUint256 calldata value
-    ) public virtual override returns (bool) {
+    ) public virtual override nonReentrant returns (bool) {
         if (spender == address(0)) revert ERC20InvalidSpender(address(0));
         address owner = _msgSender();
 
@@ -529,7 +531,7 @@ abstract contract PrivateERC20 is
     function approveGT(
         address spender,
         gtUint256 value
-    ) public virtual override returns (bool) {
+    ) public virtual override nonReentrant returns (bool) {
         if (spender == address(0)) revert ERC20InvalidSpender(address(0));
         address owner = _msgSender();
 
@@ -542,7 +544,7 @@ abstract contract PrivateERC20 is
     function approve(
         address spender,
         uint256 value
-    ) public virtual override returns (bool) {
+    ) public virtual override nonReentrant returns (bool) {
         if (spender == address(0)) revert ERC20InvalidSpender(address(0));
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         address owner = _msgSender();
@@ -564,14 +566,14 @@ abstract contract PrivateERC20 is
      * - the caller must have allowance for ``from``'s tokens of at least
      * `value`.
      *
-     * Order: (1) check allowance and revert if insufficient, (2) transfer via _transfer, (3) deduct allowance via _spendAllowance.
+     * Order: (1) check allowance and revert if insufficient, (2) deduct via _spendAllowance, (3) _transfer.
      */
     /// @notice transferFrom with encrypted (itUint256) amount
     function transferFrom(
         address from,
         address to,
         itUint256 calldata value
-    ) public virtual override returns (gtBool) {
+    ) public virtual override nonReentrant returns (gtBool) {
         if (from == address(0)) revert ERC20InvalidSender(address(0));
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         address spender = _msgSender();
@@ -601,7 +603,7 @@ abstract contract PrivateERC20 is
         address from,
         address to,
         gtUint256 value
-    ) public virtual override returns (gtBool) {
+    ) public virtual override nonReentrant returns (gtBool) {
         if (from == address(0)) revert ERC20InvalidSender(address(0));
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
         address spender = _msgSender();
@@ -630,7 +632,7 @@ abstract contract PrivateERC20 is
         address from,
         address to,
         uint256 value
-    ) public virtual override returns (bool) {
+    ) public virtual override nonReentrant returns (bool) {
         if (!publicAmountsEnabled) revert PublicAmountsDisabled();
         if (from == address(0)) revert ERC20InvalidSender(address(0));
         if (to == address(0)) revert ERC20InvalidReceiver(address(0));
