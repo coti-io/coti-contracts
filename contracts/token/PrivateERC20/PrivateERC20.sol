@@ -487,6 +487,8 @@ abstract contract PrivateERC20 is
      * Requirements:
      * - `account` must not be the zero address.
      * - Caller must have an encryption address set (EOA or contract with setAccountEncryptionAddress).
+     *
+     * Emits an {AllowanceReencrypted} event.
      */
     function reencryptAllowance(
         address account,
@@ -496,9 +498,14 @@ abstract contract PrivateERC20 is
         address encryptionAddress = _getAccountEncryptionAddress(_msgSender());
         if (encryptionAddress == address(0)) revert ERC20InvalidReceiver(address(0));
 
+        address owner_;
+        address spender_;
+
         if (isSpender) {
             // Caller is spender; `account` is owner — _allowances[owner][spender]
-            Allowance storage allowance_ = _allowances[account][_msgSender()];
+            owner_ = account;
+            spender_ = _msgSender();
+            Allowance storage allowance_ = _allowances[owner_][spender_];
 
             allowance_.spenderCiphertext = MpcCore.offBoardToUser(
                 _safeOnboard(allowance_.ciphertext),
@@ -506,13 +513,17 @@ abstract contract PrivateERC20 is
             );
         } else {
             // Caller is owner; `account` is spender — _allowances[owner][spender]
-            Allowance storage allowance_ = _allowances[_msgSender()][account];
+            owner_ = _msgSender();
+            spender_ = account;
+            Allowance storage allowance_ = _allowances[owner_][spender_];
 
             allowance_.ownerCiphertext = MpcCore.offBoardToUser(
                 _safeOnboard(allowance_.ciphertext),
                 encryptionAddress
             );
         }
+
+        emit AllowanceReencrypted(owner_, spender_, isSpender);
 
         return true;
     }

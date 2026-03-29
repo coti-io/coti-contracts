@@ -45,6 +45,16 @@ interface IPrivateERC20 {
     );
 
     /**
+     * @dev Emitted when an allowance is re-encrypted for the owner or spender view (e.g. after key rotation).
+     *      `isSpender` is true when the spender's ciphertext was updated; false when the owner's was updated.
+     */
+    event AllowanceReencrypted(
+        address indexed owner,
+        address indexed spender,
+        bool isSpender
+    );
+
+    /**
      * @dev Returns the value of tokens in existence.
      *      For privacy, the base implementation always returns 0; aggregate supply is not exposed
      *      on-chain by default. Implementations may optionally add encrypted supply tracking and
