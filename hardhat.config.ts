@@ -5,6 +5,9 @@ import "@nomicfoundation/hardhat-verify";
 import dotenv from "dotenv"
 dotenv.config()
 
+/** Bump estimated gas price / EIP-1559 fees by 30% on COTI networks (see hardhat/gasPriceBump.ts). */
+import "./hardhat/gasPriceBump"
+
 const accounts = process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [];
 
 const config: HardhatUserConfig = {

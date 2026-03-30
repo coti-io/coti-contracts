@@ -4,6 +4,7 @@ import { setupAccounts } from "../../utils/accounts"
 import { PrivacyBridgeERC20Mock, PrivateERC20Mock } from "../../../typechain-types"
 import { Wallet } from "@coti-io/coti-ethers"
 import { Contract } from "ethers"
+import { txOpts } from "../../utils/privateErc20Helpers"
 
 const GAS_LIMIT = 12000000
 
@@ -16,6 +17,7 @@ describe("PrivacyBridge Fees", function () {
     let publicTokenAddress: string
     let owner: Wallet
     let user: Wallet
+    /** Fee recipient when only two funded accounts exist in `.env` (same as `owner`). */
     let feeRecipient: Wallet
 
     const INITIAL_SUPPLY = 1000000n
@@ -25,11 +27,12 @@ describe("PrivacyBridge Fees", function () {
     const MAX_FEE = 1000n
 
     before(async function () {
-        [owner, user, feeRecipient] = await setupAccounts()
+        ;[owner, user] = await setupAccounts()
+        feeRecipient = owner
 
         // Deploy public ERC20 token (mock)
         const ERC20Factory = await hre.ethers.getContractFactory("ERC20Mock")
-        publicToken = await ERC20Factory.connect(owner).deploy("Public Token", "PUB", { gasLimit: GAS_LIMIT })
+        publicToken = await ERC20Factory.connect(owner).deploy("Public Token", "PUB", txOpts)
         await publicToken.waitForDeployment()
         publicTokenAddress = await publicToken.getAddress()
 
@@ -39,13 +42,13 @@ describe("PrivacyBridge Fees", function () {
 
         // Deploy private ERC20 token
         const PrivateERC20Factory = await hre.ethers.getContractFactory("PrivateERC20Mock")
-        privateToken = await PrivateERC20Factory.connect(owner).deploy({ gasLimit: GAS_LIMIT })
+        privateToken = await PrivateERC20Factory.connect(owner).deploy(txOpts)
         await privateToken.waitForDeployment()
         privateTokenAddress = await privateToken.getAddress()
 
         // Deploy bridge
         const BridgeFactory = await hre.ethers.getContractFactory("PrivacyBridgeERC20Mock")
-        bridge = await BridgeFactory.connect(owner).deploy(publicTokenAddress, privateTokenAddress, { gasLimit: GAS_LIMIT })
+        bridge = await BridgeFactory.connect(owner).deploy(publicTokenAddress, privateTokenAddress, txOpts)
         await bridge.waitForDeployment()
         bridgeAddress = await bridge.getAddress()
 
