@@ -50,8 +50,8 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     /// @notice Fee divisor (1,000,000)
     uint256 public constant FEE_DIVISOR = 1000000;
 
-    /// @notice Maximum fee allowed (10% = 100,000 units)
-    uint256 public constant MAX_FEE_UNITS = 100000;
+    /// @notice Maximum fee allowed (100% = 1,000,000 units)
+    uint256 public constant MAX_FEE_UNITS = 1000000;
 
     /// @notice Flag to enable/disable deposits
     bool public isDepositEnabled = true;
@@ -145,6 +145,14 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
         _grantRole(OPERATOR_ROLE, newOwner);
         _revokeRole(DEFAULT_ADMIN_ROLE, oldOwner);
         _revokeRole(OPERATOR_ROLE, oldOwner);
+    }
+
+    /**
+     * @dev Disabled to prevent split-brain state between Ownable and AccessControl.
+     *      Use transferOwnership instead.
+     */
+    function renounceOwnership() public override onlyOwner {
+        revert("renounceOwnership disabled");
     }
 
     /**
@@ -250,19 +258,9 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
      * @param _fee Amount in native tokens (wei-equivalent)
      * @dev Used by ERC20 bridges: they require msg.value >= this value and refund excess to the caller (best-effort). Only the operator can call this function.
      */
-    function setNativeCotiFee(uint256 _fee) external onlyOperator {
+    function setNativeCotiFee(uint256 _fee) external virtual onlyOperator {
         nativeCotiFee = _fee;
         emit NativeCotiFeeUpdated(_fee, msg.sender);
-    }
-
-    /**
-     * @notice Deposit preflight checks (for derived contracts)
-     * @dev Enforces pause state, deposit toggle, and amount limits.
-     */
-    function _preflightDeposit(uint256 amount) internal view {
-        if (paused()) revert BridgePaused();
-        if (!isDepositEnabled) revert DepositDisabled();
-        _checkDepositLimits(amount);
     }
 
 
@@ -297,6 +295,8 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
         revert WithdrawFeesMustBeOverridden();
     }
 
+    event CotiFeesWithdrawn(address indexed to, uint256 amount);
+
     /**
      * @notice Withdraw accumulated native COTI fees
      * @param to Address to send the native COTI fees to
@@ -314,5 +314,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
 
         (bool success, ) = to.call{value: amount}("");
         if (!success) revert EthTransferFailed();
+
+        emit CotiFeesWithdrawn(to, amount);
     }
 }
