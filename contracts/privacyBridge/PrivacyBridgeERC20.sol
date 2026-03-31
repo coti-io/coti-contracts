@@ -7,12 +7,17 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../token/PrivateERC20/IPrivateERC20.sol";
 import "../utils/mpc/MpcCore.sol";
 
+/// @dev Minimal interface to read decimals from tokens without modifying IPrivateERC20
+interface IHasDecimals {
+    function decimals() external view returns (uint8);
+}
+
 /**
  * @dev Abstract base contract for ERC20 Token Privacy Bridges
  * @dev Handles the logic for bridging ERC20 tokens to their private counterparts.
  * @dev The public ERC20 token must be standard (no fee-on-transfer, no rebasing); same decimals as private token.
  */
-contract PrivacyBridgeERC20 is PrivacyBridge {
+abstract contract PrivacyBridgeERC20 is PrivacyBridge {
     using SafeERC20 for IERC20;
 
     /// @notice The public ERC20 token being bridged (e.g., USDC, WETH)
@@ -31,6 +36,9 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
     error TokenTransferFailed();
     error InvalidTokenSender();
     error NativeFeeRequiredForTransferAndCallWithdraw();
+    error DecimalsMismatch();
+
+    event ERC20Rescued(address indexed token, address indexed to, uint256 amount);
 
     /**
      * @notice Initialize the PrivacyBridgeERC20 contract
@@ -40,6 +48,10 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
     constructor(address _token, address _privateToken) PrivacyBridge() {
         if (_token == address(0)) revert InvalidTokenAddress();
         if (_privateToken == address(0)) revert InvalidPrivateTokenAddress();
+
+        // Verify decimal parity to prevent silent exchange rate corruption
+        if (IHasDecimals(_token).decimals() != IHasDecimals(_privateToken).decimals())
+            revert DecimalsMismatch();
 
         token = IERC20(_token);
         privateToken = IPrivateERC20(_privateToken);
@@ -89,11 +101,15 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
         // Handle native COTI fee (excess refunded to sender)
         accumulatedCotiFees += nativeCotiFee;
 
+        // Use balance-before/after to handle fee-on-transfer tokens correctly
+        uint256 balBefore = token.balanceOf(address(this));
         token.safeTransferFrom(msg.sender, address(this), amount);
+        uint256 received = token.balanceOf(address(this)) - balBefore;
 
-        // Calculate and deduct deposit fee (in tokens)
-        uint256 feeAmount = _calculateFeeAmount(amount, depositFeeBasisPoints);
-        uint256 amountAfterFee = amount - feeAmount;
+        // Calculate and deduct deposit fee based on actually received tokens
+        uint256 feeAmount = _calculateFeeAmount(received, depositFeeBasisPoints);
+        uint256 amountAfterFee = received - feeAmount;
+        if (amountAfterFee == 0) revert AmountZero();
         accumulatedFees += feeAmount;
 
         if (isEncrypted) {
@@ -110,15 +126,15 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
             privateToken.mint(msg.sender, amountAfterFee);
         }
 
-        // Emit gross deposit amount and net private tokens minted
-        emit Deposit(msg.sender, amount, amountAfterFee);
+        // Emit actual received amount (gross) and net private tokens minted
+        emit Deposit(msg.sender, received, amountAfterFee);
 
         // Refund excess native COTI fee (best-effort: do not revert so deposit succeeds even if sender cannot receive)
         if (msg.value > nativeCotiFee) {
             uint256 excess = msg.value - nativeCotiFee;
             (bool ok, ) = msg.sender.call{value: excess}("");
             if (!ok) {
-                // Excess remains in contract; deposit still succeeds
+                accumulatedCotiFees += excess; // excess unrefundable; make it recoverable via withdrawCotiFees
             }
         }
     }
@@ -166,10 +182,11 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
         // Calculate fee on the public side
         uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
         uint256 amountAfterFee = amount - feeAmount;
+        if (amountAfterFee == 0) revert AmountZero();
         accumulatedFees += feeAmount;
 
         uint256 bridgeBalance = token.balanceOf(address(this));
-        if (bridgeBalance < amountAfterFee)
+        if (bridgeBalance < accumulatedFees + amountAfterFee)
             revert InsufficientBridgeLiquidity();
 
         if (isEncrypted) {
@@ -219,7 +236,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
     function withdrawFees(
         address to,
         uint256 amount
-    ) external override onlyOperator {
+    ) external override onlyOperator nonReentrant {
         if (to == address(0)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
         if (amount > accumulatedFees) revert InsufficientAccumulatedFees();
@@ -239,7 +256,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
         address _token,
         address to,
         uint256 amount
-    ) external onlyOwner {
+    ) external onlyOwner nonReentrant {
         if (to == address(0)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
         
@@ -247,5 +264,7 @@ contract PrivacyBridgeERC20 is PrivacyBridge {
             revert CannotRescueBridgeToken();
 
         IERC20(_token).safeTransfer(to, amount);
+
+        emit ERC20Rescued(_token, to, amount);
     }
 }

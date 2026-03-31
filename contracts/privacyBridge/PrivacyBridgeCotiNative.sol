@@ -14,6 +14,9 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
     PrivateCOTI public privateCoti;
 
     error ExceedsRescueableAmount();
+    error NativeCotiFeeNotApplicable();
+
+    event NativeRescued(address indexed to, uint256 amount);
 
     // Scaling factor removed (using native 18 decimals due to uint256 upgrade)
 
@@ -46,6 +49,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
             depositFeeBasisPoints
         );
         uint256 amountAfterFee = msg.value - feeAmount;
+        if (amountAfterFee == 0) revert AmountZero();
         accumulatedFees += feeAmount;
 
         if (isEncrypted) {
@@ -110,6 +114,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
         // Calculate fee
         uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
         uint256 publicAmount = amount - feeAmount;
+        if (publicAmount == 0) revert AmountZero();
         accumulatedFees += feeAmount;
 
         if (address(this).balance < publicAmount)
@@ -165,6 +170,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
         // Calculate fee on the public side
         uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
         uint256 publicAmount = amount - feeAmount;
+        if (publicAmount == 0) revert AmountZero();
         accumulatedFees += feeAmount;
 
         if (address(this).balance < publicAmount)
@@ -231,7 +237,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
     function withdrawFees(
         address to,
         uint256 amount
-    ) external override onlyOperator {
+    ) external override onlyOperator nonReentrant {
         if (to == address(0)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
         if (amount > accumulatedFees) revert InsufficientAccumulatedFees();
@@ -255,7 +261,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
      * @param amount Amount of coins to rescue
      * @notice Only the owner can call this function
      */
-    function rescueNative(address to, uint256 amount) external onlyOwner {
+    function rescueNative(address to, uint256 amount) external onlyOwner nonReentrant {
         if (to == address(0)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
         if (amount > address(this).balance) revert InsufficientEthBalance();
@@ -264,5 +270,14 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
 
         (bool success, ) = to.call{value: amount}("");
         if (!success) revert EthTransferFailed();
+
+        emit NativeRescued(to, amount);
+    }
+
+    /**
+     * @notice Native bridge does not use nativeCotiFee; always reverts.
+     */
+    function setNativeCotiFee(uint256) external pure override {
+        revert NativeCotiFeeNotApplicable();
     }
 }
