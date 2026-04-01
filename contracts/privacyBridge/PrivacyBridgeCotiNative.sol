@@ -4,7 +4,6 @@ pragma solidity ^0.8.19;
 import "./PrivacyBridge.sol";
 import "../token/PrivateERC20/tokens/PrivateCOTI.sol";
 import "../token/PrivateERC20/ITokenReceiver.sol";
-import "../utils/mpc/MpcCore.sol";
 
 /**
  * @title PrivacyBridgeCotiNative
@@ -33,38 +32,16 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
      * @notice Internal function to handle deposits
      * @param sender Address of the depositor
      */
-    function _deposit(
-        address sender,
-        bool isEncrypted,
-        itUint256 memory encryptedAmount
-    ) internal {
+    function _deposit(address sender) internal {
         if (!isDepositEnabled) revert DepositDisabled();
         if (msg.value == 0) revert AmountZero();
 
         _checkDepositLimits(msg.value);
 
-        // Calculate and deduct deposit fee
-        uint256 feeAmount = _calculateFeeAmount(
-            msg.value,
-            depositFeeBasisPoints
-        );
-        uint256 amountAfterFee = msg.value - feeAmount;
-        if (amountAfterFee == 0) revert AmountZero();
-        accumulatedFees += feeAmount;
+        // Deduct bridged-asset deposit fee, get net amount to mint
+        uint256 amountAfterFee = _collectTokenFee(msg.value, depositFeeBasisPoints);
 
-        if (isEncrypted) {
-            // Verify parity between msg.value and encrypted amount
-            gtUint256 gtAmount = MpcCore.validateCiphertext(encryptedAmount);
-            gtBool amountMatch = MpcCore.eq(
-                gtAmount,
-                MpcCore.setPublic256(amountAfterFee)
-            );
-            require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
-
-            privateCoti.mintGt(sender, gtAmount);
-        } else {
-            privateCoti.mint(sender, amountAfterFee);
-        }
+        privateCoti.mint(sender, amountAfterFee);
 
         // Emit gross deposit amount and net private tokens minted
         emit Deposit(sender, msg.value, amountAfterFee);
@@ -75,19 +52,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
      * @dev User sends native COTI with the transaction
      */
     function deposit() external payable nonReentrant whenNotPaused {
-        _deposit(
-            msg.sender,
-            false,
-            itUint256(ctUint256(ctUint128.wrap(0), ctUint128.wrap(0)), "")
-        );
-    }
-
-    /**
-     * @notice Deposit native COTI with an encrypted amount for the private minting event
-     * @param encryptedAmount Encrypted amount to mint
-     */
-    function deposit(itUint256 calldata encryptedAmount) external payable nonReentrant whenNotPaused {
-        _deposit(msg.sender, true, encryptedAmount);
+        _deposit(msg.sender);
     }
 
     /**
@@ -111,11 +76,8 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
 
         _checkWithdrawLimits(amount);
 
-        // Calculate fee
-        uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
-        uint256 publicAmount = amount - feeAmount;
-        if (publicAmount == 0) revert AmountZero();
-        accumulatedFees += feeAmount;
+        // Deduct bridged-asset withdrawal fee, get net amount to release
+        uint256 publicAmount = _collectTokenFee(amount, withdrawFeeBasisPoints);
 
         if (address(this).balance < publicAmount)
             revert InsufficientEthBalance();
@@ -138,70 +100,29 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
      * @dev User must have approved the bridge to spend their private tokens.
      */
     function withdraw(uint256 amount) external nonReentrant whenNotPaused {
-        _withdraw(
-            msg.sender,
-            amount,
-            false,
-            itUint256(ctUint256(ctUint128.wrap(0), ctUint128.wrap(0)), "")
-        );
-    }
-
-    /**
-     * @notice Withdraw native COTI by burning private COTI with an encrypted amount
-     * @param amount Public amount to release
-     * @param encryptedAmount Encrypted amount to burn
-     */
-    function withdraw(
-        uint256 amount,
-        itUint256 calldata encryptedAmount
-    ) external nonReentrant whenNotPaused {
-        _withdraw(msg.sender, amount, true, encryptedAmount);
+        _withdraw(msg.sender, amount);
     }
 
     function _withdraw(
         address to,
-        uint256 amount,
-        bool isEncrypted,
-        itUint256 memory encryptedAmount
+        uint256 amount
     ) internal {
         if (amount == 0) revert AmountZero();
         _checkWithdrawLimits(amount);
 
-        // Calculate fee on the public side
-        uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
-        uint256 publicAmount = amount - feeAmount;
-        if (publicAmount == 0) revert AmountZero();
-        accumulatedFees += feeAmount;
+        // Deduct bridged-asset withdrawal fee, get net amount to release
+        uint256 publicAmount = _collectTokenFee(amount, withdrawFeeBasisPoints);
 
         if (address(this).balance < publicAmount)
             revert InsufficientEthBalance();
 
-        if (isEncrypted) {
-            // Verify parity
-            gtUint256 gtAmount = MpcCore.validateCiphertext(encryptedAmount);
-            gtBool amountMatch = MpcCore.eq(
-                gtAmount,
-                MpcCore.setPublic256(amount)
-            );
-            require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
-
-            // Use already-validated gt handle so PrivateCOTI does not re-call
-            // validateCiphertext with a different contract context (signature mismatch)
-            IPrivateERC20(address(privateCoti)).transferFromGT(
-                msg.sender,
-                address(this),
-                gtAmount
-            );
-            privateCoti.burnGt(gtAmount);
-        } else {
-            // Standard withdrawal (public amount)
-            IPrivateERC20(address(privateCoti)).transferFrom(
-                msg.sender,
-                address(this),
-                amount
-            );
-            privateCoti.burn(amount);
-        }
+        // Pull and burn private tokens
+        IPrivateERC20(address(privateCoti)).transferFrom(
+            msg.sender,
+            address(this),
+            amount
+        );
+        privateCoti.burn(amount);
 
         (bool success, ) = to.call{value: publicAmount}("");
         if (!success) revert EthTransferFailed();
@@ -213,11 +134,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
      * @notice Fallback function to handle direct COTI transfers as deposits
      */
     receive() external payable nonReentrant whenNotPaused {
-        _deposit(
-            msg.sender,
-            false,
-            itUint256(ctUint256(ctUint128.wrap(0), ctUint128.wrap(0)), "")
-        );
+        _deposit(msg.sender);
     }
 
     /**

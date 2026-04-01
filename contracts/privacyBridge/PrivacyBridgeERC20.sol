@@ -5,7 +5,6 @@ import "./PrivacyBridge.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../token/PrivateERC20/IPrivateERC20.sol";
-import "../utils/mpc/MpcCore.sol";
 
 /// @dev Minimal interface to read decimals from tokens without modifying IPrivateERC20
 interface IHasDecimals {
@@ -41,6 +40,25 @@ abstract contract PrivacyBridgeERC20 is PrivacyBridge {
     event ERC20Rescued(address indexed token, address indexed to, uint256 amount);
 
     /**
+     * @notice Collects the flat native COTI per-operation fee from msg.value and refunds any excess to the sender.
+     * @dev Reverts with {InsufficientCotiFee} if msg.value < nativeCotiFee.
+     *      Excess above nativeCotiFee is refunded best-effort; if the refund fails (e.g. sender is a
+     *      contract that cannot receive native tokens), the excess is added to accumulatedCotiFees so
+     *      it remains recoverable via {withdrawCotiFees} rather than being permanently stranded.
+     */
+    function _collectNativeFee() internal {
+        if (msg.value < nativeCotiFee) revert InsufficientCotiFee();
+        accumulatedCotiFees += nativeCotiFee;
+        if (msg.value > nativeCotiFee) {
+            uint256 excess = msg.value - nativeCotiFee;
+            (bool ok, ) = msg.sender.call{value: excess}("");
+            if (!ok) {
+                accumulatedCotiFees += excess; // unrefundable; recoverable via withdrawCotiFees
+            }
+        }
+    }
+
+    /**
      * @notice Initialize the PrivacyBridgeERC20 contract
      * @param _token Address of the public ERC20 token (must be standard: no fee-on-transfer, no rebasing; same decimals as private token)
      * @param _privateToken Address of the private token
@@ -67,76 +85,29 @@ abstract contract PrivacyBridgeERC20 is PrivacyBridge {
     function deposit(
         uint256 amount
     ) external payable nonReentrant whenNotPaused {
-        _deposit(
-            amount,
-            false,
-            itUint256(ctUint256(ctUint128.wrap(0), ctUint128.wrap(0)), "")
-        );
+        _deposit(amount);
     }
 
-    /**
-     * @notice Deposit public ERC20 tokens with an encrypted amount for the private minting event
-     * @param amount Public amount of tokens to lock
-     * @param encryptedAmount Encrypted amount to mint
-     * @dev Native COTI fee: send msg.value >= nativeCotiFee. Excess refunded best-effort (see deposit(uint256)).
-     */
-    function deposit(
-        uint256 amount,
-        itUint256 calldata encryptedAmount
-    ) external payable nonReentrant whenNotPaused {
-        _deposit(amount, true, encryptedAmount);
-    }
-
-    function _deposit(
-        uint256 amount,
-        bool isEncrypted,
-        itUint256 memory encryptedAmount
-    ) internal {
+    function _deposit(uint256 amount) internal {
         if (!isDepositEnabled) revert DepositDisabled();
         if (amount == 0) revert AmountZero();
-        if (msg.value < nativeCotiFee) revert InsufficientCotiFee();
-
         _checkDepositLimits(amount);
 
-        // Handle native COTI fee (excess refunded to sender)
-        accumulatedCotiFees += nativeCotiFee;
+        // Step 1: collect flat native COTI fee (refunds excess to sender)
+        _collectNativeFee();
 
-        // Use balance-before/after to handle fee-on-transfer tokens correctly
+        // Step 2: pull tokens and measure actual received amount (fee-on-transfer safe)
         uint256 balBefore = token.balanceOf(address(this));
         token.safeTransferFrom(msg.sender, address(this), amount);
         uint256 received = token.balanceOf(address(this)) - balBefore;
 
-        // Calculate and deduct deposit fee based on actually received tokens
-        uint256 feeAmount = _calculateFeeAmount(received, depositFeeBasisPoints);
-        uint256 amountAfterFee = received - feeAmount;
-        if (amountAfterFee == 0) revert AmountZero();
-        accumulatedFees += feeAmount;
+        // Step 3: deduct bridged-asset deposit fee, get net amount to mint
+        uint256 amountAfterFee = _collectTokenFee(received, depositFeeBasisPoints);
 
-        if (isEncrypted) {
-            // Verify parity between public amount and encrypted amount
-            gtUint256 gtAmount = MpcCore.validateCiphertext(encryptedAmount);
-            gtBool amountMatch = MpcCore.eq(
-                gtAmount,
-                MpcCore.setPublic256(amountAfterFee)
-            );
-            require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
+        // Step 4: mint private tokens
+        privateToken.mint(msg.sender, amountAfterFee);
 
-            privateToken.mintGt(msg.sender, gtAmount);
-        } else {
-            privateToken.mint(msg.sender, amountAfterFee);
-        }
-
-        // Emit actual received amount (gross) and net private tokens minted
         emit Deposit(msg.sender, received, amountAfterFee);
-
-        // Refund excess native COTI fee (best-effort: do not revert so deposit succeeds even if sender cannot receive)
-        if (msg.value > nativeCotiFee) {
-            uint256 excess = msg.value - nativeCotiFee;
-            (bool ok, ) = msg.sender.call{value: excess}("");
-            if (!ok) {
-                accumulatedCotiFees += excess; // excess unrefundable; make it recoverable via withdrawCotiFees
-            }
-        }
     }
 
     /**
@@ -147,84 +118,32 @@ abstract contract PrivacyBridgeERC20 is PrivacyBridge {
     function withdraw(
         uint256 amount
     ) external payable nonReentrant whenNotPaused {
-        _withdraw(
-            amount,
-            false,
-            itUint256(ctUint256(ctUint128.wrap(0), ctUint128.wrap(0)), "")
-        );
+        _withdraw(amount);
     }
 
-    /**
-     * @notice Withdraw public ERC20 tokens by burning private tokens with an encrypted amount
-     * @param amount Public amount to release
-     * @param encryptedAmount Encrypted amount to burn
-     * @dev Native COTI fee: send msg.value >= nativeCotiFee; excess refunded best-effort (see deposit).
-     */
-    function withdraw(
-        uint256 amount,
-        itUint256 calldata encryptedAmount
-    ) external payable nonReentrant whenNotPaused {
-        _withdraw(amount, true, encryptedAmount);
-    }
-
-    function _withdraw(
-        uint256 amount,
-        bool isEncrypted,
-        itUint256 memory encryptedAmount
-    ) internal {
+    function _withdraw(uint256 amount) internal {
         if (amount == 0) revert AmountZero();
-        if (msg.value < nativeCotiFee) revert InsufficientCotiFee();
         _checkWithdrawLimits(amount);
 
-        // Handle native COTI fee (excess refunded to sender)
-        accumulatedCotiFees += nativeCotiFee;
+        // Step 1: collect flat native COTI fee (refunds excess to sender)
+        _collectNativeFee();
 
-        // Calculate fee on the public side
-        uint256 feeAmount = _calculateFeeAmount(amount, withdrawFeeBasisPoints);
-        uint256 amountAfterFee = amount - feeAmount;
-        if (amountAfterFee == 0) revert AmountZero();
-        accumulatedFees += feeAmount;
+        // Step 2: deduct bridged-asset withdrawal fee, get net amount to release
+        uint256 amountAfterFee = _collectTokenFee(amount, withdrawFeeBasisPoints);
 
+        // Step 3: verify bridge has enough liquidity (reserves fee balance)
         uint256 bridgeBalance = token.balanceOf(address(this));
         if (bridgeBalance < accumulatedFees + amountAfterFee)
             revert InsufficientBridgeLiquidity();
 
-        if (isEncrypted) {
-            // Verify parity
-            gtUint256 gtAmount = MpcCore.validateCiphertext(encryptedAmount);
-            gtBool amountMatch = MpcCore.eq(
-                gtAmount,
-                MpcCore.setPublic256(amount)
-            );
-            require(MpcCore.decrypt(amountMatch), "Encrypted amount mismatch");
+        // Step 4: pull and burn private tokens
+        privateToken.transferFrom(msg.sender, address(this), amount);
+        privateToken.burn(amount);
 
-            // Use already-validated gt handle so PrivateERC20 does not re-call
-            // validateCiphertext with a different contract context (signature mismatch)
-            privateToken.transferFromGT(
-                msg.sender,
-                address(this),
-                gtAmount
-            );
-            privateToken.burnGt(gtAmount);
-        } else {
-            // Standard withdrawal (public amount)
-            privateToken.transferFrom(msg.sender, address(this), amount);
-            privateToken.burn(amount);
-        }
-
-        // Transfer public tokens
+        // Step 5: release public tokens to user
         token.safeTransfer(msg.sender, amountAfterFee);
 
         emit Withdraw(msg.sender, amount, amountAfterFee);
-
-        // Refund excess native COTI fee (best-effort: do not revert so withdraw succeeds even if sender cannot receive)
-        if (msg.value > nativeCotiFee) {
-            uint256 excess = msg.value - nativeCotiFee;
-            (bool ok, ) = msg.sender.call{value: excess}("");
-            if (!ok) {
-                // Excess remains in contract; withdraw still succeeds
-            }
-        }
     }
 
     /**
