@@ -50,8 +50,8 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     /// @notice Fee divisor (1,000,000)
     uint256 public constant FEE_DIVISOR = 1000000;
 
-    /// @notice Maximum fee allowed (100% = 1,000,000 units)
-    uint256 public constant MAX_FEE_UNITS = 1000000;
+    /// @notice Maximum fee allowed (10% = 100,000 units)
+    uint256 public constant MAX_FEE_UNITS = 100000;
 
     /// @notice Flag to enable/disable deposits
     bool public isDepositEnabled = true;
@@ -276,6 +276,23 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     ) internal pure returns (uint256) {
         if (feeBasisPoints == 0) return 0;
         return Math.mulDiv(amount, feeBasisPoints, FEE_DIVISOR);
+    }
+
+    /**
+     * @notice Deducts the bridged-asset fee from `grossAmount`, accumulates it, and returns the net amount.
+     * @dev Reverts with {AmountZero} if the net amount after fee is zero.
+     * @param grossAmount The gross token amount before fee deduction.
+     * @param feeBasisPoints The fee rate to apply (deposit or withdraw basis points).
+     * @return net The amount the user receives / the bridge releases after fee.
+     */
+    function _collectTokenFee(
+        uint256 grossAmount,
+        uint256 feeBasisPoints
+    ) internal returns (uint256 net) {
+        uint256 fee = _calculateFeeAmount(grossAmount, feeBasisPoints);
+        net = grossAmount - fee;
+        if (net == 0) revert AmountZero();
+        accumulatedFees += fee;
     }
 
     /**
