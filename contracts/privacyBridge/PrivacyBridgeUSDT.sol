@@ -11,7 +11,7 @@ import "../token/PrivateERC20/tokens/PrivateTetherUSD.sol";
 contract PrivacyBridgeUSDT is PrivacyBridgeERC20 {
     
 
-    constructor(address _usdt, address _privateUsdt) PrivacyBridgeERC20(_usdt, _privateUsdt) {
+    constructor(address _usdt, address _privateUsdt) PrivacyBridgeERC20(_usdt, _privateUsdt, "USDT") {
         
     }
 }

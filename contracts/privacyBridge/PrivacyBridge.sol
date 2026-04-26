@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
+import "../oracle/ICotiPriceConsumer.sol";
 
 /**
  * @title PrivacyBridge
@@ -22,6 +23,8 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     event OperatorRemoved(address indexed account, address indexed by);
     event DepositEnabledUpdated(bool enabled, address indexed by);
     event NativeCotiFeeUpdated(uint256 fee, address indexed by);
+    event DynamicFeeUpdated(string feeType, uint256 fixedFee, uint256 percentageBps, uint256 maxFee);
+    event PriceOracleUpdated(address indexed oldOracle, address indexed newOracle);
 
     /// @notice Maximum amount that can be deposited in a single transaction
     uint256 public maxDepositAmount;
@@ -59,6 +62,34 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     /// @notice Fee in native COTI for bridge operations
     uint256 public nativeCotiFee;
 
+
+    // Privacy Bridge defines default Fees
+    // those fees can be overwritten using
+    // setDepositDynamicFee available for OPERATORS and ADMIN
+
+    /// @notice Deposit fee floor in COTI wei
+    uint256 public depositFixedFee = 10 ether;
+
+    /// @notice Deposit percentage (500/1,000,000 = 0.05%)
+    uint256 public depositPercentageBps = 500;
+
+    /// @notice Deposit fee cap in COTI wei
+    uint256 public depositMaxFee = 3000 ether;
+
+    /// @notice Withdraw fee floor in COTI wei
+    uint256 public withdrawFixedFee = 3 ether;
+
+    /// @notice Withdraw percentage (250/1,000,000 = 0.025%)
+    uint256 public withdrawPercentageBps = 250;
+
+    /// @notice Withdraw fee cap in COTI wei
+    uint256 public withdrawMaxFee = 1500 ether;
+
+    // --- END OF DEFAULT FEES
+
+    /// @notice CotiPriceConsumer contract address
+    address public priceOracle;
+
     error AmountZero();
     error InsufficientEthBalance();
     error EthTransferFailed();
@@ -66,6 +97,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     error DepositDisabled();
     error InsufficientCotiFee();
     error BridgePaused();
+    error OracleTimestampMismatch(uint256 expected, uint256 actual);
 
     // Limits errors
     error InvalidLimitConfiguration();
@@ -74,6 +106,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     error WithdrawBelowMinimum();
     error WithdrawExceedsMaximum();
     error InvalidFee();
+    error InvalidFeeConfiguration();
     error InsufficientAccumulatedFees();
     error WithdrawFeesMustBeOverridden();
 
@@ -263,6 +296,109 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
         emit NativeCotiFeeUpdated(_fee, msg.sender);
     }
 
+    /**
+     * @notice Validate that the oracle's lastUpdated timestamp matches the caller's expectation.
+     * @dev Reverts with {OracleTimestampMismatch} if the oracle data has been refreshed since
+     *      the user called estimateDepositFee / estimateWithdrawFee.
+     * @param expectedTimestamp The lastUpdated value the caller received from the estimate call.
+     */
+    function _validateOracleTimestamp(uint256 expectedTimestamp) internal view {
+        (, uint256 lastUpdated,,) = ICotiPriceConsumer(priceOracle).getPriceWithMeta("COTI");
+        if (lastUpdated != expectedTimestamp) revert OracleTimestampMismatch(expectedTimestamp, lastUpdated);
+    }
+
+    /**
+     * @notice Calculate the dynamic fee using the floor/cap formula
+     * @param percentageFeeCoti The percentage-based fee component in COTI
+     * @param fixedFee The minimum fee floor in COTI
+     * @param maxFee The maximum fee cap in COTI
+     * @return The computed fee: min(max(fixedFee, percentageFeeCoti), maxFee)
+     */
+    function _calculateDynamicFee(
+        uint256 percentageFeeCoti,
+        uint256 fixedFee,
+        uint256 maxFee
+    ) internal pure returns (uint256) {
+        uint256 fee = percentageFeeCoti > fixedFee ? percentageFeeCoti : fixedFee;
+        return fee > maxFee ? maxFee : fee;
+    }
+
+    /**
+     * @notice Estimate the deposit fee for a given amount
+     * @param amount The amount to estimate the deposit fee for
+     * @return fee           The estimated fee in native COTI (18 decimals)
+     * @return lastUpdated   Oracle data last update timestamp
+     * @return threshold     Staleness cutoff timestamp (0 if disabled)
+     * @return blockTimestamp Current block.timestamp
+     * @dev Must be overridden by derived contracts (Native and ERC20 bridges).
+     */
+    function estimateDepositFee(uint256 amount) external view virtual returns (uint256 fee, uint256 lastUpdated, uint256 threshold, uint256 blockTimestamp);
+
+    /**
+     * @notice Estimate the withdrawal fee for a given amount
+     * @param amount The amount to estimate the withdrawal fee for
+     * @return fee           The estimated fee in native COTI (18 decimals)
+     * @return lastUpdated   Oracle data last update timestamp
+     * @return threshold     Staleness cutoff timestamp (0 if disabled)
+     * @return blockTimestamp Current block.timestamp
+     * @dev Must be overridden by derived contracts (Native and ERC20 bridges).
+     */
+    function estimateWithdrawFee(uint256 amount) external view virtual returns (uint256 fee, uint256 lastUpdated, uint256 threshold, uint256 blockTimestamp);
+
+    /**
+     * @notice Set the deposit dynamic fee parameters
+     * @param _fixedFee New deposit fee floor in COTI wei
+     * @param _percentageBps New deposit percentage (max MAX_FEE_UNITS = 10%)
+     * @param _maxFee New deposit fee cap in COTI wei
+     * @dev Only the operator can call this function
+     */
+    function setDepositDynamicFee(
+        uint256 _fixedFee,
+        uint256 _percentageBps,
+        uint256 _maxFee
+    ) external onlyOperator {
+        if (_maxFee == 0) revert InvalidFeeConfiguration();
+        if (_fixedFee > _maxFee) revert InvalidFeeConfiguration();
+        if (_percentageBps > MAX_FEE_UNITS) revert InvalidFee();
+        depositFixedFee = _fixedFee;
+        depositPercentageBps = _percentageBps;
+        depositMaxFee = _maxFee;
+        emit DynamicFeeUpdated("deposit", _fixedFee, _percentageBps, _maxFee);
+    }
+
+    /**
+     * @notice Set the withdraw dynamic fee parameters
+     * @param _fixedFee New withdraw fee floor in COTI wei
+     * @param _percentageBps New withdraw percentage (max MAX_FEE_UNITS = 10%)
+     * @param _maxFee New withdraw fee cap in COTI wei
+     * @dev Only the operator can call this function
+     */
+    function setWithdrawDynamicFee(
+        uint256 _fixedFee,
+        uint256 _percentageBps,
+        uint256 _maxFee
+    ) external onlyOperator {
+        if (_maxFee == 0) revert InvalidFeeConfiguration();
+        if (_fixedFee > _maxFee) revert InvalidFeeConfiguration();
+        if (_percentageBps > MAX_FEE_UNITS) revert InvalidFee();
+        withdrawFixedFee = _fixedFee;
+        withdrawPercentageBps = _percentageBps;
+        withdrawMaxFee = _maxFee;
+        emit DynamicFeeUpdated("withdraw", _fixedFee, _percentageBps, _maxFee);
+    }
+
+    /**
+     * @notice Set the price oracle address
+     * @param _oracle Address of the CotiPriceConsumer contract
+     * @dev Only the owner can call this function
+     */
+    function setPriceOracle(address _oracle) external onlyOwner {
+        if (_oracle == address(0)) revert InvalidAddress();
+        address oldOracle = priceOracle;
+        priceOracle = _oracle;
+        emit PriceOracleUpdated(oldOracle, _oracle);
+    }
+
 
     /**
      * @notice Calculate fee amount based on the input amount and fee basis points
@@ -305,7 +441,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     function withdrawFees(
         address to,
         uint256 amount
-    ) external virtual onlyOperator {
+    ) external virtual onlyOwner {
         if (to == address(0)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
         if (amount > accumulatedFees) revert InsufficientAccumulatedFees();
@@ -321,7 +457,7 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
      * @dev Only the operator can call this function. Derived ERC20 bridges use this inherited implementation to withdraw
      *      accumulated native COTI fees; native bridge does not use this (accumulatedCotiFees remains 0).
      */
-    function withdrawCotiFees(address to, uint256 amount) external onlyOperator nonReentrant {
+    function withdrawCotiFees(address to, uint256 amount) external onlyOwner nonReentrant {
         if (to == address(0)) revert InvalidAddress();
         if (amount == 0) revert AmountZero();
         if (amount > accumulatedCotiFees) revert InsufficientAccumulatedFees();
