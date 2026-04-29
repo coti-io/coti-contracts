@@ -51,7 +51,7 @@ contract ValidateCiphertext256TestsContract {
         gtUint256 validatedValue = MpcCore.validateCiphertext(input);
         
         // Add 1 to the value
-        gtUint256 one = MpcCore.setPublic256(1);
+        gtUint256 one = MpcCore.setPublic256(uint256(1));
         gtUint256 result = MpcCore.add(validatedValue, one);
         
         // Decrypt and return

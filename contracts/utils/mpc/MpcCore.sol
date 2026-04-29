@@ -4,9 +4,13 @@ pragma solidity ^0.8.20;
 
 
 type gtBool is uint256;
+type gtInt8 is uint256;
 type gtUint8 is uint256;
+type gtInt16 is uint256;
 type gtUint16 is uint256;
+type gtInt32 is uint256;
 type gtUint32 is uint256;
+type gtInt64 is uint256;
 type gtUint64 is uint256;
 
 // we use a struct because user-defined value types can only be elementary value types
@@ -16,12 +20,18 @@ struct gtString {
 }
 
 type gtUint128 is uint256;
+type gtInt128 is uint256;
 type gtUint256 is uint256;
+type gtInt256 is uint256;
 
 type ctBool is uint256;
+type ctInt8 is uint256;
 type ctUint8 is uint256;
+type ctInt16 is uint256;
 type ctUint16 is uint256;
+type ctInt32 is uint256;
 type ctUint32 is uint256;
+type ctInt64 is uint256;
 type ctUint64 is uint256;
 
 // we use a struct because user-defined value types can only be elementary value types
@@ -31,6 +41,11 @@ struct ctString {
 }
 
 type ctUint128 is uint256;
+type ctInt128 is uint256;
+struct ctInt256 {
+    ctInt128 ciphertextHigh;
+    ctInt128 ciphertextLow;
+}
 struct ctUint256 {
     ctUint128 ciphertextHigh;
     ctUint128 ciphertextLow;
@@ -40,16 +55,32 @@ struct itBool {
     ctBool ciphertext;
     bytes signature;
 }
+struct itInt8 {
+    ctInt8 ciphertext;
+    bytes signature;
+}
 struct itUint8 {
     ctUint8 ciphertext;
+    bytes signature;
+}
+struct itInt16 {
+    ctInt16 ciphertext;
     bytes signature;
 }
 struct itUint16 {
     ctUint16 ciphertext;
     bytes signature;
 }
+struct itInt32 {
+    ctInt32 ciphertext;
+    bytes signature;
+}
 struct itUint32 {
     ctUint32 ciphertext;
+    bytes signature;
+}
+struct itInt64 {
+    ctInt64 ciphertext;
     bytes signature;
 }
 struct itUint64 {
@@ -64,8 +95,16 @@ struct itUint128 {
     ctUint128 ciphertext;
     bytes signature;
 }
+struct itInt128 {
+    ctInt128 ciphertext;
+    bytes signature;
+}
 struct itUint256 {
     ctUint256 ciphertext;
+    bytes signature;
+}
+struct itInt256 {
+    ctInt256 ciphertext;
     bytes signature;
 }
 
@@ -73,25 +112,49 @@ struct utBool {
     ctBool ciphertext;
     ctBool userCiphertext;
 }
+struct utInt8 {
+    ctInt8 ciphertext;
+    ctInt8 userCiphertext;
+}
 struct utUint8 {
     ctUint8 ciphertext;
     ctUint8 userCiphertext;
+}
+struct utInt16 {
+    ctInt16 ciphertext;
+    ctInt16 userCiphertext;
 }
 struct utUint16 {
     ctUint16 ciphertext;
     ctUint16 userCiphertext;
 }
+struct utInt32 {
+    ctInt32 ciphertext;
+    ctInt32 userCiphertext;
+}
 struct utUint32 {
     ctUint32 ciphertext;
     ctUint32 userCiphertext;
+}
+struct utInt64 {
+    ctInt64 ciphertext;
+    ctInt64 userCiphertext;
 }
 struct utUint64 {
     ctUint64 ciphertext;
     ctUint64 userCiphertext;
 }
+struct utInt128 {
+    ctInt128 ciphertext;
+    ctInt128 userCiphertext;
+}
 struct utUint128 {
     ctUint128 ciphertext;
     ctUint128 userCiphertext;
+}
+struct utInt256 {
+    ctInt256 ciphertext;
+    ctInt256 userCiphertext;
 }
 struct utUint256 {
     ctUint256 ciphertext;
@@ -14049,5 +14112,551 @@ library MpcCore {
         return (gtUint256.wrap(new_a), gtUint256.wrap(new_b), gtBool.wrap(res), gtUint256.wrap(new_allowance));
     }
 
+    // =========== signed integer operations ==============
+
+    function validateCiphertext(itInt8 memory input) internal returns (gtInt8) {
+        return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).ValidateCiphertext(bytes1(uint8(MPC_TYPE.SUINT8_T)), ctInt8.unwrap(input.ciphertext), input.signature));
+    }
+
+    function validateCiphertext(itInt16 memory input) internal returns (gtInt16) {
+        return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).ValidateCiphertext(bytes1(uint8(MPC_TYPE.SUINT16_T)), ctInt16.unwrap(input.ciphertext), input.signature));
+    }
+
+    function validateCiphertext(itInt32 memory input) internal returns (gtInt32) {
+        return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).ValidateCiphertext(bytes1(uint8(MPC_TYPE.SUINT32_T)), ctInt32.unwrap(input.ciphertext), input.signature));
+    }
+
+    function validateCiphertext(itInt64 memory input) internal returns (gtInt64) {
+        return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).ValidateCiphertext(bytes1(uint8(MPC_TYPE.SUINT64_T)), ctInt64.unwrap(input.ciphertext), input.signature));
+    }
+
+    function validateCiphertext(itInt128 memory input) internal returns (gtInt128) {
+        return gtInt128.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).ValidateCiphertext(bytes1(uint8(MPC_TYPE.SUINT128_T)), ctInt128.unwrap(input.ciphertext), input.signature));
+    }
+
+    function validateCiphertext(itInt256 memory input) internal returns (gtInt256) {
+        return gtInt256.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).ValidateCiphertext(bytes1(uint8(MPC_TYPE.SUINT256_T)), ctInt128.unwrap(input.ciphertext.ciphertextHigh), ctInt128.unwrap(input.ciphertext.ciphertextLow), input.signature));
+    }
+
+    function onBoard(ctInt8 ct) internal returns (gtInt8) {
+        return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).OnBoard(bytes1(uint8(MPC_TYPE.SUINT8_T)), ctInt8.unwrap(ct)));
+    }
+
+    function onBoard(ctInt16 ct) internal returns (gtInt16) {
+        return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).OnBoard(bytes1(uint8(MPC_TYPE.SUINT16_T)), ctInt16.unwrap(ct)));
+    }
+
+    function onBoard(ctInt32 ct) internal returns (gtInt32) {
+        return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).OnBoard(bytes1(uint8(MPC_TYPE.SUINT32_T)), ctInt32.unwrap(ct)));
+    }
+
+    function onBoard(ctInt64 ct) internal returns (gtInt64) {
+        return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).OnBoard(bytes1(uint8(MPC_TYPE.SUINT64_T)), ctInt64.unwrap(ct)));
+    }
+
+    function onBoard(ctInt128 ct) internal returns (gtInt128) {
+        return gtInt128.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).OnBoard(bytes1(uint8(MPC_TYPE.SUINT128_T)), ctInt128.unwrap(ct)));
+    }
+
+    function onBoard(ctInt256 memory ct) internal returns (gtInt256) {
+        return gtInt256.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).OnBoard(bytes1(uint8(MPC_TYPE.SUINT256_T)), ctInt128.unwrap(ct.ciphertextHigh), ctInt128.unwrap(ct.ciphertextLow)));
+    }
+
+    function offBoard(gtInt8 pt) internal returns (ctInt8) {
+        return ctInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).OffBoard(bytes1(uint8(MPC_TYPE.SUINT8_T)), gtInt8.unwrap(pt)));
+    }
+
+    function offBoard(gtInt16 pt) internal returns (ctInt16) {
+        return ctInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).OffBoard(bytes1(uint8(MPC_TYPE.SUINT16_T)), gtInt16.unwrap(pt)));
+    }
+
+    function offBoard(gtInt32 pt) internal returns (ctInt32) {
+        return ctInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).OffBoard(bytes1(uint8(MPC_TYPE.SUINT32_T)), gtInt32.unwrap(pt)));
+    }
+
+    function offBoard(gtInt64 pt) internal returns (ctInt64) {
+        return ctInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).OffBoard(bytes1(uint8(MPC_TYPE.SUINT64_T)), gtInt64.unwrap(pt)));
+    }
+
+    function offBoard(gtInt128 pt) internal returns (ctInt128) {
+        return ctInt128.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).OffBoard(bytes1(uint8(MPC_TYPE.SUINT128_T)), gtInt128.unwrap(pt)));
+    }
+
+    function offBoard(gtInt256 pt) internal returns (ctInt256 memory result) {
+        (uint256 high, uint256 low) = ExtendedOperations(address(MPC_PRECOMPILE)).OffBoard256(bytes1(uint8(MPC_TYPE.SUINT256_T)), gtInt256.unwrap(pt));
+        result = ctInt256({ciphertextHigh: ctInt128.wrap(high), ciphertextLow: ctInt128.wrap(low)});
+    }
+
+    function offBoardToUser(gtInt8 pt, address addr) internal returns (ctInt8) {
+        return ctInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).OffBoardToUser(bytes1(uint8(MPC_TYPE.SUINT8_T)), gtInt8.unwrap(pt), abi.encodePacked(addr)));
+    }
+
+    function offBoardToUser(gtInt16 pt, address addr) internal returns (ctInt16) {
+        return ctInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).OffBoardToUser(bytes1(uint8(MPC_TYPE.SUINT16_T)), gtInt16.unwrap(pt), abi.encodePacked(addr)));
+    }
+
+    function offBoardToUser(gtInt32 pt, address addr) internal returns (ctInt32) {
+        return ctInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).OffBoardToUser(bytes1(uint8(MPC_TYPE.SUINT32_T)), gtInt32.unwrap(pt), abi.encodePacked(addr)));
+    }
+
+    function offBoardToUser(gtInt64 pt, address addr) internal returns (ctInt64) {
+        return ctInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).OffBoardToUser(bytes1(uint8(MPC_TYPE.SUINT64_T)), gtInt64.unwrap(pt), abi.encodePacked(addr)));
+    }
+
+    function offBoardToUser(gtInt128 pt, address addr) internal returns (ctInt128) {
+        return ctInt128.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).OffBoardToUser(bytes1(uint8(MPC_TYPE.SUINT128_T)), gtInt128.unwrap(pt), abi.encodePacked(addr)));
+    }
+
+    function offBoardToUser(gtInt256 pt, address addr) internal returns (ctInt256 memory result) {
+        (uint256 high, uint256 low) = ExtendedOperations(address(MPC_PRECOMPILE)).OffBoardToUser256(bytes1(uint8(MPC_TYPE.SUINT256_T)), gtInt256.unwrap(pt), abi.encodePacked(addr));
+        result = ctInt256({ciphertextHigh: ctInt128.wrap(high), ciphertextLow: ctInt128.wrap(low)});
+    }
+
+    function offBoardCombined(gtInt8 pt, address addr) internal returns (utInt8 memory ut) {
+        ut.ciphertext = offBoard(pt);
+        ut.userCiphertext = offBoardToUser(pt, addr);
+    }
+
+    function offBoardCombined(gtInt16 pt, address addr) internal returns (utInt16 memory ut) {
+        ut.ciphertext = offBoard(pt);
+        ut.userCiphertext = offBoardToUser(pt, addr);
+    }
+
+    function offBoardCombined(gtInt32 pt, address addr) internal returns (utInt32 memory ut) {
+        ut.ciphertext = offBoard(pt);
+        ut.userCiphertext = offBoardToUser(pt, addr);
+    }
+
+    function offBoardCombined(gtInt64 pt, address addr) internal returns (utInt64 memory ut) {
+        ut.ciphertext = offBoard(pt);
+        ut.userCiphertext = offBoardToUser(pt, addr);
+    }
+
+    function offBoardCombined(gtInt128 pt, address addr) internal returns (utInt128 memory ut) {
+        ut.ciphertext = offBoard(pt);
+        ut.userCiphertext = offBoardToUser(pt, addr);
+    }
+
+    function offBoardCombined(gtInt256 pt, address addr) internal returns (utInt256 memory ut) {
+        ut.ciphertext = offBoard(pt);
+        ut.userCiphertext = offBoardToUser(pt, addr);
+    }
+
+    function setPublic8(int8 pt) internal returns (gtInt8) {
+        uint8 unsignedBits;
+        assembly { unsignedBits := pt }
+        return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).SetPublic(bytes1(uint8(MPC_TYPE.SUINT8_T)), uint256(unsignedBits)));
+    }
+
+    function setPublic16(int16 pt) internal returns (gtInt16) {
+        uint16 unsignedBits;
+        assembly { unsignedBits := pt }
+        return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).SetPublic(bytes1(uint8(MPC_TYPE.SUINT16_T)), uint256(unsignedBits)));
+    }
+
+    function setPublic32(int32 pt) internal returns (gtInt32) {
+        uint32 unsignedBits;
+        assembly { unsignedBits := pt }
+        return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).SetPublic(bytes1(uint8(MPC_TYPE.SUINT32_T)), uint256(unsignedBits)));
+    }
+
+    function setPublic64(int64 pt) internal returns (gtInt64) {
+        uint64 unsignedBits;
+        assembly { unsignedBits := pt }
+        return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).SetPublic(bytes1(uint8(MPC_TYPE.SUINT64_T)), uint256(unsignedBits)));
+    }
+
+    function setPublic128(int128 pt) internal returns (gtInt128) {
+        uint128 unsignedBits;
+        assembly { unsignedBits := pt }
+        return gtInt128.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).SetPublic(bytes1(uint8(MPC_TYPE.SUINT128_T)), uint256(unsignedBits)));
+    }
+
+    function setPublic256(int256 pt) internal returns (gtInt256) {
+        uint256 unsignedBits;
+        assembly { unsignedBits := pt }
+        return gtInt256.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).SetPublic(bytes1(uint8(MPC_TYPE.SUINT256_T)), unsignedBits));
+    }
+
+    function add(gtInt8 a, gtInt8 b) internal returns (gtInt8) { return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Add(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtInt8.unwrap(a), gtInt8.unwrap(b))); }
+    function add(gtInt16 a, gtInt16 b) internal returns (gtInt16) { return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Add(combineEnumsToBytes3(MPC_TYPE.SUINT16_T, MPC_TYPE.SUINT16_T, ARGS.BOTH_SECRET), gtInt16.unwrap(a), gtInt16.unwrap(b))); }
+    function add(gtInt32 a, gtInt32 b) internal returns (gtInt32) { return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Add(combineEnumsToBytes3(MPC_TYPE.SUINT32_T, MPC_TYPE.SUINT32_T, ARGS.BOTH_SECRET), gtInt32.unwrap(a), gtInt32.unwrap(b))); }
+    function add(gtInt64 a, gtInt64 b) internal returns (gtInt64) { return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Add(combineEnumsToBytes3(MPC_TYPE.SUINT64_T, MPC_TYPE.SUINT64_T, ARGS.BOTH_SECRET), gtInt64.unwrap(a), gtInt64.unwrap(b))); }
+    function add(gtInt128 a, gtInt128 b) internal returns (gtInt128) { return gtInt128.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Add(combineEnumsToBytes3(MPC_TYPE.SUINT128_T, MPC_TYPE.SUINT128_T, ARGS.BOTH_SECRET), gtInt128.unwrap(a), gtInt128.unwrap(b))); }
+    function add(gtInt256 a, gtInt256 b) internal returns (gtInt256) { return gtInt256.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Add(combineEnumsToBytes3(MPC_TYPE.SUINT256_T, MPC_TYPE.SUINT256_T, ARGS.BOTH_SECRET), gtInt256.unwrap(a), gtInt256.unwrap(b))); }
+
+    function sub(gtInt8 a, gtInt8 b) internal returns (gtInt8) { return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Sub(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtInt8.unwrap(a), gtInt8.unwrap(b))); }
+    function sub(gtInt16 a, gtInt16 b) internal returns (gtInt16) { return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Sub(combineEnumsToBytes3(MPC_TYPE.SUINT16_T, MPC_TYPE.SUINT16_T, ARGS.BOTH_SECRET), gtInt16.unwrap(a), gtInt16.unwrap(b))); }
+    function sub(gtInt32 a, gtInt32 b) internal returns (gtInt32) { return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Sub(combineEnumsToBytes3(MPC_TYPE.SUINT32_T, MPC_TYPE.SUINT32_T, ARGS.BOTH_SECRET), gtInt32.unwrap(a), gtInt32.unwrap(b))); }
+    function sub(gtInt64 a, gtInt64 b) internal returns (gtInt64) { return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Sub(combineEnumsToBytes3(MPC_TYPE.SUINT64_T, MPC_TYPE.SUINT64_T, ARGS.BOTH_SECRET), gtInt64.unwrap(a), gtInt64.unwrap(b))); }
+    function sub(gtInt128 a, gtInt128 b) internal returns (gtInt128) { return gtInt128.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Sub(combineEnumsToBytes3(MPC_TYPE.SUINT128_T, MPC_TYPE.SUINT128_T, ARGS.BOTH_SECRET), gtInt128.unwrap(a), gtInt128.unwrap(b))); }
+    function sub(gtInt256 a, gtInt256 b) internal returns (gtInt256) { return gtInt256.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Sub(combineEnumsToBytes3(MPC_TYPE.SUINT256_T, MPC_TYPE.SUINT256_T, ARGS.BOTH_SECRET), gtInt256.unwrap(a), gtInt256.unwrap(b))); }
+
+    function mul(gtInt8 a, gtInt8 b) internal returns (gtInt8) { return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Mul(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtInt8.unwrap(a), gtInt8.unwrap(b))); }
+    function mul(gtInt16 a, gtInt16 b) internal returns (gtInt16) { return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Mul(combineEnumsToBytes3(MPC_TYPE.SUINT16_T, MPC_TYPE.SUINT16_T, ARGS.BOTH_SECRET), gtInt16.unwrap(a), gtInt16.unwrap(b))); }
+    function mul(gtInt32 a, gtInt32 b) internal returns (gtInt32) { return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Mul(combineEnumsToBytes3(MPC_TYPE.SUINT32_T, MPC_TYPE.SUINT32_T, ARGS.BOTH_SECRET), gtInt32.unwrap(a), gtInt32.unwrap(b))); }
+    function mul(gtInt64 a, gtInt64 b) internal returns (gtInt64) { return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Mul(combineEnumsToBytes3(MPC_TYPE.SUINT64_T, MPC_TYPE.SUINT64_T, ARGS.BOTH_SECRET), gtInt64.unwrap(a), gtInt64.unwrap(b))); }
+    function mul(gtInt128 a, gtInt128 b) internal returns (gtInt128) { return gtInt128.wrap(gtUint128.unwrap(applyMulSign(signBit(a), signBit(b), mul(absUnsigned(a), absUnsigned(b))))); }
+    function mul(gtInt256 a, gtInt256 b) internal returns (gtInt256) { return gtInt256.wrap(gtUint256.unwrap(applyMulSign(signBit(a), signBit(b), mul(absUnsigned(a), absUnsigned(b))))); }
+
+    function div(gtInt8 a, gtInt8 b) internal returns (gtInt8) { require(decrypt(ne(b, setPublic8(int8(0)))), "division by zero"); return gtInt8.wrap(gtUint8.unwrap(applyDivSign(signBit(a), signBit(b), div(absUnsigned(a), absUnsigned(b))))); }
+    function div(gtInt16 a, gtInt16 b) internal returns (gtInt16) { require(decrypt(ne(b, setPublic16(int16(0)))), "division by zero"); return gtInt16.wrap(gtUint16.unwrap(applyDivSign(signBit(a), signBit(b), div(absUnsigned(a), absUnsigned(b))))); }
+    function div(gtInt32 a, gtInt32 b) internal returns (gtInt32) { require(decrypt(ne(b, setPublic32(int32(0)))), "division by zero"); return gtInt32.wrap(gtUint32.unwrap(applyDivSign(signBit(a), signBit(b), div(absUnsigned(a), absUnsigned(b))))); }
+    function div(gtInt64 a, gtInt64 b) internal returns (gtInt64) { require(decrypt(ne(b, setPublic64(int64(0)))), "division by zero"); return gtInt64.wrap(gtUint64.unwrap(applyDivSign(signBit(a), signBit(b), div(absUnsigned(a), absUnsigned(b))))); }
+    function div(gtInt128 a, gtInt128 b) internal returns (gtInt128) { require(decrypt(ne(b, setPublic128(int128(0)))), "division by zero"); return gtInt128.wrap(gtUint128.unwrap(applyDivSign(signBit(a), signBit(b), div(absUnsigned(a), absUnsigned(b))))); }
+    function div(gtInt256 a, gtInt256 b) internal returns (gtInt256) { require(decrypt(ne(b, setPublic256(int256(0)))), "division by zero"); return gtInt256.wrap(gtUint256.unwrap(applyDivSign(signBit(a), signBit(b), div(absUnsigned(a), absUnsigned(b))))); }
+
+    function and(gtInt8 a, gtInt8 b) internal returns (gtInt8) { return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).And(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtInt8.unwrap(a), gtInt8.unwrap(b))); }
+    function and(gtInt16 a, gtInt16 b) internal returns (gtInt16) { return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).And(combineEnumsToBytes3(MPC_TYPE.SUINT16_T, MPC_TYPE.SUINT16_T, ARGS.BOTH_SECRET), gtInt16.unwrap(a), gtInt16.unwrap(b))); }
+    function and(gtInt32 a, gtInt32 b) internal returns (gtInt32) { return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).And(combineEnumsToBytes3(MPC_TYPE.SUINT32_T, MPC_TYPE.SUINT32_T, ARGS.BOTH_SECRET), gtInt32.unwrap(a), gtInt32.unwrap(b))); }
+    function and(gtInt64 a, gtInt64 b) internal returns (gtInt64) { return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).And(combineEnumsToBytes3(MPC_TYPE.SUINT64_T, MPC_TYPE.SUINT64_T, ARGS.BOTH_SECRET), gtInt64.unwrap(a), gtInt64.unwrap(b))); }
+    function and(gtInt128 a, gtInt128 b) internal returns (gtInt128) { return gtInt128.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).And(combineEnumsToBytes3(MPC_TYPE.SUINT128_T, MPC_TYPE.SUINT128_T, ARGS.BOTH_SECRET), gtInt128.unwrap(a), gtInt128.unwrap(b))); }
+    function and(gtInt256 a, gtInt256 b) internal returns (gtInt256) { return gtInt256.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).And(combineEnumsToBytes3(MPC_TYPE.SUINT256_T, MPC_TYPE.SUINT256_T, ARGS.BOTH_SECRET), gtInt256.unwrap(a), gtInt256.unwrap(b))); }
+
+    function or(gtInt8 a, gtInt8 b) internal returns (gtInt8) { return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Or(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtInt8.unwrap(a), gtInt8.unwrap(b))); }
+    function or(gtInt16 a, gtInt16 b) internal returns (gtInt16) { return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Or(combineEnumsToBytes3(MPC_TYPE.SUINT16_T, MPC_TYPE.SUINT16_T, ARGS.BOTH_SECRET), gtInt16.unwrap(a), gtInt16.unwrap(b))); }
+    function or(gtInt32 a, gtInt32 b) internal returns (gtInt32) { return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Or(combineEnumsToBytes3(MPC_TYPE.SUINT32_T, MPC_TYPE.SUINT32_T, ARGS.BOTH_SECRET), gtInt32.unwrap(a), gtInt32.unwrap(b))); }
+    function or(gtInt64 a, gtInt64 b) internal returns (gtInt64) { return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Or(combineEnumsToBytes3(MPC_TYPE.SUINT64_T, MPC_TYPE.SUINT64_T, ARGS.BOTH_SECRET), gtInt64.unwrap(a), gtInt64.unwrap(b))); }
+    function or(gtInt128 a, gtInt128 b) internal returns (gtInt128) { return gtInt128.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Or(combineEnumsToBytes3(MPC_TYPE.SUINT128_T, MPC_TYPE.SUINT128_T, ARGS.BOTH_SECRET), gtInt128.unwrap(a), gtInt128.unwrap(b))); }
+    function or(gtInt256 a, gtInt256 b) internal returns (gtInt256) { return gtInt256.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Or(combineEnumsToBytes3(MPC_TYPE.SUINT256_T, MPC_TYPE.SUINT256_T, ARGS.BOTH_SECRET), gtInt256.unwrap(a), gtInt256.unwrap(b))); }
+
+    function xor(gtInt8 a, gtInt8 b) internal returns (gtInt8) { return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Xor(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtInt8.unwrap(a), gtInt8.unwrap(b))); }
+    function xor(gtInt16 a, gtInt16 b) internal returns (gtInt16) { return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Xor(combineEnumsToBytes3(MPC_TYPE.SUINT16_T, MPC_TYPE.SUINT16_T, ARGS.BOTH_SECRET), gtInt16.unwrap(a), gtInt16.unwrap(b))); }
+    function xor(gtInt32 a, gtInt32 b) internal returns (gtInt32) { return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Xor(combineEnumsToBytes3(MPC_TYPE.SUINT32_T, MPC_TYPE.SUINT32_T, ARGS.BOTH_SECRET), gtInt32.unwrap(a), gtInt32.unwrap(b))); }
+    function xor(gtInt64 a, gtInt64 b) internal returns (gtInt64) { return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Xor(combineEnumsToBytes3(MPC_TYPE.SUINT64_T, MPC_TYPE.SUINT64_T, ARGS.BOTH_SECRET), gtInt64.unwrap(a), gtInt64.unwrap(b))); }
+    function xor(gtInt128 a, gtInt128 b) internal returns (gtInt128) { return gtInt128.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Xor(combineEnumsToBytes3(MPC_TYPE.SUINT128_T, MPC_TYPE.SUINT128_T, ARGS.BOTH_SECRET), gtInt128.unwrap(a), gtInt128.unwrap(b))); }
+    function xor(gtInt256 a, gtInt256 b) internal returns (gtInt256) { return gtInt256.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Xor(combineEnumsToBytes3(MPC_TYPE.SUINT256_T, MPC_TYPE.SUINT256_T, ARGS.BOTH_SECRET), gtInt256.unwrap(a), gtInt256.unwrap(b))); }
+
+    function eq(gtInt8 a, gtInt8 b) internal returns (gtBool) { return eq(gtUint8.wrap(gtInt8.unwrap(a)), gtUint8.wrap(gtInt8.unwrap(b))); }
+    function eq(gtInt16 a, gtInt16 b) internal returns (gtBool) { return eq(gtUint16.wrap(gtInt16.unwrap(a)), gtUint16.wrap(gtInt16.unwrap(b))); }
+    function eq(gtInt32 a, gtInt32 b) internal returns (gtBool) { return eq(gtUint32.wrap(gtInt32.unwrap(a)), gtUint32.wrap(gtInt32.unwrap(b))); }
+    function eq(gtInt64 a, gtInt64 b) internal returns (gtBool) { return eq(gtUint64.wrap(gtInt64.unwrap(a)), gtUint64.wrap(gtInt64.unwrap(b))); }
+    function eq(gtInt128 a, gtInt128 b) internal returns (gtBool) { return eq(gtUint128.wrap(gtInt128.unwrap(a)), gtUint128.wrap(gtInt128.unwrap(b))); }
+    function eq(gtInt256 a, gtInt256 b) internal returns (gtBool) { return eq(gtUint256.wrap(gtInt256.unwrap(a)), gtUint256.wrap(gtInt256.unwrap(b))); }
+
+    function ne(gtInt8 a, gtInt8 b) internal returns (gtBool) { return ne(gtUint8.wrap(gtInt8.unwrap(a)), gtUint8.wrap(gtInt8.unwrap(b))); }
+    function ne(gtInt16 a, gtInt16 b) internal returns (gtBool) { return ne(gtUint16.wrap(gtInt16.unwrap(a)), gtUint16.wrap(gtInt16.unwrap(b))); }
+    function ne(gtInt32 a, gtInt32 b) internal returns (gtBool) { return ne(gtUint32.wrap(gtInt32.unwrap(a)), gtUint32.wrap(gtInt32.unwrap(b))); }
+    function ne(gtInt64 a, gtInt64 b) internal returns (gtBool) { return ne(gtUint64.wrap(gtInt64.unwrap(a)), gtUint64.wrap(gtInt64.unwrap(b))); }
+    function ne(gtInt128 a, gtInt128 b) internal returns (gtBool) { return ne(gtUint128.wrap(gtInt128.unwrap(a)), gtUint128.wrap(gtInt128.unwrap(b))); }
+    function ne(gtInt256 a, gtInt256 b) internal returns (gtBool) { return ne(gtUint256.wrap(gtInt256.unwrap(a)), gtUint256.wrap(gtInt256.unwrap(b))); }
+
+    function gt(gtInt8 a, gtInt8 b) internal returns (gtBool) { return signedGt(signBit(a), signBit(b), gt(gtUint8.wrap(gtInt8.unwrap(a)), gtUint8.wrap(gtInt8.unwrap(b)))); }
+    function gt(gtInt16 a, gtInt16 b) internal returns (gtBool) { return signedGt(signBit(a), signBit(b), gt(gtUint16.wrap(gtInt16.unwrap(a)), gtUint16.wrap(gtInt16.unwrap(b)))); }
+    function gt(gtInt32 a, gtInt32 b) internal returns (gtBool) { return signedGt(signBit(a), signBit(b), gt(gtUint32.wrap(gtInt32.unwrap(a)), gtUint32.wrap(gtInt32.unwrap(b)))); }
+    function gt(gtInt64 a, gtInt64 b) internal returns (gtBool) { return signedGt(signBit(a), signBit(b), gt(gtUint64.wrap(gtInt64.unwrap(a)), gtUint64.wrap(gtInt64.unwrap(b)))); }
+    function gt(gtInt128 a, gtInt128 b) internal returns (gtBool) { return signedGt(signBit(a), signBit(b), gt(gtUint128.wrap(gtInt128.unwrap(a)), gtUint128.wrap(gtInt128.unwrap(b)))); }
+    function gt(gtInt256 a, gtInt256 b) internal returns (gtBool) { return signedGt(signBit(a), signBit(b), gt(gtUint256.wrap(gtInt256.unwrap(a)), gtUint256.wrap(gtInt256.unwrap(b)))); }
+
+    function lt(gtInt8 a, gtInt8 b) internal returns (gtBool) { return signedLt(signBit(a), signBit(b), lt(gtUint8.wrap(gtInt8.unwrap(a)), gtUint8.wrap(gtInt8.unwrap(b)))); }
+    function lt(gtInt16 a, gtInt16 b) internal returns (gtBool) { return signedLt(signBit(a), signBit(b), lt(gtUint16.wrap(gtInt16.unwrap(a)), gtUint16.wrap(gtInt16.unwrap(b)))); }
+    function lt(gtInt32 a, gtInt32 b) internal returns (gtBool) { return signedLt(signBit(a), signBit(b), lt(gtUint32.wrap(gtInt32.unwrap(a)), gtUint32.wrap(gtInt32.unwrap(b)))); }
+    function lt(gtInt64 a, gtInt64 b) internal returns (gtBool) { return signedLt(signBit(a), signBit(b), lt(gtUint64.wrap(gtInt64.unwrap(a)), gtUint64.wrap(gtInt64.unwrap(b)))); }
+    function lt(gtInt128 a, gtInt128 b) internal returns (gtBool) { return signedLt(signBit(a), signBit(b), lt(gtUint128.wrap(gtInt128.unwrap(a)), gtUint128.wrap(gtInt128.unwrap(b)))); }
+    function lt(gtInt256 a, gtInt256 b) internal returns (gtBool) { return signedLt(signBit(a), signBit(b), lt(gtUint256.wrap(gtInt256.unwrap(a)), gtUint256.wrap(gtInt256.unwrap(b)))); }
+
+    function ge(gtInt8 a, gtInt8 b) internal returns (gtBool) { return not(lt(a, b)); }
+    function ge(gtInt16 a, gtInt16 b) internal returns (gtBool) { return not(lt(a, b)); }
+    function ge(gtInt32 a, gtInt32 b) internal returns (gtBool) { return not(lt(a, b)); }
+    function ge(gtInt64 a, gtInt64 b) internal returns (gtBool) { return not(lt(a, b)); }
+    function ge(gtInt128 a, gtInt128 b) internal returns (gtBool) { return not(lt(a, b)); }
+    function ge(gtInt256 a, gtInt256 b) internal returns (gtBool) { return not(lt(a, b)); }
+
+    function le(gtInt8 a, gtInt8 b) internal returns (gtBool) { return not(gt(a, b)); }
+    function le(gtInt16 a, gtInt16 b) internal returns (gtBool) { return not(gt(a, b)); }
+    function le(gtInt32 a, gtInt32 b) internal returns (gtBool) { return not(gt(a, b)); }
+    function le(gtInt64 a, gtInt64 b) internal returns (gtBool) { return not(gt(a, b)); }
+    function le(gtInt128 a, gtInt128 b) internal returns (gtBool) { return not(gt(a, b)); }
+    function le(gtInt256 a, gtInt256 b) internal returns (gtBool) { return not(gt(a, b)); }
+
+    function decrypt(gtInt8 ct) internal returns (int8) { return int8(uint8(ExtendedOperations(address(MPC_PRECOMPILE)).Decrypt(bytes1(uint8(MPC_TYPE.SUINT8_T)), gtInt8.unwrap(ct)))); }
+    function decrypt(gtInt16 ct) internal returns (int16) { return int16(uint16(ExtendedOperations(address(MPC_PRECOMPILE)).Decrypt(bytes1(uint8(MPC_TYPE.SUINT16_T)), gtInt16.unwrap(ct)))); }
+    function decrypt(gtInt32 ct) internal returns (int32) { return int32(uint32(ExtendedOperations(address(MPC_PRECOMPILE)).Decrypt(bytes1(uint8(MPC_TYPE.SUINT32_T)), gtInt32.unwrap(ct)))); }
+    function decrypt(gtInt64 ct) internal returns (int64) { return int64(uint64(ExtendedOperations(address(MPC_PRECOMPILE)).Decrypt(bytes1(uint8(MPC_TYPE.SUINT64_T)), gtInt64.unwrap(ct)))); }
+    function decrypt(gtInt128 ct) internal returns (int128) { return int128(uint128(ExtendedOperations(address(MPC_PRECOMPILE)).Decrypt(bytes1(uint8(MPC_TYPE.SUINT128_T)), gtInt128.unwrap(ct)))); }
+    function decrypt(gtInt256 ct) internal returns (int256) { return int256(ExtendedOperations(address(MPC_PRECOMPILE)).Decrypt(bytes1(uint8(MPC_TYPE.SUINT256_T)), gtInt256.unwrap(ct))); }
+
+    function mux(gtBool bit, gtInt8 a, gtInt8 b) internal returns (gtInt8) { return gtInt8.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Mux(combineEnumsToBytes3(MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtBool.unwrap(bit), gtInt8.unwrap(a), gtInt8.unwrap(b))); }
+    function mux(gtBool bit, gtInt16 a, gtInt16 b) internal returns (gtInt16) { return gtInt16.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Mux(combineEnumsToBytes3(MPC_TYPE.SUINT16_T, MPC_TYPE.SUINT16_T, ARGS.BOTH_SECRET), gtBool.unwrap(bit), gtInt16.unwrap(a), gtInt16.unwrap(b))); }
+    function mux(gtBool bit, gtInt32 a, gtInt32 b) internal returns (gtInt32) { return gtInt32.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Mux(combineEnumsToBytes3(MPC_TYPE.SUINT32_T, MPC_TYPE.SUINT32_T, ARGS.BOTH_SECRET), gtBool.unwrap(bit), gtInt32.unwrap(a), gtInt32.unwrap(b))); }
+    function mux(gtBool bit, gtInt64 a, gtInt64 b) internal returns (gtInt64) { return gtInt64.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Mux(combineEnumsToBytes3(MPC_TYPE.SUINT64_T, MPC_TYPE.SUINT64_T, ARGS.BOTH_SECRET), gtBool.unwrap(bit), gtInt64.unwrap(a), gtInt64.unwrap(b))); }
+    function mux(gtBool bit, gtInt128 a, gtInt128 b) internal returns (gtInt128) { return gtInt128.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Mux(combineEnumsToBytes3(MPC_TYPE.SUINT128_T, MPC_TYPE.SUINT128_T, ARGS.BOTH_SECRET), gtBool.unwrap(bit), gtInt128.unwrap(a), gtInt128.unwrap(b))); }
+    function mux(gtBool bit, gtInt256 a, gtInt256 b) internal returns (gtInt256) { return gtInt256.wrap(ExtendedOperations(address(MPC_PRECOMPILE)).Mux(combineEnumsToBytes3(MPC_TYPE.SUINT256_T, MPC_TYPE.SUINT256_T, ARGS.BOTH_SECRET), gtBool.unwrap(bit), gtInt256.unwrap(a), gtInt256.unwrap(b))); }
+
+    function shl(gtInt8 a, uint8 b) internal returns (gtInt8) { return gtInt8.wrap(gtUint8.unwrap(shl(gtUint8.wrap(gtInt8.unwrap(a)), b))); }
+    function shl(gtInt16 a, uint8 b) internal returns (gtInt16) { return gtInt16.wrap(gtUint16.unwrap(shl(gtUint16.wrap(gtInt16.unwrap(a)), b))); }
+    function shl(gtInt32 a, uint8 b) internal returns (gtInt32) { return gtInt32.wrap(gtUint32.unwrap(shl(gtUint32.wrap(gtInt32.unwrap(a)), b))); }
+    function shl(gtInt64 a, uint8 b) internal returns (gtInt64) { return gtInt64.wrap(gtUint64.unwrap(shl(gtUint64.wrap(gtInt64.unwrap(a)), b))); }
+    function shl(gtInt128 a, uint8 b) internal returns (gtInt128) { return gtInt128.wrap(gtUint128.unwrap(shl(gtUint128.wrap(gtInt128.unwrap(a)), b))); }
+
+    function shr(gtInt8 a, uint8 b) internal returns (gtInt8) { return gtInt8.wrap(gtUint8.unwrap(signedShr(gtUint8.wrap(gtInt8.unwrap(a)), b, 8))); }
+    function shr(gtInt16 a, uint8 b) internal returns (gtInt16) { return gtInt16.wrap(gtUint16.unwrap(signedShr(gtUint16.wrap(gtInt16.unwrap(a)), b, 16))); }
+    function shr(gtInt32 a, uint8 b) internal returns (gtInt32) { return gtInt32.wrap(gtUint32.unwrap(signedShr(gtUint32.wrap(gtInt32.unwrap(a)), b, 32))); }
+    function shr(gtInt64 a, uint8 b) internal returns (gtInt64) { return gtInt64.wrap(gtUint64.unwrap(signedShr(gtUint64.wrap(gtInt64.unwrap(a)), b, 64))); }
+    function shr(gtInt128 a, uint8 b) internal returns (gtInt128) { return gtInt128.wrap(gtUint128.unwrap(signedShr(gtUint128.wrap(gtInt128.unwrap(a)), b, 128))); }
+
+    function fromSigned(gtInt128 a) internal pure returns (gtUint128) { return gtUint128.wrap(gtInt128.unwrap(a)); }
+    function toSigned(gtUint128 a) internal pure returns (gtInt128) { return gtInt128.wrap(gtUint128.unwrap(a)); }
+    function fromSigned(gtInt256 a) internal pure returns (gtUint256) { return gtUint256.wrap(gtInt256.unwrap(a)); }
+    function toSigned(gtUint256 a) internal pure returns (gtInt256) { return gtInt256.wrap(gtUint256.unwrap(a)); }
+    function int64ToUint64(int64 x) internal pure returns (uint64) { return uint64(uint256(uint64(x))); }
+    function uint64ToInt64(uint64 x) internal pure returns (int64) { return int64(uint64(uint256(x))); }
+    function int128ToUint128(int128 x) internal pure returns (uint128) { return uint128(uint256(uint128(x))); }
+    function uint128ToInt128(uint128 x) internal pure returns (int128) { return int128(x); }
+
+    function negate(gtInt128 a) internal returns (gtInt128) { return sub(setPublic128(int128(0)), a); }
+    function negate(gtInt256 a) internal returns (gtInt256) { return sub(setPublic256(int256(0)), a); }
+
+    function checkedAdd(gtInt8 a, gtInt8 b) internal returns (gtInt8) { (gtBool overflow, gtInt8 result) = checkedAddWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+    function checkedAdd(gtInt16 a, gtInt16 b) internal returns (gtInt16) { (gtBool overflow, gtInt16 result) = checkedAddWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+    function checkedAdd(gtInt32 a, gtInt32 b) internal returns (gtInt32) { (gtBool overflow, gtInt32 result) = checkedAddWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+    function checkedAdd(gtInt64 a, gtInt64 b) internal returns (gtInt64) { (gtBool overflow, gtInt64 result) = checkedAddWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+    function checkedAdd(gtInt128 a, gtInt128 b) internal returns (gtInt128) { (gtBool overflow, gtInt128 result) = checkedAddWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+    function checkedAdd(gtInt256 a, gtInt256 b) internal returns (gtInt256) { (gtBool overflow, gtInt256 result) = checkedAddWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+
+    function checkedAddWithOverflowBit(gtInt8 a, gtInt8 b) internal returns (gtBool, gtInt8) { gtInt8 result = add(a, b); return (signedAddOverflow(signBit(a), signBit(b), signBit(result)), result); }
+    function checkedAddWithOverflowBit(gtInt16 a, gtInt16 b) internal returns (gtBool, gtInt16) { gtInt16 result = add(a, b); return (signedAddOverflow(signBit(a), signBit(b), signBit(result)), result); }
+    function checkedAddWithOverflowBit(gtInt32 a, gtInt32 b) internal returns (gtBool, gtInt32) { gtInt32 result = add(a, b); return (signedAddOverflow(signBit(a), signBit(b), signBit(result)), result); }
+    function checkedAddWithOverflowBit(gtInt64 a, gtInt64 b) internal returns (gtBool, gtInt64) { gtInt64 result = add(a, b); return (signedAddOverflow(signBit(a), signBit(b), signBit(result)), result); }
+    function checkedAddWithOverflowBit(gtInt128 a, gtInt128 b) internal returns (gtBool, gtInt128) { gtInt128 result = add(a, b); return (signedAddOverflow(signBit(a), signBit(b), signBit(result)), result); }
+    function checkedAddWithOverflowBit(gtInt256 a, gtInt256 b) internal returns (gtBool, gtInt256) { gtInt256 result = add(a, b); return (signedAddOverflow(signBit(a), signBit(b), signBit(result)), result); }
+
+    function checkedSub(gtInt8 a, gtInt8 b) internal returns (gtInt8) { (gtBool overflow, gtInt8 result) = checkedSubWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+    function checkedSub(gtInt16 a, gtInt16 b) internal returns (gtInt16) { (gtBool overflow, gtInt16 result) = checkedSubWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+    function checkedSub(gtInt32 a, gtInt32 b) internal returns (gtInt32) { (gtBool overflow, gtInt32 result) = checkedSubWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+    function checkedSub(gtInt64 a, gtInt64 b) internal returns (gtInt64) { (gtBool overflow, gtInt64 result) = checkedSubWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+    function checkedSub(gtInt128 a, gtInt128 b) internal returns (gtInt128) { (gtBool overflow, gtInt128 result) = checkedSubWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+    function checkedSub(gtInt256 a, gtInt256 b) internal returns (gtInt256) { (gtBool overflow, gtInt256 result) = checkedSubWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+
+    function checkedSubWithOverflowBit(gtInt8 a, gtInt8 b) internal returns (gtBool, gtInt8) { gtInt8 result = sub(a, b); return (signedSubOverflow(signBit(a), signBit(b), signBit(result)), result); }
+    function checkedSubWithOverflowBit(gtInt16 a, gtInt16 b) internal returns (gtBool, gtInt16) { gtInt16 result = sub(a, b); return (signedSubOverflow(signBit(a), signBit(b), signBit(result)), result); }
+    function checkedSubWithOverflowBit(gtInt32 a, gtInt32 b) internal returns (gtBool, gtInt32) { gtInt32 result = sub(a, b); return (signedSubOverflow(signBit(a), signBit(b), signBit(result)), result); }
+    function checkedSubWithOverflowBit(gtInt64 a, gtInt64 b) internal returns (gtBool, gtInt64) { gtInt64 result = sub(a, b); return (signedSubOverflow(signBit(a), signBit(b), signBit(result)), result); }
+    function checkedSubWithOverflowBit(gtInt128 a, gtInt128 b) internal returns (gtBool, gtInt128) { gtInt128 result = sub(a, b); return (signedSubOverflow(signBit(a), signBit(b), signBit(result)), result); }
+    function checkedSubWithOverflowBit(gtInt256 a, gtInt256 b) internal returns (gtBool, gtInt256) { gtInt256 result = sub(a, b); return (signedSubOverflow(signBit(a), signBit(b), signBit(result)), result); }
+
+    function checkedMul(gtInt8 a, gtInt8 b) internal returns (gtInt8) { (gtBool overflow, gtInt8 result) = checkedMulWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+    function checkedMul(gtInt16 a, gtInt16 b) internal returns (gtInt16) { (gtBool overflow, gtInt16 result) = checkedMulWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+    function checkedMul(gtInt32 a, gtInt32 b) internal returns (gtInt32) { (gtBool overflow, gtInt32 result) = checkedMulWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+    function checkedMul(gtInt64 a, gtInt64 b) internal returns (gtInt64) { (gtBool overflow, gtInt64 result) = checkedMulWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+    function checkedMul(gtInt128 a, gtInt128 b) internal returns (gtInt128) { (gtBool overflow, gtInt128 result) = checkedMulWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+    function checkedMul(gtInt256 a, gtInt256 b) internal returns (gtInt256) { (gtBool overflow, gtInt256 result) = checkedMulWithOverflowBit(a, b); return checkSignedRes(overflow, result); }
+
+    function checkedMulWithOverflowBit(gtInt8 a, gtInt8 b) internal returns (gtBool, gtInt8) {
+        (gtBool overflow, gtUint8 product) = checkedMulWithOverflowBit(absUnsigned(a), absUnsigned(b));
+        return signedMulResult(overflow, signBit(a), signBit(b), product, uint8(type(int8).max), uint8(1) << 7);
+    }
+
+    function checkedMulWithOverflowBit(gtInt16 a, gtInt16 b) internal returns (gtBool, gtInt16) {
+        (gtBool overflow, gtUint16 product) = checkedMulWithOverflowBit(absUnsigned(a), absUnsigned(b));
+        return signedMulResult(overflow, signBit(a), signBit(b), product, uint16(type(int16).max), uint16(1) << 15);
+    }
+
+    function checkedMulWithOverflowBit(gtInt32 a, gtInt32 b) internal returns (gtBool, gtInt32) {
+        (gtBool overflow, gtUint32 product) = checkedMulWithOverflowBit(absUnsigned(a), absUnsigned(b));
+        return signedMulResult(overflow, signBit(a), signBit(b), product, uint32(type(int32).max), uint32(1) << 31);
+    }
+
+    function checkedMulWithOverflowBit(gtInt64 a, gtInt64 b) internal returns (gtBool, gtInt64) {
+        (gtBool overflow, gtUint64 product) = checkedMulWithOverflowBit(absUnsigned(a), absUnsigned(b));
+        return signedMulResult(overflow, signBit(a), signBit(b), product, uint64(type(int64).max), uint64(1) << 63);
+    }
+
+    function checkedMulWithOverflowBit(gtInt128 a, gtInt128 b) internal returns (gtBool, gtInt128) {
+        (gtBool overflow, gtUint128 product) = checkedMulWithOverflowBit(absUnsigned(a), absUnsigned(b));
+        return signedMulResult(overflow, signBit(a), signBit(b), product, uint128(type(int128).max), uint128(1) << 127);
+    }
+
+    function checkedMulWithOverflowBit(gtInt256 a, gtInt256 b) internal returns (gtBool, gtInt256) {
+        (gtBool overflow, gtUint256 product) = checkedMulWithOverflowBit(absUnsigned(a), absUnsigned(b));
+        return signedMulResult(overflow, signBit(a), signBit(b), product, uint256(type(int256).max), uint256(1) << 255);
+    }
+
+    function checkSignedRes(gtBool bit, gtInt8 res) private returns (gtInt8) { checkOverflow(bit); return res; }
+    function checkSignedRes(gtBool bit, gtInt16 res) private returns (gtInt16) { checkOverflow(bit); return res; }
+    function checkSignedRes(gtBool bit, gtInt32 res) private returns (gtInt32) { checkOverflow(bit); return res; }
+    function checkSignedRes(gtBool bit, gtInt64 res) private returns (gtInt64) { checkOverflow(bit); return res; }
+    function checkSignedRes(gtBool bit, gtInt128 res) private returns (gtInt128) { checkOverflow(bit); return res; }
+    function checkSignedRes(gtBool bit, gtInt256 res) private returns (gtInt256) { checkOverflow(bit); return res; }
+
+    function signedGt(gtBool signA, gtBool signB, gtBool unsignedGt) private returns (gtBool) {
+        gtBool signDiff = ne(signA, signB);
+        gtBool aPositiveBNegative = and(signDiff, not(signA));
+        return or(aPositiveBNegative, and(not(signDiff), unsignedGt));
+    }
+
+    function signedLt(gtBool signA, gtBool signB, gtBool unsignedLt) private returns (gtBool) {
+        gtBool signDiff = ne(signA, signB);
+        gtBool aNegativeBPositive = and(signDiff, signA);
+        return or(aNegativeBPositive, and(not(signDiff), unsignedLt));
+    }
+
+    function signedAddOverflow(gtBool signA, gtBool signB, gtBool signResult) private returns (gtBool) {
+        return and(eq(signA, signB), ne(signResult, signA));
+    }
+
+    function signedSubOverflow(gtBool signA, gtBool signB, gtBool signResult) private returns (gtBool) {
+        return and(ne(signA, signB), ne(signResult, signA));
+    }
+
+    function applyMulSign(gtBool signA, gtBool signB, gtUint128 product) private returns (gtUint128) {
+        gtBool negative = xor(signA, signB);
+        gtInt128 signedProduct = gtInt128.wrap(gtUint128.unwrap(product));
+        return gtUint128.wrap(gtInt128.unwrap(mux(negative, signedProduct, sub(setPublic128(int128(0)), signedProduct))));
+    }
+
+    function applyMulSign(gtBool signA, gtBool signB, gtUint256 product) private returns (gtUint256) {
+        gtBool negative = xor(signA, signB);
+        gtInt256 signedProduct = gtInt256.wrap(gtUint256.unwrap(product));
+        return gtUint256.wrap(gtInt256.unwrap(mux(negative, signedProduct, sub(setPublic256(int256(0)), signedProduct))));
+    }
+
+    function applyDivSign(gtBool signA, gtBool signB, gtUint8 quotient) private returns (gtUint8) {
+        gtBool negative = xor(signA, signB);
+        gtInt8 signedQuotient = gtInt8.wrap(gtUint8.unwrap(quotient));
+        return gtUint8.wrap(gtInt8.unwrap(mux(negative, signedQuotient, sub(setPublic8(int8(0)), signedQuotient))));
+    }
+
+    function applyDivSign(gtBool signA, gtBool signB, gtUint16 quotient) private returns (gtUint16) {
+        gtBool negative = xor(signA, signB);
+        gtInt16 signedQuotient = gtInt16.wrap(gtUint16.unwrap(quotient));
+        return gtUint16.wrap(gtInt16.unwrap(mux(negative, signedQuotient, sub(setPublic16(int16(0)), signedQuotient))));
+    }
+
+    function applyDivSign(gtBool signA, gtBool signB, gtUint32 quotient) private returns (gtUint32) {
+        gtBool negative = xor(signA, signB);
+        gtInt32 signedQuotient = gtInt32.wrap(gtUint32.unwrap(quotient));
+        return gtUint32.wrap(gtInt32.unwrap(mux(negative, signedQuotient, sub(setPublic32(int32(0)), signedQuotient))));
+    }
+
+    function applyDivSign(gtBool signA, gtBool signB, gtUint64 quotient) private returns (gtUint64) {
+        gtBool negative = xor(signA, signB);
+        gtInt64 signedQuotient = gtInt64.wrap(gtUint64.unwrap(quotient));
+        return gtUint64.wrap(gtInt64.unwrap(mux(negative, signedQuotient, sub(setPublic64(int64(0)), signedQuotient))));
+    }
+
+    function applyDivSign(gtBool signA, gtBool signB, gtUint128 quotient) private returns (gtUint128) {
+        gtBool negative = xor(signA, signB);
+        gtInt128 signedQuotient = gtInt128.wrap(gtUint128.unwrap(quotient));
+        return gtUint128.wrap(gtInt128.unwrap(mux(negative, signedQuotient, sub(setPublic128(int128(0)), signedQuotient))));
+    }
+
+    function applyDivSign(gtBool signA, gtBool signB, gtUint256 quotient) private returns (gtUint256) {
+        gtBool negative = xor(signA, signB);
+        gtInt256 signedQuotient = gtInt256.wrap(gtUint256.unwrap(quotient));
+        return gtUint256.wrap(gtInt256.unwrap(mux(negative, signedQuotient, sub(setPublic256(int256(0)), signedQuotient))));
+    }
+
+    function signedShr(gtUint8 value, uint8 shift, uint8 width) private returns (gtUint8) {
+        gtUint8 shifted = shr(value, shift);
+        if (shift == 0) return shifted;
+        uint8 mask = shift >= width ? type(uint8).max : uint8(type(uint8).max << (width - shift));
+        gtBool negative = eq(shr(value, width - 1), setPublic8(uint8(1)));
+        return mux(negative, shifted, or(shifted, setPublic8(mask)));
+    }
+
+    function signedShr(gtUint16 value, uint8 shift, uint8 width) private returns (gtUint16) {
+        gtUint16 shifted = shr(value, shift);
+        if (shift == 0) return shifted;
+        uint16 mask = shift >= width ? type(uint16).max : uint16(type(uint16).max << (width - shift));
+        gtBool negative = eq(shr(value, width - 1), setPublic16(uint16(1)));
+        return mux(negative, shifted, or(shifted, setPublic16(mask)));
+    }
+
+    function signedShr(gtUint32 value, uint8 shift, uint8 width) private returns (gtUint32) {
+        gtUint32 shifted = shr(value, shift);
+        if (shift == 0) return shifted;
+        uint32 mask = shift >= width ? type(uint32).max : uint32(type(uint32).max << (width - shift));
+        gtBool negative = eq(shr(value, width - 1), setPublic32(uint32(1)));
+        return mux(negative, shifted, or(shifted, setPublic32(mask)));
+    }
+
+    function signedShr(gtUint64 value, uint8 shift, uint8 width) private returns (gtUint64) {
+        gtUint64 shifted = shr(value, shift);
+        if (shift == 0) return shifted;
+        uint64 mask = shift >= width ? type(uint64).max : uint64(type(uint64).max << (width - shift));
+        gtBool negative = eq(shr(value, width - 1), setPublic64(uint64(1)));
+        return mux(negative, shifted, or(shifted, setPublic64(mask)));
+    }
+
+    function signedShr(gtUint128 value, uint8 shift, uint8 width) private returns (gtUint128) {
+        gtUint128 shifted = shr(value, shift);
+        if (shift == 0) return shifted;
+        uint128 mask = shift >= width ? type(uint128).max : uint128(type(uint128).max << (width - shift));
+        gtBool negative = eq(shr(value, width - 1), setPublic128(uint128(1)));
+        return mux(negative, shifted, or(shifted, setPublic128(mask)));
+    }
+
+    function signedMulResult(gtBool unsignedOverflow, gtBool signA, gtBool signB, gtUint8 product, uint8 maxPositive, uint8 maxNegativeMagnitude) private returns (gtBool, gtInt8) {
+        gtBool negative = xor(signA, signB);
+        gtBool positiveOverflow = and(not(negative), gt(product, setPublic8(maxPositive)));
+        gtBool negativeOverflow = and(negative, gt(product, setPublic8(maxNegativeMagnitude)));
+        gtInt8 signedProduct = gtInt8.wrap(gtUint8.unwrap(product));
+        return (or(unsignedOverflow, or(positiveOverflow, negativeOverflow)), mux(negative, signedProduct, sub(setPublic8(int8(0)), signedProduct)));
+    }
+
+    function signedMulResult(gtBool unsignedOverflow, gtBool signA, gtBool signB, gtUint16 product, uint16 maxPositive, uint16 maxNegativeMagnitude) private returns (gtBool, gtInt16) {
+        gtBool negative = xor(signA, signB);
+        gtBool positiveOverflow = and(not(negative), gt(product, setPublic16(maxPositive)));
+        gtBool negativeOverflow = and(negative, gt(product, setPublic16(maxNegativeMagnitude)));
+        gtInt16 signedProduct = gtInt16.wrap(gtUint16.unwrap(product));
+        return (or(unsignedOverflow, or(positiveOverflow, negativeOverflow)), mux(negative, signedProduct, sub(setPublic16(int16(0)), signedProduct)));
+    }
+
+    function signedMulResult(gtBool unsignedOverflow, gtBool signA, gtBool signB, gtUint32 product, uint32 maxPositive, uint32 maxNegativeMagnitude) private returns (gtBool, gtInt32) {
+        gtBool negative = xor(signA, signB);
+        gtBool positiveOverflow = and(not(negative), gt(product, setPublic32(maxPositive)));
+        gtBool negativeOverflow = and(negative, gt(product, setPublic32(maxNegativeMagnitude)));
+        gtInt32 signedProduct = gtInt32.wrap(gtUint32.unwrap(product));
+        return (or(unsignedOverflow, or(positiveOverflow, negativeOverflow)), mux(negative, signedProduct, sub(setPublic32(int32(0)), signedProduct)));
+    }
+
+    function signedMulResult(gtBool unsignedOverflow, gtBool signA, gtBool signB, gtUint64 product, uint64 maxPositive, uint64 maxNegativeMagnitude) private returns (gtBool, gtInt64) {
+        gtBool negative = xor(signA, signB);
+        gtBool positiveOverflow = and(not(negative), gt(product, setPublic64(maxPositive)));
+        gtBool negativeOverflow = and(negative, gt(product, setPublic64(maxNegativeMagnitude)));
+        gtInt64 signedProduct = gtInt64.wrap(gtUint64.unwrap(product));
+        return (or(unsignedOverflow, or(positiveOverflow, negativeOverflow)), mux(negative, signedProduct, sub(setPublic64(int64(0)), signedProduct)));
+    }
+
+    function signedMulResult(gtBool unsignedOverflow, gtBool signA, gtBool signB, gtUint128 product, uint128 maxPositive, uint128 maxNegativeMagnitude) private returns (gtBool, gtInt128) {
+        gtBool negative = xor(signA, signB);
+        gtBool positiveOverflow = and(not(negative), gt(product, setPublic128(maxPositive)));
+        gtBool negativeOverflow = and(negative, gt(product, setPublic128(maxNegativeMagnitude)));
+        gtInt128 signedProduct = gtInt128.wrap(gtUint128.unwrap(product));
+        return (or(unsignedOverflow, or(positiveOverflow, negativeOverflow)), mux(negative, signedProduct, sub(setPublic128(int128(0)), signedProduct)));
+    }
+
+    function signedMulResult(gtBool unsignedOverflow, gtBool signA, gtBool signB, gtUint256 product, uint256 maxPositive, uint256 maxNegativeMagnitude) private returns (gtBool, gtInt256) {
+        gtBool negative = xor(signA, signB);
+        gtBool positiveOverflow = and(not(negative), gt(product, setPublic256(maxPositive)));
+        gtBool negativeOverflow = and(negative, gt(product, setPublic256(maxNegativeMagnitude)));
+        gtInt256 signedProduct = gtInt256.wrap(gtUint256.unwrap(product));
+        return (or(unsignedOverflow, or(positiveOverflow, negativeOverflow)), mux(negative, signedProduct, sub(setPublic256(int256(0)), signedProduct)));
+    }
+
+    function checkedAbsMul(gtInt128 a, gtInt128 b) private returns (gtUint128) {
+        (, gtUint128 product) = checkedMulWithOverflowBit(absUnsigned(a), absUnsigned(b));
+        return product;
+    }
+
+    function checkedAbsMul(gtInt256 a, gtInt256 b) private returns (gtUint256) {
+        (, gtUint256 product) = checkedMulWithOverflowBit(absUnsigned(a), absUnsigned(b));
+        return product;
+    }
+
+    function absUnsigned(gtInt8 a) private returns (gtUint8) { return gtUint8.wrap(gtInt8.unwrap(mux(signBit(a), a, sub(setPublic8(int8(0)), a)))); }
+    function absUnsigned(gtInt16 a) private returns (gtUint16) { return gtUint16.wrap(gtInt16.unwrap(mux(signBit(a), a, sub(setPublic16(int16(0)), a)))); }
+    function absUnsigned(gtInt32 a) private returns (gtUint32) { return gtUint32.wrap(gtInt32.unwrap(mux(signBit(a), a, sub(setPublic32(int32(0)), a)))); }
+    function absUnsigned(gtInt64 a) private returns (gtUint64) { return gtUint64.wrap(gtInt64.unwrap(mux(signBit(a), a, sub(setPublic64(int64(0)), a)))); }
+    function absUnsigned(gtInt128 a) private returns (gtUint128) { return gtUint128.wrap(gtInt128.unwrap(mux(signBit(a), a, sub(setPublic128(int128(0)), a)))); }
+    function absUnsigned(gtInt256 a) private returns (gtUint256) { return gtUint256.wrap(gtInt256.unwrap(mux(signBit(a), a, sub(setPublic256(int256(0)), a)))); }
+
+    function signBit(gtInt8 a) private returns (gtBool) { return eq(shr(gtUint8.wrap(gtInt8.unwrap(a)), 7), setPublic8(uint8(1))); }
+    function signBit(gtInt16 a) private returns (gtBool) { return eq(shr(gtUint16.wrap(gtInt16.unwrap(a)), 15), setPublic16(uint16(1))); }
+    function signBit(gtInt32 a) private returns (gtBool) { return eq(shr(gtUint32.wrap(gtInt32.unwrap(a)), 31), setPublic32(uint32(1))); }
+    function signBit(gtInt64 a) private returns (gtBool) { return eq(shr(gtUint64.wrap(gtInt64.unwrap(a)), 63), setPublic64(uint64(1))); }
+    function signBit(gtInt128 a) private returns (gtBool) { return eq(shr(gtUint128.wrap(gtInt128.unwrap(a)), 127), setPublic128(uint128(1))); }
+    function signBit(gtInt256 a) private returns (gtBool) { return eq(shr(gtUint256.wrap(gtInt256.unwrap(a)), 255), setPublic256(uint256(1))); }
 
 }

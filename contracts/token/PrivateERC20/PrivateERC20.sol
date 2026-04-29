@@ -842,7 +842,7 @@ abstract contract PrivateERC20 is
             // Burn (`to == address(0)`): use canonical public zero as the sink balance. Do not read
             // `_balances[address(0)]` — that slot must never affect burn accounting if it were ever corrupted.
             gtUint256 toBalance = to == address(0)
-                ? MpcCore.setPublic256(0)
+                ? MpcCore.setPublic256(uint256(0))
                 : _getBalance(to);
 
             gtUint256 newFromBalance;
@@ -1010,7 +1010,7 @@ abstract contract PrivateERC20 is
         address spender,
         gtUint256 gtNewValue
     ) internal {
-        gtBool newIsZero = MpcCore.eq(gtNewValue, MpcCore.setPublic256(0));
+        gtBool newIsZero = MpcCore.eq(gtNewValue, MpcCore.setPublic256(uint256(0)));
         if (MpcCore.decrypt(newIsZero)) {
             return;
         }
@@ -1180,7 +1180,7 @@ abstract contract PrivateERC20 is
      */
     function _safeOnboard(ctUint256 memory value) internal returns (gtUint256) {
         if (_isCanonicalEmptyCtUint256(value)) {
-            return MpcCore.setPublic256(0);
+            return MpcCore.setPublic256(uint256(0));
         }
         return MpcCore.onBoard(value);
     }

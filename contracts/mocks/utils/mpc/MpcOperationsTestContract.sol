@@ -234,7 +234,7 @@ contract MpcOperationsTestContract {
         gtUint256 gtB = MpcCore.validateCiphertext(b);
         
         gtBool result = MpcCore.eq(gtA, gtB);
-        gtUint256 resultAsUint = MpcCore.mux(result, MpcCore.setPublic256(1), MpcCore.setPublic256(0));
+        gtUint256 resultAsUint = MpcCore.mux(result, MpcCore.setPublic256(uint256(1)), MpcCore.setPublic256(uint256(0)));
         
         ctUint256 memory ctResult = MpcCore.offBoardToUser(resultAsUint, user);
         
@@ -256,7 +256,7 @@ contract MpcOperationsTestContract {
         gtUint256 gtB = MpcCore.validateCiphertext(b);
         
         gtBool result = MpcCore.gt(gtA, gtB);
-        gtUint256 resultAsUint = MpcCore.mux(result, MpcCore.setPublic256(1), MpcCore.setPublic256(0));
+        gtUint256 resultAsUint = MpcCore.mux(result, MpcCore.setPublic256(uint256(1)), MpcCore.setPublic256(uint256(0)));
         
         ctUint256 memory ctResult = MpcCore.offBoardToUser(resultAsUint, user);
         
@@ -278,7 +278,7 @@ contract MpcOperationsTestContract {
         gtUint256 gtB = MpcCore.validateCiphertext(b);
         
         gtBool result = MpcCore.lt(gtA, gtB);
-        gtUint256 resultAsUint = MpcCore.mux(result, MpcCore.setPublic256(1), MpcCore.setPublic256(0));
+        gtUint256 resultAsUint = MpcCore.mux(result, MpcCore.setPublic256(uint256(1)), MpcCore.setPublic256(uint256(0)));
         
         ctUint256 memory ctResult = MpcCore.offBoardToUser(resultAsUint, user);
         
