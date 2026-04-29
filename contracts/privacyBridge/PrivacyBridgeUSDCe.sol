@@ -10,7 +10,7 @@ import "../token/PrivateERC20/tokens/PrivateBridgedUSDC.sol";
  */
 contract PrivacyBridgeUSDCe is PrivacyBridgeERC20 {
 
-    constructor(address _usdc, address _privateUsdc) PrivacyBridgeERC20(_usdc, _privateUsdc, "USDC") {
+    constructor(address _usdc, address _privateUsdc, address _feeRecipient, address _rescueRecipient) PrivacyBridgeERC20(_usdc, _privateUsdc, "USDC", _feeRecipient, _rescueRecipient) {
         
     }
 }

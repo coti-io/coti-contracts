@@ -11,7 +11,7 @@ import "../token/PrivateERC20/tokens/PrivateWrappedADA.sol";
 contract PrivacyBridgeWADA is PrivacyBridgeERC20 {
     
 
-    constructor(address _wada, address _privateWada) PrivacyBridgeERC20(_wada, _privateWada, "ADA") {
+    constructor(address _wada, address _privateWada, address _feeRecipient, address _rescueRecipient) PrivacyBridgeERC20(_wada, _privateWada, "ADA", _feeRecipient, _rescueRecipient) {
         
     }
 }

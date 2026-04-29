@@ -23,7 +23,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
      * @notice Initialize the Native Bridge
      * @param _privateCoti Address of the PrivateCoti token contract
      */
-    constructor(address _privateCoti) PrivacyBridge() {
+    constructor(address _privateCoti, address _feeRecipient, address _rescueRecipient) PrivacyBridge(_feeRecipient, _rescueRecipient) {
         if (_privateCoti == address(0)) revert InvalidAddress();
         privateCoti = PrivateCOTI(_privateCoti);
     }

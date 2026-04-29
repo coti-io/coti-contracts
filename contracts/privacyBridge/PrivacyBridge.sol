@@ -143,12 +143,15 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     /// @notice Emitted when accumulated fees are withdrawn
     event FeesWithdrawn(address indexed to, uint256 amount);
 
-    constructor() Ownable() {
+    constructor(address _feeRecipient, address _rescueRecipient) Ownable() {
+        if (_feeRecipient == address(0)) revert InvalidAddress();
+        if (_rescueRecipient == address(0)) revert InvalidAddress();
         maxDepositAmount = type(uint256).max;
         maxWithdrawAmount = type(uint256).max;
         minDepositAmount = 1;
         minWithdrawAmount = 1;
-        rescueRecipient = msg.sender;
+        feeRecipient = _feeRecipient;
+        rescueRecipient = _rescueRecipient;
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(OPERATOR_ROLE, msg.sender);
@@ -397,34 +400,6 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
         address oldOracle = priceOracle;
         priceOracle = _oracle;
         emit PriceOracleUpdated(oldOracle, _oracle);
-    }
-
-    event FeeRecipientUpdated(address indexed oldRecipient, address indexed newRecipient);
-
-    /**
-     * @notice Set the address where collected fees are sent
-     * @param _recipient Address to receive fees
-     * @dev Only the owner can call this function
-     */
-    function setFeeRecipient(address _recipient) external onlyOwner {
-        if (_recipient == address(0)) revert InvalidAddress();
-        address old = feeRecipient;
-        feeRecipient = _recipient;
-        emit FeeRecipientUpdated(old, _recipient);
-    }
-
-    event RescueRecipientUpdated(address indexed oldRecipient, address indexed newRecipient);
-
-    /**
-     * @notice Set the address where rescued funds are sent
-     * @param _recipient Address to receive rescued funds
-     * @dev Only the owner can call this function
-     */
-    function setRescueRecipient(address _recipient) external onlyOwner {
-        if (_recipient == address(0)) revert InvalidAddress();
-        address old = rescueRecipient;
-        rescueRecipient = _recipient;
-        emit RescueRecipientUpdated(old, _recipient);
     }
 
 

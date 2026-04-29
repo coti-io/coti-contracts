@@ -119,7 +119,7 @@ abstract contract PrivacyBridgeERC20 is PrivacyBridge {
      * @param _privateToken Address of the private token
      * @param _tokenSymbol Band oracle symbol for the bridged token (e.g., "ETH", "WBTC") — required for Band Protocol compatibility check
      */
-    constructor(address _token, address _privateToken, string memory _tokenSymbol) PrivacyBridge() {
+    constructor(address _token, address _privateToken, string memory _tokenSymbol, address _feeRecipient, address _rescueRecipient) PrivacyBridge(_feeRecipient, _rescueRecipient) {
         if (_token == address(0)) revert InvalidTokenAddress();
         if (_privateToken == address(0)) revert InvalidPrivateTokenAddress();
 

@@ -11,7 +11,7 @@ import "../token/PrivateERC20/tokens/PrivateWrappedEther.sol";
 contract PrivacyBridgeWETH is PrivacyBridgeERC20 {
     
 
-    constructor(address _weth, address _privateWeth) PrivacyBridgeERC20(_weth, _privateWeth, "ETH") {
+    constructor(address _weth, address _privateWeth, address _feeRecipient, address _rescueRecipient) PrivacyBridgeERC20(_weth, _privateWeth, "ETH", _feeRecipient, _rescueRecipient) {
         
     }
 }
