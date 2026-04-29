@@ -11,7 +11,7 @@ import "../token/PrivateERC20/tokens/PrivateWrappedBTC.sol";
 contract PrivacyBridgeWBTC is PrivacyBridgeERC20 {
     
 
-    constructor(address _wbtc, address _privateWbtc) PrivacyBridgeERC20(_wbtc, _privateWbtc) {
+    constructor(address _wbtc, address _privateWbtc) PrivacyBridgeERC20(_wbtc, _privateWbtc, "WBTC") {
         
     }
 }

@@ -11,7 +11,7 @@ import "../token/PrivateERC20/tokens/PrivateCOTITreasuryGovernanceToken.sol";
 contract PrivacyBridgegCoti is PrivacyBridgeERC20 {
     
 
-    constructor(address _gCoti, address _privategCoti) PrivacyBridgeERC20(_gCoti, _privategCoti) {
+    constructor(address _gCoti, address _privategCoti) PrivacyBridgeERC20(_gCoti, _privategCoti, "GCOTI") {
         
     }
 }
