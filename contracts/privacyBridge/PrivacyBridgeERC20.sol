@@ -149,6 +149,11 @@ abstract contract PrivacyBridgeERC20 is PrivacyBridge {
         _deposit(amount, cotiOracleTimestamp, tokenOracleTimestamp);
     }
 
+    /**
+     * @dev Asset support is limited to standard ERC20 tokens only.
+     *      Fee-on-transfer, rebasing, or non-standard ERC20 tokens are not supported
+     *      and may result in incorrect balances or loss of funds.
+     */
     function _deposit(uint256 amount, uint256 cotiOracleTimestamp, uint256 tokenOracleTimestamp) internal {
         if (!isDepositEnabled) revert DepositDisabled();
         if (amount == 0) revert AmountZero();
