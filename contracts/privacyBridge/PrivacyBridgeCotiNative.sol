@@ -90,6 +90,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge {
 
         accumulatedCotiFees += fee;
 
+        totalUserLiability += netAmount;
         privateCoti.mint(sender, netAmount);
 
         // Emit gross deposit amount and net private tokens minted
@@ -137,6 +138,8 @@ contract PrivacyBridgeCotiNative is PrivacyBridge {
         if (address(this).balance < publicAmount)
             revert InsufficientEthBalance();
 
+        totalUserLiability -= publicAmount;
+
         // Pull and burn private tokens
         IPrivateERC20(address(privateCoti)).transferFrom(
             msg.sender,
@@ -168,6 +171,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge {
 
         accumulatedCotiFees += fee;
 
+        totalUserLiability += netAmount;
         privateCoti.mint(sender, netAmount);
 
         emit Deposit(sender, msg.value, netAmount);
@@ -222,8 +226,8 @@ contract PrivacyBridgeCotiNative is PrivacyBridge {
     function rescueNative(uint256 amount) external onlyOwner nonReentrant {
         if (amount == 0) revert AmountZero();
         if (amount > address(this).balance) revert InsufficientEthBalance();
-        if (address(this).balance < accumulatedFees) revert InsufficientEthBalance();
-        if (amount > address(this).balance - accumulatedFees) revert ExceedsRescueableAmount();
+        if (address(this).balance < accumulatedCotiFees) revert InsufficientEthBalance();
+        if (amount > address(this).balance - accumulatedCotiFees) revert ExceedsRescueableAmount();
 
         (bool success, ) = rescueRecipient.call{value: amount}("");
         if (!success) revert EthTransferFailed();

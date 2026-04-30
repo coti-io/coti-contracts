@@ -50,6 +50,10 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     /// @notice Accumulated native COTI fees (used only by ERC20 bridges for per-operation native fee; not used by native bridge)
     uint256 public accumulatedCotiFees;
 
+    /// @notice Outstanding user liability — net amount minted minus net amount released.
+    ///         Represents the total amount owed to users if they all withdraw.
+    uint256 public totalUserLiability;
+
     /// @notice Fee divisor (1,000,000)
     uint256 public constant FEE_DIVISOR = 1000000;
 

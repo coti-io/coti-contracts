@@ -167,6 +167,7 @@ abstract contract PrivacyBridgeERC20 is PrivacyBridge {
         uint256 received = token.balanceOf(address(this)) - balBefore;
 
         // Step 4: mint full private token amount
+        totalUserLiability += received;
         privateToken.mint(msg.sender, received);
 
         emit Deposit(msg.sender, amount, received);
@@ -206,6 +207,7 @@ abstract contract PrivacyBridgeERC20 is PrivacyBridge {
             revert InsufficientBridgeLiquidity();
 
         // Step 4: pull and burn full private token amount
+        totalUserLiability -= amount;
         privateToken.transferFrom(msg.sender, address(this), amount);
         privateToken.burn(amount);
 
