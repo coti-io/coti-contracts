@@ -247,8 +247,8 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     }
 
     /**
-     * @notice Pause the bridge, preventing deposits and withdrawals
-     * @dev Only the owner can call this function
+     * @notice Emergency stop — pause the bridge, preventing all deposits and withdrawals.
+     * @dev Only the owner can call this function.
      */
     function pause() external onlyOwner {
         _pause();
