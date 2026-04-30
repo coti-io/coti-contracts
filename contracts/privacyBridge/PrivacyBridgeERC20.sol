@@ -103,6 +103,8 @@ abstract contract PrivacyBridgeERC20 is PrivacyBridge {
      */
     function _collectDynamicNativeFee(uint256 fee) internal {
         if (msg.value < fee) revert InsufficientCotiFee();
+        // Verify contract balance covers the fee before accounting
+        if (address(this).balance < fee) revert InsufficientEthBalance();
         accumulatedCotiFees += fee;
         if (msg.value > fee) {
             uint256 excess = msg.value - fee;
