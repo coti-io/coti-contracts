@@ -103,7 +103,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge {
      * @param tokenOracleTimestamp The token oracle lastUpdated timestamp (same as cotiOracleTimestamp for native bridge)
      * @dev User sends native COTI with the transaction
      */
-    function deposit(uint256 cotiOracleTimestamp, uint256 tokenOracleTimestamp) external payable nonReentrant whenNotPaused {
+    function deposit(uint256 cotiOracleTimestamp, uint256 tokenOracleTimestamp) external payable nonReentrant whenNotPaused notBlacklisted {
         _deposit(msg.sender, cotiOracleTimestamp, tokenOracleTimestamp);
     }
 
@@ -114,7 +114,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge {
      * @param tokenOracleTimestamp The token oracle lastUpdated timestamp (same as cotiOracleTimestamp for native bridge)
      * @dev User must have approved the bridge to spend their private tokens.
      */
-    function withdraw(uint256 amount, uint256 cotiOracleTimestamp, uint256 tokenOracleTimestamp) external nonReentrant whenNotPaused {
+    function withdraw(uint256 amount, uint256 cotiOracleTimestamp, uint256 tokenOracleTimestamp) external nonReentrant whenNotPaused notBlacklisted {
         _withdraw(msg.sender, amount, cotiOracleTimestamp, tokenOracleTimestamp);
     }
 
@@ -182,7 +182,7 @@ contract PrivacyBridgeCotiNative is PrivacyBridge {
      * @dev Mints private tokens at current oracle price without timestamp validation.
      *      For fee-protected deposits, use deposit(cotiOracleTimestamp, tokenOracleTimestamp) instead.
      */
-    receive() external payable nonReentrant whenNotPaused {
+    receive() external payable nonReentrant whenNotPaused notBlacklisted {
         _directDeposit(msg.sender);
     }
 

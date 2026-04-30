@@ -143,7 +143,7 @@ abstract contract PrivacyBridgeERC20 is PrivacyBridge {
         uint256 amount,
         uint256 cotiOracleTimestamp,
         uint256 tokenOracleTimestamp
-    ) external payable nonReentrant whenNotPaused {
+    ) external payable nonReentrant whenNotPaused notBlacklisted {
         _deposit(amount, cotiOracleTimestamp, tokenOracleTimestamp);
     }
 
@@ -184,7 +184,7 @@ abstract contract PrivacyBridgeERC20 is PrivacyBridge {
         uint256 amount,
         uint256 cotiOracleTimestamp,
         uint256 tokenOracleTimestamp
-    ) external payable nonReentrant whenNotPaused {
+    ) external payable nonReentrant whenNotPaused notBlacklisted {
         _withdraw(amount, cotiOracleTimestamp, tokenOracleTimestamp);
     }
 

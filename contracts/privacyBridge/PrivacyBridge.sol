@@ -109,6 +109,13 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     error BridgePaused();
     error OracleTimestampMismatch(uint256 expected, uint256 actual);
     error FeeRecipientNotSet();
+    error AddressBlacklisted(address account);
+
+    /// @notice Addresses blocked from depositing or withdrawing
+    mapping(address => bool) public blacklisted;
+
+    event Blacklisted(address indexed account, address indexed by);
+    event UnBlacklisted(address indexed account, address indexed by);
 
     // Limits errors
     error InvalidLimitConfiguration();
@@ -214,6 +221,36 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
      */
     function renounceOwnership() public override onlyOwner {
         revert("renounceOwnership disabled");
+    }
+
+    /**
+     * @notice Add an address to the blacklist, preventing deposits and withdrawals.
+     * @param account The address to blacklist
+     * @dev Only the owner can call this function.
+     */
+    function addToBlacklist(address account) external onlyOwner {
+        if (account == address(0)) revert InvalidAddress();
+        blacklisted[account] = true;
+        emit Blacklisted(account, msg.sender);
+    }
+
+    /**
+     * @notice Remove an address from the blacklist.
+     * @param account The address to remove
+     * @dev Only the owner can call this function.
+     */
+    function removeFromBlacklist(address account) external onlyOwner {
+        if (account == address(0)) revert InvalidAddress();
+        blacklisted[account] = false;
+        emit UnBlacklisted(account, msg.sender);
+    }
+
+    /**
+     * @dev Reverts if the caller is blacklisted.
+     */
+    modifier notBlacklisted() {
+        if (blacklisted[msg.sender]) revert AddressBlacklisted(msg.sender);
+        _;
     }
 
     /**
