@@ -220,6 +220,8 @@ contract PrivacyBridgeCotiNative is PrivacyBridge {
      * @dev Rescue native COTI coins mistakenly sent to the contract.
      *      Only excess over the accumulated fee reserve can be rescued.
      *      Sends to the predefined rescueRecipient address.
+     *      The admin (owner) is fully responsible for invoking this function correctly.
+     *      Misuse can remove bridge liquidity backing user deposits.
      * @param amount Amount of coins to rescue
      * @notice Only the owner can call this function
      */
