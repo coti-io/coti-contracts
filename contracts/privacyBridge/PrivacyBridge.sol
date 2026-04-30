@@ -257,6 +257,10 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
      * @notice Update deposit and withdrawal limits
      * @dev Ensures min values are less than or equal to max values.
      *      Setting _maxDeposit or _maxWithdraw to 0 effectively disables deposits or withdrawals.
+     *      Note: cross-parameter coherence (e.g. minDeposit after fee >= minWithdraw) cannot be
+     *      validated on-chain because fees are dynamic and depend on the oracle price at transaction
+     *      time, not at the time limits are set. The operator is responsible for ensuring that the
+     *      smallest valid deposit mints at least the smallest valid withdrawal amount.
      * @param _minDeposit New minimum deposit amount
      * @param _maxDeposit New maximum deposit amount
      * @param _minWithdraw New minimum withdrawal amount
