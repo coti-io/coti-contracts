@@ -3,13 +3,12 @@ pragma solidity ^0.8.19;
 
 import "./PrivacyBridge.sol";
 import "../token/PrivateERC20/tokens/PrivateCOTI.sol";
-import "../token/PrivateERC20/ITokenReceiver.sol";
 
 /**
  * @title PrivacyBridgeCotiNative
  * @notice Bridge contract for converting between native COTI and privacy-preserving COTI.p tokens
  */
-contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
+contract PrivacyBridgeCotiNative is PrivacyBridge {
     PrivateCOTI public privateCoti;
 
     error ExceedsRescueableAmount();
@@ -105,49 +104,6 @@ contract PrivacyBridgeCotiNative is PrivacyBridge, ITokenReceiver {
      */
     function deposit(uint256 cotiOracleTimestamp, uint256 tokenOracleTimestamp) external payable nonReentrant whenNotPaused {
         _deposit(msg.sender, cotiOracleTimestamp, tokenOracleTimestamp);
-    }
-
-    /**
-     * @notice Handle callback from PrivateCoti.transferAndCall
-     * @dev Called when user transfers tokens to the bridge to withdraw.
-     *      The `data` parameter must be abi-encoded (uint256 cotiOracleTimestamp, uint256 tokenOracleTimestamp).
-     * @param from Address of the sender
-     * @param amount Amount of tokens received
-     * @param data ABI-encoded (uint256, uint256) oracle timestamps from estimateWithdrawFee
-     */
-    function onTokenReceived(
-        address from,
-        uint256 amount,
-        bytes calldata data
-    ) external nonReentrant whenNotPaused returns (bool) {
-        if (msg.sender != address(privateCoti)) revert InvalidAddress();
-        if (amount == 0) revert AmountZero();
-
-        (uint256 cotiOracleTimestamp, uint256 tokenOracleTimestamp) = abi.decode(data, (uint256, uint256));
-        _validateOracleTimestamps(cotiOracleTimestamp, tokenOracleTimestamp, "COTI");
-
-        _checkWithdrawLimits(amount);
-
-        // Compute dynamic withdrawal fee in COTI
-        uint256 fee = _computeCotiFee(amount, withdrawFixedFee, withdrawPercentageBps, withdrawMaxFee);
-        uint256 publicAmount = amount - fee;
-        if (publicAmount == 0) revert AmountZero();
-
-        accumulatedCotiFees += fee;
-
-        if (address(this).balance < publicAmount)
-            revert InsufficientEthBalance();
-
-        // Private tokens are already transferred to this contract by transferAndCall
-        // We just need to burn them.
-        privateCoti.burn(amount);
-
-        (bool success, ) = from.call{value: publicAmount}("");
-        if (!success) revert EthTransferFailed();
-
-        // Emit gross private amount burned and net native COTI sent
-        emit Withdraw(from, amount, publicAmount);
-        return true;
     }
 
     /**
