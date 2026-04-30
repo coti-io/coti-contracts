@@ -300,7 +300,9 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
     /**
      * @notice Set the native COTI fee
      * @param _fee Amount in native tokens (wei-equivalent)
-     * @dev Used by ERC20 bridges: they require msg.value >= this value and refund excess to the caller (best-effort). Only the operator can call this function.
+     * @dev Used by ERC20 bridges: they require msg.value >= this value and refund excess to the caller (best-effort).
+     *      Only the operator can call this function. Operators are responsible for setting reasonable fees
+     *      and can change fees back whenever needed.
      */
     function setNativeCotiFee(uint256 _fee) external virtual onlyOperator {
         nativeCotiFee = _fee;
