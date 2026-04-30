@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../oracle/ICotiPriceConsumer.sol";
 
@@ -16,7 +16,7 @@ import "../oracle/ICotiPriceConsumer.sol";
  *      (3) Owner operations (limits, fees, pause, withdraw fees, rescue) are centralized; consider timelock/multisig for sensitive actions.
  *      (4) Any new derived bridge must override withdrawFees to perform the actual transfer; base implementation reverts.
  */
-abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessControl {
+abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessControlEnumerable {
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     event OperatorAdded(address indexed account, address indexed by);
@@ -180,15 +180,28 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
 
     /**
      * @dev Overrides Ownable's transferOwnership to automatically grant roles to new owner
+     *      and revoke all existing operators to prevent hidden privileged actors.
      */
     function transferOwnership(address newOwner) public override onlyOwner {
         if (newOwner == address(0)) revert InvalidAddress();
-        address oldOwner = owner();
+
+        // Revoke all existing operators before transferring
+        uint256 operatorCount = getRoleMemberCount(OPERATOR_ROLE);
+        for (uint256 i = operatorCount; i > 0; i--) {
+            address op = getRoleMember(OPERATOR_ROLE, i - 1);
+            _revokeRole(OPERATOR_ROLE, op);
+        }
+
+        // Revoke all existing admins
+        uint256 adminCount = getRoleMemberCount(DEFAULT_ADMIN_ROLE);
+        for (uint256 i = adminCount; i > 0; i--) {
+            address admin = getRoleMember(DEFAULT_ADMIN_ROLE, i - 1);
+            _revokeRole(DEFAULT_ADMIN_ROLE, admin);
+        }
+
         super.transferOwnership(newOwner);
         _grantRole(DEFAULT_ADMIN_ROLE, newOwner);
         _grantRole(OPERATOR_ROLE, newOwner);
-        _revokeRole(DEFAULT_ADMIN_ROLE, oldOwner);
-        _revokeRole(OPERATOR_ROLE, oldOwner);
     }
 
     /**
