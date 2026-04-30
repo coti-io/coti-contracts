@@ -223,6 +223,7 @@ abstract contract PrivacyBridgeERC20 is PrivacyBridge {
      *      Sends to the predefined rescueRecipient address.
      *      The admin (owner) is fully responsible for invoking this function correctly.
      *      Misuse can remove bridge liquidity backing user deposits.
+     *      Note: unless new p.tokens are issued, p.tokens can be reused across multiple bridges.
      */
     function rescueERC20(
         address _token,
