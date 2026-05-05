@@ -577,6 +577,36 @@ abstract contract PrivacyBridge is ReentrancyGuard, Pausable, Ownable, AccessCon
         emit MaxOracleAgeUpdated(_maxOracleAge, msg.sender);
     }
 
+    /**
+     * @notice Simulate fee calculation with custom parameters.
+     * @dev Reads token and COTI prices from the oracle but allows overriding
+     *      fixedFee, percentageBps, maxFee, and tokenDecimals.
+     *      Use this to preview what fees would look like under different configurations
+     *      without changing on-chain state.
+     * @param amount The token amount to simulate fee for
+     * @param fixedFee The minimum fee floor in COTI wei
+     * @param percentageBps The percentage in basis points (relative to FEE_DIVISOR)
+     * @param maxFee The maximum fee cap in COTI wei
+     * @param tokenSymbol The Band oracle symbol for the token (e.g. "COTI", "ETH", "WBTC")
+     * @param tokenDecimals The decimal precision of the token (e.g. 18, 8, 6)
+     * @return fee The computed fee in native COTI (18 decimals)
+     */
+    function simulateFee(
+        uint256 amount,
+        uint256 fixedFee,
+        uint256 percentageBps,
+        uint256 maxFee,
+        string calldata tokenSymbol,
+        uint8 tokenDecimals
+    ) external view returns (uint256 fee) {
+        uint256 tokenUsdRate = ICotiPriceConsumer(priceOracle).getPrice(tokenSymbol);
+        uint256 cotiUsdRate = ICotiPriceConsumer(priceOracle).getPrice("COTI");
+        uint256 txValueUsd = (amount * tokenUsdRate) / (10 ** tokenDecimals);
+        uint256 percentageFeeUsd = (txValueUsd * percentageBps) / FEE_DIVISOR;
+        uint256 percentageFeeCoti = (percentageFeeUsd * 1e18) / cotiUsdRate;
+        fee = _calculateDynamicFee(percentageFeeCoti, fixedFee, maxFee);
+    }
+
     event CotiFeesWithdrawn(address indexed feeRecipient, uint256 amount);
 
     /**
