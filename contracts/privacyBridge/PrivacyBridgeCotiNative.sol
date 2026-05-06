@@ -83,6 +83,25 @@ contract PrivacyBridgeCotiNative is PrivacyBridge {
     }
 
     /**
+     * @notice Simulate fee calculation for native COTI with arbitrary parameters.
+     * @dev Public view — allows frontends/operators to preview fees with custom fee params.
+     *      Reads live COTI oracle price but accepts custom fee configuration.
+     * @param cotiAmount The COTI amount to compute fee for (wei; very large values can revert in fee math)
+     * @param fixedFee The minimum fee floor in COTI wei
+     * @param percentageBps The percentage in basis points (relative to {FEE_DIVISOR})
+     * @param maxFee The maximum fee cap in COTI wei
+     * @return The computed fee in COTI wei
+     */
+    function computeCotiFee(
+        uint256 cotiAmount,
+        uint256 fixedFee,
+        uint256 percentageBps,
+        uint256 maxFee
+    ) external view returns (uint256) {
+        return _computeCotiFee(cotiAmount, fixedFee, percentageBps, maxFee);
+    }
+
+    /**
      * @notice Estimate the deposit fee in COTI for a given COTI amount
      * @param cotiAmount The amount of native COTI to deposit (wei; very large values can revert in fee math)
      * @return fee                The estimated fee in COTI wei

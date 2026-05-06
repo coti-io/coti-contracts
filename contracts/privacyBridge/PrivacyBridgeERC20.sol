@@ -63,15 +63,27 @@ abstract contract PrivacyBridgeERC20 is PrivacyBridge {
         return _computeErc20FeeAndMeta(tokenAmount, fixedFee, percentageBps, maxFee, tokenSymbol, bridgedTokenDecimals).fee;
     }
 
-    function _computeErc20Fee(
+    /**
+     * @notice Simulate fee calculation for any token symbol and decimals.
+     * @dev Public view — allows frontends/operators to preview fees with arbitrary parameters.
+     *      Reads live oracle prices but accepts custom fee params and token config.
+     * @param tokenAmount The token amount to simulate fee for (raw units; very large values can revert in fee math)
+     * @param fixedFee The minimum fee floor in COTI wei
+     * @param percentageBps The percentage in basis points (relative to {FEE_DIVISOR})
+     * @param maxFee The maximum fee cap in COTI wei
+     * @param _tokenSymbol The Band oracle symbol (e.g. "ETH", "WBTC", "ADA")
+     * @param _tokenDecimals The decimal precision of the token (e.g. 18, 8, 6)
+     * @return The computed fee in native COTI (18 decimals)
+     */
+    function computeErc20Fee(
         uint256 tokenAmount,
         uint256 fixedFee,
         uint256 percentageBps,
         uint256 maxFee,
-        string tokenSymbol,
-        uint8 tokenDecimals
-    ) public view returns (uint256) {
-        return _computeErc20FeeAndMeta(tokenAmount, fixedFee, percentageBps, maxFee, tokenSymbol, tokenDecimals).fee;
+        string calldata _tokenSymbol,
+        uint8 _tokenDecimals
+    ) external view returns (uint256) {
+        return _computeErc20FeeAndMeta(tokenAmount, fixedFee, percentageBps, maxFee, _tokenSymbol, _tokenDecimals).fee;
     }
 
     /**
