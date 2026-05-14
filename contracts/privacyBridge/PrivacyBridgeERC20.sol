@@ -60,7 +60,8 @@ abstract contract PrivacyBridgeERC20 is PrivacyBridge {
         uint256 percentageBps,
         uint256 maxFee
     ) internal view returns (uint256) {
-        return _computeErc20FeeAndMeta(tokenAmount, fixedFee, percentageBps, maxFee, tokenSymbol, bridgedTokenDecimals).fee;
+        (uint256 fee,,,) = _computeErc20FeeAndMeta(tokenAmount, fixedFee, percentageBps, maxFee, tokenSymbol, bridgedTokenDecimals);
+        return fee;
     }
 
     /**
@@ -83,7 +84,8 @@ abstract contract PrivacyBridgeERC20 is PrivacyBridge {
         string calldata _tokenSymbol,
         uint8 _tokenDecimals
     ) external view returns (uint256) {
-        return _computeErc20FeeAndMeta(tokenAmount, fixedFee, percentageBps, maxFee, _tokenSymbol, _tokenDecimals).fee;
+        (uint256 fee,,,) = _computeErc20FeeAndMeta(tokenAmount, fixedFee, percentageBps, maxFee, _tokenSymbol, _tokenDecimals);
+        return fee;
     }
 
     /**
