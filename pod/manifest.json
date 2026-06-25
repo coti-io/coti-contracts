@@ -1,0 +1,52 @@
+{
+  "generatedAt": "2026-06-25T12:37:39Z",
+  "source": "/Users/ith/nk/pod-mpc-lib/contracts",
+  "target": "/Users/ith/nk/coti-contracts/pod",
+  "files": [
+    "examples/it128/PodAdder128.sol",
+    "examples/it256/PodAdder256.sol",
+    "examples/MpcAdder.sol",
+    "examples/MpcAdderPausable.sol",
+    "fee/IInboxFeeManager.sol",
+    "IInbox.sol",
+    "IInboxMiner.sol",
+    "InboxUser.sol",
+    "InboxUserCotiTestnet.sol",
+    "mpc/coti-side/IPodExecutorOps.sol",
+    "mpc/PodLib.sol",
+    "mpc/PodLib128.sol",
+    "mpc/PodLib256.sol",
+    "mpc/PodLib64.sol",
+    "mpc/PodLibBase.sol",
+    "mpc/PodUser.sol",
+    "mpc/PodUserFuji.sol",
+    "mpc/PodUserSepolia.sol",
+    "mpccodec/MpcAbiCodec.sol",
+    "PodNetworkConstants.sol",
+    "privacy/IPrivacyPortal.sol",
+    "privacy/PrivacyPortal.sol",
+    "privacy/PrivacyPortalFactory.sol",
+    "token/erc7984/Erc7984Constants.sol",
+    "token/erc7984/Erc7984Pointers.sol",
+    "token/erc7984/IERC7984.sol",
+    "token/erc7984/IERC7984PortalWrapper.sol",
+    "token/erc7984/PodErc7984Mixin.sol",
+    "token/erc7984/README.md",
+    "token/perc20/cotiside/IPodErc20CotiSide.sol",
+    "token/perc20/cotiside/PodErc20CotiMother.sol",
+    "token/perc20/IPodERC20.sol",
+    "token/perc20/PodERC20.sol",
+    "token/perc20/PodErc20Mintable.sol",
+    "token/perc20/PodErc20MintableInitializable.sol",
+    "utils/IWrappedNative.sol"
+  ],
+  "externalImports": [
+    "utils/mpc/MpcCore.sol",
+    "utils/mpc/MpcInterface.sol"
+  ],
+  "notes": [
+    "MpcCore.sol and MpcInterface.sol live at contracts/utils/mpc/ in coti-contracts.",
+    "OpenZeppelin imports are unchanged (@openzeppelin/contracts).",
+    "Indexers/relayers: use getRequest(requestId) for full inbox payloads (compact MessageSent logs)."
+  ]
+}
