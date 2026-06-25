@@ -2,3 +2,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export { FixedRatioCoinDisperser__factory } from "./FixedRatioCoinDisperser__factory";
+export { FixedRatioCoinDisperserLeftoverS1__factory } from "./FixedRatioCoinDisperserLeftoverS1__factory";
+export { FixedRatioCoinDisperserUnlimitedWindow__factory } from "./FixedRatioCoinDisperserUnlimitedWindow__factory";

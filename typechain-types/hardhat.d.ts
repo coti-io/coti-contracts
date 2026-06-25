@@ -14,6 +14,22 @@ import * as Contracts from ".";
 declare module "hardhat/types/runtime" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
     getContractFactory(
+      name: "AccessControl",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.AccessControl__factory>;
+    getContractFactory(
+      name: "AccessControlEnumerable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.AccessControlEnumerable__factory>;
+    getContractFactory(
+      name: "IAccessControl",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IAccessControl__factory>;
+    getContractFactory(
+      name: "IAccessControlEnumerable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IAccessControlEnumerable__factory>;
+    getContractFactory(
       name: "Ownable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Ownable__factory>;
@@ -22,6 +38,18 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC4906__factory>;
     getContractFactory(
+      name: "Pausable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Pausable__factory>;
+    getContractFactory(
+      name: "ERC20",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC20__factory>;
+    getContractFactory(
+      name: "IERC20Metadata",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC20Metadata__factory>;
+    getContractFactory(
       name: "IERC20Permit",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20Permit__factory>;
@@ -29,6 +57,14 @@ declare module "hardhat/types/runtime" {
       name: "IERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20__factory>;
+    getContractFactory(
+      name: "ERC721",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC721__factory>;
+    getContractFactory(
+      name: "IERC721Metadata",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC721Metadata__factory>;
     getContractFactory(
       name: "IERC721",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -58,9 +94,21 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.FixedRatioCoinDisperser__factory>;
     getContractFactory(
+      name: "FixedRatioCoinDisperserLeftoverS1",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.FixedRatioCoinDisperserLeftoverS1__factory>;
+    getContractFactory(
+      name: "FixedRatioCoinDisperserUnlimitedWindow",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.FixedRatioCoinDisperserUnlimitedWindow__factory>;
+    getContractFactory(
       name: "IMintableERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IMintableERC20__factory>;
+    getContractFactory(
+      name: "IOwnable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IOwnable__factory>;
     getContractFactory(
       name: "MintDisperser",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -70,13 +118,73 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TokenDisperser__factory>;
     getContractFactory(
+      name: "PrivateMessaging",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivateMessaging__factory>;
+    getContractFactory(
       name: "DataPrivacyFrameworkMock",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.DataPrivacyFrameworkMock__factory>;
     getContractFactory(
+      name: "PrivateMessagingHarness",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivateMessagingHarness__factory>;
+    getContractFactory(
+      name: "CotiPriceConsumerMock",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CotiPriceConsumerMock__factory>;
+    getContractFactory(
+      name: "ERC20DecimalsMock",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC20DecimalsMock__factory>;
+    getContractFactory(
+      name: "ERC20Mock",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC20Mock__factory>;
+    getContractFactory(
+      name: "EncryptedTokenReceiverMock",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.EncryptedTokenReceiverMock__factory>;
+    getContractFactory(
+      name: "PrivacyBridgeERC20Mock",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivacyBridgeERC20Mock__factory>;
+    getContractFactory(
+      name: "PrivateERC20AuditorSupplyMock",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivateERC20AuditorSupplyMock__factory>;
+    getContractFactory(
+      name: "PrivateERC20CappedMock",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivateERC20CappedMock__factory>;
+    getContractFactory(
+      name: "PrivateERC20GtCallerMock",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivateERC20GtCallerMock__factory>;
+    getContractFactory(
       name: "PrivateERC20Mock",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PrivateERC20Mock__factory>;
+    getContractFactory(
+      name: "IPrivateERC20TransferAndCallEncrypted",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IPrivateERC20TransferAndCallEncrypted__factory>;
+    getContractFactory(
+      name: "PrivateERC20ReentrantReceiverMock",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivateERC20ReentrantReceiverMock__factory>;
+    getContractFactory(
+      name: "PublicReentrantTokenReceiverMock",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PublicReentrantTokenReceiverMock__factory>;
+    getContractFactory(
+      name: "PublicTokenReceiverBoolMock",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PublicTokenReceiverBoolMock__factory>;
+    getContractFactory(
+      name: "PublicTokenReceiverMock",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PublicTokenReceiverMock__factory>;
     getContractFactory(
       name: "PrivateERC721URIStorageMock",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -290,17 +398,117 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PrivateERC20WalletMock__factory>;
     getContractFactory(
+      name: "CotiNodeRewards",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CotiNodeRewards__factory>;
+    getContractFactory(
+      name: "IERC5192",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC5192__factory>;
+    getContractFactory(
+      name: "SoulboundNodeNFT",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.SoulboundNodeNFT__factory>;
+    getContractFactory(
       name: "AccountOnboard",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.AccountOnboard__factory>;
+    getContractFactory(
+      name: "CotiPriceConsumer",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.CotiPriceConsumer__factory>;
+    getContractFactory(
+      name: "ICotiPriceConsumer",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ICotiPriceConsumer__factory>;
+    getContractFactory(
+      name: "IStdReference",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IStdReference__factory>;
+    getContractFactory(
+      name: "PrivacyBridge",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivacyBridge__factory>;
+    getContractFactory(
+      name: "PrivacyBridgeCotiNative",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivacyBridgeCotiNative__factory>;
+    getContractFactory(
+      name: "IHasDecimals",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IHasDecimals__factory>;
+    getContractFactory(
+      name: "PrivacyBridgeERC20",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivacyBridgeERC20__factory>;
+    getContractFactory(
+      name: "PrivacyBridgegCoti",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivacyBridgegCoti__factory>;
+    getContractFactory(
+      name: "PrivacyBridgeUSDCe",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivacyBridgeUSDCe__factory>;
+    getContractFactory(
+      name: "PrivacyBridgeUSDT",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivacyBridgeUSDT__factory>;
+    getContractFactory(
+      name: "PrivacyBridgeWADA",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivacyBridgeWADA__factory>;
+    getContractFactory(
+      name: "PrivacyBridgeWBTC",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivacyBridgeWBTC__factory>;
+    getContractFactory(
+      name: "PrivacyBridgeWETH",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivacyBridgeWETH__factory>;
     getContractFactory(
       name: "IPrivateERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IPrivateERC20__factory>;
     getContractFactory(
+      name: "ITokenReceiver",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ITokenReceiver__factory>;
+    getContractFactory(
+      name: "ITokenReceiverEncrypted",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ITokenReceiverEncrypted__factory>;
+    getContractFactory(
       name: "PrivateERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PrivateERC20__factory>;
+    getContractFactory(
+      name: "PrivateBridgedUSDC",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivateBridgedUSDC__factory>;
+    getContractFactory(
+      name: "PrivateCOTI",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivateCOTI__factory>;
+    getContractFactory(
+      name: "PrivateCOTITreasuryGovernanceToken",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivateCOTITreasuryGovernanceToken__factory>;
+    getContractFactory(
+      name: "PrivateTetherUSD",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivateTetherUSD__factory>;
+    getContractFactory(
+      name: "PrivateWrappedADA",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivateWrappedADA__factory>;
+    getContractFactory(
+      name: "PrivateWrappedBTC",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivateWrappedBTC__factory>;
+    getContractFactory(
+      name: "PrivateWrappedEther",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.PrivateWrappedEther__factory>;
     getContractFactory(
       name: "IPrivateERC721URIStorage",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -327,6 +535,26 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.ExtendedOperations__factory>;
 
     getContractAt(
+      name: "AccessControl",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.AccessControl>;
+    getContractAt(
+      name: "AccessControlEnumerable",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.AccessControlEnumerable>;
+    getContractAt(
+      name: "IAccessControl",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IAccessControl>;
+    getContractAt(
+      name: "IAccessControlEnumerable",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IAccessControlEnumerable>;
+    getContractAt(
       name: "Ownable",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -337,6 +565,21 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IERC4906>;
     getContractAt(
+      name: "Pausable",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Pausable>;
+    getContractAt(
+      name: "ERC20",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC20>;
+    getContractAt(
+      name: "IERC20Metadata",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC20Metadata>;
+    getContractAt(
       name: "IERC20Permit",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -346,6 +589,16 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC20>;
+    getContractAt(
+      name: "ERC721",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC721>;
+    getContractAt(
+      name: "IERC721Metadata",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC721Metadata>;
     getContractAt(
       name: "IERC721",
       address: string | ethers.Addressable,
@@ -382,10 +635,25 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.FixedRatioCoinDisperser>;
     getContractAt(
+      name: "FixedRatioCoinDisperserLeftoverS1",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.FixedRatioCoinDisperserLeftoverS1>;
+    getContractAt(
+      name: "FixedRatioCoinDisperserUnlimitedWindow",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.FixedRatioCoinDisperserUnlimitedWindow>;
+    getContractAt(
       name: "IMintableERC20",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.IMintableERC20>;
+    getContractAt(
+      name: "IOwnable",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IOwnable>;
     getContractAt(
       name: "MintDisperser",
       address: string | ethers.Addressable,
@@ -397,15 +665,90 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.TokenDisperser>;
     getContractAt(
+      name: "PrivateMessaging",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivateMessaging>;
+    getContractAt(
       name: "DataPrivacyFrameworkMock",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.DataPrivacyFrameworkMock>;
     getContractAt(
+      name: "PrivateMessagingHarness",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivateMessagingHarness>;
+    getContractAt(
+      name: "CotiPriceConsumerMock",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CotiPriceConsumerMock>;
+    getContractAt(
+      name: "ERC20DecimalsMock",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC20DecimalsMock>;
+    getContractAt(
+      name: "ERC20Mock",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC20Mock>;
+    getContractAt(
+      name: "EncryptedTokenReceiverMock",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.EncryptedTokenReceiverMock>;
+    getContractAt(
+      name: "PrivacyBridgeERC20Mock",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivacyBridgeERC20Mock>;
+    getContractAt(
+      name: "PrivateERC20AuditorSupplyMock",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivateERC20AuditorSupplyMock>;
+    getContractAt(
+      name: "PrivateERC20CappedMock",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivateERC20CappedMock>;
+    getContractAt(
+      name: "PrivateERC20GtCallerMock",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivateERC20GtCallerMock>;
+    getContractAt(
       name: "PrivateERC20Mock",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.PrivateERC20Mock>;
+    getContractAt(
+      name: "IPrivateERC20TransferAndCallEncrypted",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IPrivateERC20TransferAndCallEncrypted>;
+    getContractAt(
+      name: "PrivateERC20ReentrantReceiverMock",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivateERC20ReentrantReceiverMock>;
+    getContractAt(
+      name: "PublicReentrantTokenReceiverMock",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PublicReentrantTokenReceiverMock>;
+    getContractAt(
+      name: "PublicTokenReceiverBoolMock",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PublicTokenReceiverBoolMock>;
+    getContractAt(
+      name: "PublicTokenReceiverMock",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PublicTokenReceiverMock>;
     getContractAt(
       name: "PrivateERC721URIStorageMock",
       address: string | ethers.Addressable,
@@ -672,20 +1015,145 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.PrivateERC20WalletMock>;
     getContractAt(
+      name: "CotiNodeRewards",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CotiNodeRewards>;
+    getContractAt(
+      name: "IERC5192",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC5192>;
+    getContractAt(
+      name: "SoulboundNodeNFT",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.SoulboundNodeNFT>;
+    getContractAt(
       name: "AccountOnboard",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.AccountOnboard>;
+    getContractAt(
+      name: "CotiPriceConsumer",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.CotiPriceConsumer>;
+    getContractAt(
+      name: "ICotiPriceConsumer",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ICotiPriceConsumer>;
+    getContractAt(
+      name: "IStdReference",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IStdReference>;
+    getContractAt(
+      name: "PrivacyBridge",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivacyBridge>;
+    getContractAt(
+      name: "PrivacyBridgeCotiNative",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivacyBridgeCotiNative>;
+    getContractAt(
+      name: "IHasDecimals",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IHasDecimals>;
+    getContractAt(
+      name: "PrivacyBridgeERC20",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivacyBridgeERC20>;
+    getContractAt(
+      name: "PrivacyBridgegCoti",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivacyBridgegCoti>;
+    getContractAt(
+      name: "PrivacyBridgeUSDCe",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivacyBridgeUSDCe>;
+    getContractAt(
+      name: "PrivacyBridgeUSDT",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivacyBridgeUSDT>;
+    getContractAt(
+      name: "PrivacyBridgeWADA",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivacyBridgeWADA>;
+    getContractAt(
+      name: "PrivacyBridgeWBTC",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivacyBridgeWBTC>;
+    getContractAt(
+      name: "PrivacyBridgeWETH",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivacyBridgeWETH>;
     getContractAt(
       name: "IPrivateERC20",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.IPrivateERC20>;
     getContractAt(
+      name: "ITokenReceiver",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ITokenReceiver>;
+    getContractAt(
+      name: "ITokenReceiverEncrypted",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ITokenReceiverEncrypted>;
+    getContractAt(
       name: "PrivateERC20",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.PrivateERC20>;
+    getContractAt(
+      name: "PrivateBridgedUSDC",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivateBridgedUSDC>;
+    getContractAt(
+      name: "PrivateCOTI",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivateCOTI>;
+    getContractAt(
+      name: "PrivateCOTITreasuryGovernanceToken",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivateCOTITreasuryGovernanceToken>;
+    getContractAt(
+      name: "PrivateTetherUSD",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivateTetherUSD>;
+    getContractAt(
+      name: "PrivateWrappedADA",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivateWrappedADA>;
+    getContractAt(
+      name: "PrivateWrappedBTC",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivateWrappedBTC>;
+    getContractAt(
+      name: "PrivateWrappedEther",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.PrivateWrappedEther>;
     getContractAt(
       name: "IPrivateERC721URIStorage",
       address: string | ethers.Addressable,
@@ -718,6 +1186,22 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.ExtendedOperations>;
 
     deployContract(
+      name: "AccessControl",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.AccessControl>;
+    deployContract(
+      name: "AccessControlEnumerable",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.AccessControlEnumerable>;
+    deployContract(
+      name: "IAccessControl",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IAccessControl>;
+    deployContract(
+      name: "IAccessControlEnumerable",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IAccessControlEnumerable>;
+    deployContract(
       name: "Ownable",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Ownable>;
@@ -726,6 +1210,18 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IERC4906>;
     deployContract(
+      name: "Pausable",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Pausable>;
+    deployContract(
+      name: "ERC20",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ERC20>;
+    deployContract(
+      name: "IERC20Metadata",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC20Metadata>;
+    deployContract(
       name: "IERC20Permit",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IERC20Permit>;
@@ -733,6 +1229,14 @@ declare module "hardhat/types/runtime" {
       name: "IERC20",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IERC20>;
+    deployContract(
+      name: "ERC721",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ERC721>;
+    deployContract(
+      name: "IERC721Metadata",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC721Metadata>;
     deployContract(
       name: "IERC721",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -762,9 +1266,21 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.FixedRatioCoinDisperser>;
     deployContract(
+      name: "FixedRatioCoinDisperserLeftoverS1",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.FixedRatioCoinDisperserLeftoverS1>;
+    deployContract(
+      name: "FixedRatioCoinDisperserUnlimitedWindow",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.FixedRatioCoinDisperserUnlimitedWindow>;
+    deployContract(
       name: "IMintableERC20",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IMintableERC20>;
+    deployContract(
+      name: "IOwnable",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IOwnable>;
     deployContract(
       name: "MintDisperser",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -774,13 +1290,73 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TokenDisperser>;
     deployContract(
+      name: "PrivateMessaging",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateMessaging>;
+    deployContract(
       name: "DataPrivacyFrameworkMock",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.DataPrivacyFrameworkMock>;
     deployContract(
+      name: "PrivateMessagingHarness",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateMessagingHarness>;
+    deployContract(
+      name: "CotiPriceConsumerMock",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.CotiPriceConsumerMock>;
+    deployContract(
+      name: "ERC20DecimalsMock",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ERC20DecimalsMock>;
+    deployContract(
+      name: "ERC20Mock",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ERC20Mock>;
+    deployContract(
+      name: "EncryptedTokenReceiverMock",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.EncryptedTokenReceiverMock>;
+    deployContract(
+      name: "PrivacyBridgeERC20Mock",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgeERC20Mock>;
+    deployContract(
+      name: "PrivateERC20AuditorSupplyMock",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateERC20AuditorSupplyMock>;
+    deployContract(
+      name: "PrivateERC20CappedMock",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateERC20CappedMock>;
+    deployContract(
+      name: "PrivateERC20GtCallerMock",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateERC20GtCallerMock>;
+    deployContract(
       name: "PrivateERC20Mock",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.PrivateERC20Mock>;
+    deployContract(
+      name: "IPrivateERC20TransferAndCallEncrypted",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IPrivateERC20TransferAndCallEncrypted>;
+    deployContract(
+      name: "PrivateERC20ReentrantReceiverMock",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateERC20ReentrantReceiverMock>;
+    deployContract(
+      name: "PublicReentrantTokenReceiverMock",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PublicReentrantTokenReceiverMock>;
+    deployContract(
+      name: "PublicTokenReceiverBoolMock",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PublicTokenReceiverBoolMock>;
+    deployContract(
+      name: "PublicTokenReceiverMock",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PublicTokenReceiverMock>;
     deployContract(
       name: "PrivateERC721URIStorageMock",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -994,17 +1570,117 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.PrivateERC20WalletMock>;
     deployContract(
+      name: "CotiNodeRewards",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.CotiNodeRewards>;
+    deployContract(
+      name: "IERC5192",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC5192>;
+    deployContract(
+      name: "SoulboundNodeNFT",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.SoulboundNodeNFT>;
+    deployContract(
       name: "AccountOnboard",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.AccountOnboard>;
+    deployContract(
+      name: "CotiPriceConsumer",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.CotiPriceConsumer>;
+    deployContract(
+      name: "ICotiPriceConsumer",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ICotiPriceConsumer>;
+    deployContract(
+      name: "IStdReference",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IStdReference>;
+    deployContract(
+      name: "PrivacyBridge",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridge>;
+    deployContract(
+      name: "PrivacyBridgeCotiNative",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgeCotiNative>;
+    deployContract(
+      name: "IHasDecimals",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IHasDecimals>;
+    deployContract(
+      name: "PrivacyBridgeERC20",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgeERC20>;
+    deployContract(
+      name: "PrivacyBridgegCoti",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgegCoti>;
+    deployContract(
+      name: "PrivacyBridgeUSDCe",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgeUSDCe>;
+    deployContract(
+      name: "PrivacyBridgeUSDT",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgeUSDT>;
+    deployContract(
+      name: "PrivacyBridgeWADA",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgeWADA>;
+    deployContract(
+      name: "PrivacyBridgeWBTC",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgeWBTC>;
+    deployContract(
+      name: "PrivacyBridgeWETH",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgeWETH>;
     deployContract(
       name: "IPrivateERC20",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IPrivateERC20>;
     deployContract(
+      name: "ITokenReceiver",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ITokenReceiver>;
+    deployContract(
+      name: "ITokenReceiverEncrypted",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ITokenReceiverEncrypted>;
+    deployContract(
       name: "PrivateERC20",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.PrivateERC20>;
+    deployContract(
+      name: "PrivateBridgedUSDC",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateBridgedUSDC>;
+    deployContract(
+      name: "PrivateCOTI",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateCOTI>;
+    deployContract(
+      name: "PrivateCOTITreasuryGovernanceToken",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateCOTITreasuryGovernanceToken>;
+    deployContract(
+      name: "PrivateTetherUSD",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateTetherUSD>;
+    deployContract(
+      name: "PrivateWrappedADA",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateWrappedADA>;
+    deployContract(
+      name: "PrivateWrappedBTC",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateWrappedBTC>;
+    deployContract(
+      name: "PrivateWrappedEther",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateWrappedEther>;
     deployContract(
       name: "IPrivateERC721URIStorage",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -1031,6 +1707,26 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.ExtendedOperations>;
 
     deployContract(
+      name: "AccessControl",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.AccessControl>;
+    deployContract(
+      name: "AccessControlEnumerable",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.AccessControlEnumerable>;
+    deployContract(
+      name: "IAccessControl",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IAccessControl>;
+    deployContract(
+      name: "IAccessControlEnumerable",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IAccessControlEnumerable>;
+    deployContract(
       name: "Ownable",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -1041,6 +1737,21 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IERC4906>;
     deployContract(
+      name: "Pausable",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Pausable>;
+    deployContract(
+      name: "ERC20",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ERC20>;
+    deployContract(
+      name: "IERC20Metadata",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC20Metadata>;
+    deployContract(
       name: "IERC20Permit",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -1050,6 +1761,16 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IERC20>;
+    deployContract(
+      name: "ERC721",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ERC721>;
+    deployContract(
+      name: "IERC721Metadata",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC721Metadata>;
     deployContract(
       name: "IERC721",
       args: any[],
@@ -1086,10 +1807,25 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.FixedRatioCoinDisperser>;
     deployContract(
+      name: "FixedRatioCoinDisperserLeftoverS1",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.FixedRatioCoinDisperserLeftoverS1>;
+    deployContract(
+      name: "FixedRatioCoinDisperserUnlimitedWindow",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.FixedRatioCoinDisperserUnlimitedWindow>;
+    deployContract(
       name: "IMintableERC20",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IMintableERC20>;
+    deployContract(
+      name: "IOwnable",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IOwnable>;
     deployContract(
       name: "MintDisperser",
       args: any[],
@@ -1101,15 +1837,90 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.TokenDisperser>;
     deployContract(
+      name: "PrivateMessaging",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateMessaging>;
+    deployContract(
       name: "DataPrivacyFrameworkMock",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.DataPrivacyFrameworkMock>;
     deployContract(
+      name: "PrivateMessagingHarness",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateMessagingHarness>;
+    deployContract(
+      name: "CotiPriceConsumerMock",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.CotiPriceConsumerMock>;
+    deployContract(
+      name: "ERC20DecimalsMock",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ERC20DecimalsMock>;
+    deployContract(
+      name: "ERC20Mock",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ERC20Mock>;
+    deployContract(
+      name: "EncryptedTokenReceiverMock",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.EncryptedTokenReceiverMock>;
+    deployContract(
+      name: "PrivacyBridgeERC20Mock",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgeERC20Mock>;
+    deployContract(
+      name: "PrivateERC20AuditorSupplyMock",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateERC20AuditorSupplyMock>;
+    deployContract(
+      name: "PrivateERC20CappedMock",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateERC20CappedMock>;
+    deployContract(
+      name: "PrivateERC20GtCallerMock",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateERC20GtCallerMock>;
+    deployContract(
       name: "PrivateERC20Mock",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.PrivateERC20Mock>;
+    deployContract(
+      name: "IPrivateERC20TransferAndCallEncrypted",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IPrivateERC20TransferAndCallEncrypted>;
+    deployContract(
+      name: "PrivateERC20ReentrantReceiverMock",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateERC20ReentrantReceiverMock>;
+    deployContract(
+      name: "PublicReentrantTokenReceiverMock",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PublicReentrantTokenReceiverMock>;
+    deployContract(
+      name: "PublicTokenReceiverBoolMock",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PublicTokenReceiverBoolMock>;
+    deployContract(
+      name: "PublicTokenReceiverMock",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PublicTokenReceiverMock>;
     deployContract(
       name: "PrivateERC721URIStorageMock",
       args: any[],
@@ -1376,20 +2187,145 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.PrivateERC20WalletMock>;
     deployContract(
+      name: "CotiNodeRewards",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.CotiNodeRewards>;
+    deployContract(
+      name: "IERC5192",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC5192>;
+    deployContract(
+      name: "SoulboundNodeNFT",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.SoulboundNodeNFT>;
+    deployContract(
       name: "AccountOnboard",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.AccountOnboard>;
+    deployContract(
+      name: "CotiPriceConsumer",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.CotiPriceConsumer>;
+    deployContract(
+      name: "ICotiPriceConsumer",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ICotiPriceConsumer>;
+    deployContract(
+      name: "IStdReference",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IStdReference>;
+    deployContract(
+      name: "PrivacyBridge",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridge>;
+    deployContract(
+      name: "PrivacyBridgeCotiNative",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgeCotiNative>;
+    deployContract(
+      name: "IHasDecimals",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IHasDecimals>;
+    deployContract(
+      name: "PrivacyBridgeERC20",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgeERC20>;
+    deployContract(
+      name: "PrivacyBridgegCoti",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgegCoti>;
+    deployContract(
+      name: "PrivacyBridgeUSDCe",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgeUSDCe>;
+    deployContract(
+      name: "PrivacyBridgeUSDT",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgeUSDT>;
+    deployContract(
+      name: "PrivacyBridgeWADA",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgeWADA>;
+    deployContract(
+      name: "PrivacyBridgeWBTC",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgeWBTC>;
+    deployContract(
+      name: "PrivacyBridgeWETH",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivacyBridgeWETH>;
     deployContract(
       name: "IPrivateERC20",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IPrivateERC20>;
     deployContract(
+      name: "ITokenReceiver",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ITokenReceiver>;
+    deployContract(
+      name: "ITokenReceiverEncrypted",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ITokenReceiverEncrypted>;
+    deployContract(
       name: "PrivateERC20",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.PrivateERC20>;
+    deployContract(
+      name: "PrivateBridgedUSDC",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateBridgedUSDC>;
+    deployContract(
+      name: "PrivateCOTI",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateCOTI>;
+    deployContract(
+      name: "PrivateCOTITreasuryGovernanceToken",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateCOTITreasuryGovernanceToken>;
+    deployContract(
+      name: "PrivateTetherUSD",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateTetherUSD>;
+    deployContract(
+      name: "PrivateWrappedADA",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateWrappedADA>;
+    deployContract(
+      name: "PrivateWrappedBTC",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateWrappedBTC>;
+    deployContract(
+      name: "PrivateWrappedEther",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.PrivateWrappedEther>;
     deployContract(
       name: "IPrivateERC721URIStorage",
       args: any[],

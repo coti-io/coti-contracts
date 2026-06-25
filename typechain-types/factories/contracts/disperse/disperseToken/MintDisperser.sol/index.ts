@@ -2,4 +2,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export { IMintableERC20__factory } from "./IMintableERC20__factory";
+export { IOwnable__factory } from "./IOwnable__factory";
 export { MintDisperser__factory } from "./MintDisperser__factory";

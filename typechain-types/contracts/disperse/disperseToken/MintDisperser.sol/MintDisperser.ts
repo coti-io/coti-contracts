@@ -31,6 +31,7 @@ export interface MintDisperserInterface extends Interface {
       | "owner"
       | "renounceOwnership"
       | "transferOwnership"
+      | "transferTokenOwnership"
   ): FunctionFragment;
 
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
@@ -52,6 +53,10 @@ export interface MintDisperserInterface extends Interface {
     functionFragment: "transferOwnership",
     values: [AddressLike]
   ): string;
+  encodeFunctionData(
+    functionFragment: "transferTokenOwnership",
+    values: [AddressLike, AddressLike]
+  ): string;
 
   decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
   decodeFunctionResult(
@@ -65,6 +70,10 @@ export interface MintDisperserInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "transferOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "transferTokenOwnership",
     data: BytesLike
   ): Result;
 }
@@ -151,6 +160,12 @@ export interface MintDisperser extends BaseContract {
     "nonpayable"
   >;
 
+  transferTokenOwnership: TypedContractMethod<
+    [token: AddressLike, newOwner: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
@@ -182,6 +197,13 @@ export interface MintDisperser extends BaseContract {
   getFunction(
     nameOrSignature: "transferOwnership"
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "transferTokenOwnership"
+  ): TypedContractMethod<
+    [token: AddressLike, newOwner: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
   getEvent(
     key: "OwnershipTransferred"

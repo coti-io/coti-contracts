@@ -68,17 +68,38 @@ export interface IPrivateERC20Interface extends Interface {
       | "allowance(address,address)"
       | "approve(address,uint256)"
       | "approve(address,((uint256,uint256),bytes))"
+      | "approveGT"
       | "balanceOf(address)"
       | "balanceOf()"
+      | "burn(uint256)"
+      | "burn(((uint256,uint256),bytes))"
+      | "burnGt"
+      | "decreaseAllowance(address,uint256)"
+      | "decreaseAllowance(address,((uint256,uint256),bytes))"
+      | "decreaseAllowanceGT"
+      | "increaseAllowance(address,uint256)"
+      | "increaseAllowance(address,((uint256,uint256),bytes))"
+      | "increaseAllowanceGT"
+      | "mint(address,uint256)"
+      | "mint(address,((uint256,uint256),bytes))"
+      | "mintGt"
+      | "publicAmountsEnabled"
       | "setAccountEncryptionAddress"
+      | "setPublicAmountsEnabled"
       | "totalSupply"
       | "transfer(address,((uint256,uint256),bytes))"
       | "transfer(address,uint256)"
+      | "transferAndCall(address,((uint256,uint256),bytes),bytes)"
+      | "transferAndCall(address,uint256,bytes)"
       | "transferFrom(address,address,uint256)"
       | "transferFrom(address,address,((uint256,uint256),bytes))"
+      | "transferFromGT"
+      | "transferGT"
   ): FunctionFragment;
 
-  getEvent(nameOrSignatureOrTopic: "Approval" | "Transfer"): EventFragment;
+  getEvent(
+    nameOrSignatureOrTopic: "AllowanceReencrypted" | "Approval" | "Transfer"
+  ): EventFragment;
 
   encodeFunctionData(
     functionFragment: "allowance(address,bool)",
@@ -97,6 +118,10 @@ export interface IPrivateERC20Interface extends Interface {
     values: [AddressLike, ItUint256Struct]
   ): string;
   encodeFunctionData(
+    functionFragment: "approveGT",
+    values: [AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "balanceOf(address)",
     values: [AddressLike]
   ): string;
@@ -105,8 +130,64 @@ export interface IPrivateERC20Interface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "burn(uint256)",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "burn(((uint256,uint256),bytes))",
+    values: [ItUint256Struct]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "burnGt",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "decreaseAllowance(address,uint256)",
+    values: [AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "decreaseAllowance(address,((uint256,uint256),bytes))",
+    values: [AddressLike, ItUint256Struct]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "decreaseAllowanceGT",
+    values: [AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "increaseAllowance(address,uint256)",
+    values: [AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "increaseAllowance(address,((uint256,uint256),bytes))",
+    values: [AddressLike, ItUint256Struct]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "increaseAllowanceGT",
+    values: [AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "mint(address,uint256)",
+    values: [AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "mint(address,((uint256,uint256),bytes))",
+    values: [AddressLike, ItUint256Struct]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "mintGt",
+    values: [AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "publicAmountsEnabled",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "setAccountEncryptionAddress",
     values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setPublicAmountsEnabled",
+    values: [boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "totalSupply",
@@ -121,12 +202,28 @@ export interface IPrivateERC20Interface extends Interface {
     values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "transferAndCall(address,((uint256,uint256),bytes),bytes)",
+    values: [AddressLike, ItUint256Struct, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "transferAndCall(address,uint256,bytes)",
+    values: [AddressLike, BigNumberish, BytesLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "transferFrom(address,address,uint256)",
     values: [AddressLike, AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "transferFrom(address,address,((uint256,uint256),bytes))",
     values: [AddressLike, AddressLike, ItUint256Struct]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "transferFromGT",
+    values: [AddressLike, AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "transferGT",
+    values: [AddressLike, BigNumberish]
   ): string;
 
   decodeFunctionResult(
@@ -145,6 +242,7 @@ export interface IPrivateERC20Interface extends Interface {
     functionFragment: "approve(address,((uint256,uint256),bytes))",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "approveGT", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "balanceOf(address)",
     data: BytesLike
@@ -154,7 +252,57 @@ export interface IPrivateERC20Interface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "burn(uint256)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "burn(((uint256,uint256),bytes))",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "burnGt", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "decreaseAllowance(address,uint256)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "decreaseAllowance(address,((uint256,uint256),bytes))",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "decreaseAllowanceGT",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "increaseAllowance(address,uint256)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "increaseAllowance(address,((uint256,uint256),bytes))",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "increaseAllowanceGT",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "mint(address,uint256)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "mint(address,((uint256,uint256),bytes))",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "mintGt", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "publicAmountsEnabled",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "setAccountEncryptionAddress",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setPublicAmountsEnabled",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -170,6 +318,14 @@ export interface IPrivateERC20Interface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "transferAndCall(address,((uint256,uint256),bytes),bytes)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "transferAndCall(address,uint256,bytes)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "transferFrom(address,address,uint256)",
     data: BytesLike
   ): Result;
@@ -177,6 +333,33 @@ export interface IPrivateERC20Interface extends Interface {
     functionFragment: "transferFrom(address,address,((uint256,uint256),bytes))",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "transferFromGT",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "transferGT", data: BytesLike): Result;
+}
+
+export namespace AllowanceReencryptedEvent {
+  export type InputTuple = [
+    owner: AddressLike,
+    spender: AddressLike,
+    isSpender: boolean
+  ];
+  export type OutputTuple = [
+    owner: string,
+    spender: string,
+    isSpender: boolean
+  ];
+  export interface OutputObject {
+    owner: string;
+    spender: string;
+    isSpender: boolean;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export namespace ApprovalEvent {
@@ -285,14 +468,20 @@ export interface IPrivateERC20 extends BaseContract {
   >;
 
   "approve(address,uint256)": TypedContractMethod<
-    [spender: AddressLike, value: BigNumberish],
-    [boolean],
+    [spender: AddressLike, amount: BigNumberish],
+    [void],
     "nonpayable"
   >;
 
   "approve(address,((uint256,uint256),bytes))": TypedContractMethod<
     [spender: AddressLike, value: ItUint256Struct],
-    [boolean],
+    [void],
+    "nonpayable"
+  >;
+
+  approveGT: TypedContractMethod<
+    [spender: AddressLike, value: BigNumberish],
+    [void],
     "nonpayable"
   >;
 
@@ -304,9 +493,85 @@ export interface IPrivateERC20 extends BaseContract {
 
   "balanceOf()": TypedContractMethod<[], [bigint], "nonpayable">;
 
+  "burn(uint256)": TypedContractMethod<
+    [amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  "burn(((uint256,uint256),bytes))": TypedContractMethod<
+    [amount: ItUint256Struct],
+    [void],
+    "nonpayable"
+  >;
+
+  burnGt: TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
+
+  "decreaseAllowance(address,uint256)": TypedContractMethod<
+    [spender: AddressLike, subtractedValue: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  "decreaseAllowance(address,((uint256,uint256),bytes))": TypedContractMethod<
+    [spender: AddressLike, subtractedValue: ItUint256Struct],
+    [void],
+    "nonpayable"
+  >;
+
+  decreaseAllowanceGT: TypedContractMethod<
+    [spender: AddressLike, subtractedValue: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  "increaseAllowance(address,uint256)": TypedContractMethod<
+    [spender: AddressLike, addedValue: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  "increaseAllowance(address,((uint256,uint256),bytes))": TypedContractMethod<
+    [spender: AddressLike, addedValue: ItUint256Struct],
+    [void],
+    "nonpayable"
+  >;
+
+  increaseAllowanceGT: TypedContractMethod<
+    [spender: AddressLike, addedValue: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  "mint(address,uint256)": TypedContractMethod<
+    [to: AddressLike, amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  "mint(address,((uint256,uint256),bytes))": TypedContractMethod<
+    [to: AddressLike, amount: ItUint256Struct],
+    [void],
+    "nonpayable"
+  >;
+
+  mintGt: TypedContractMethod<
+    [to: AddressLike, amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  publicAmountsEnabled: TypedContractMethod<[], [boolean], "view">;
+
   setAccountEncryptionAddress: TypedContractMethod<
     [addr: AddressLike],
     [boolean],
+    "nonpayable"
+  >;
+
+  setPublicAmountsEnabled: TypedContractMethod<
+    [enabled: boolean],
+    [void],
     "nonpayable"
   >;
 
@@ -314,25 +579,49 @@ export interface IPrivateERC20 extends BaseContract {
 
   "transfer(address,((uint256,uint256),bytes))": TypedContractMethod<
     [to: AddressLike, value: ItUint256Struct],
-    [bigint],
+    [void],
     "nonpayable"
   >;
 
   "transfer(address,uint256)": TypedContractMethod<
-    [to: AddressLike, value: BigNumberish],
-    [bigint],
+    [to: AddressLike, amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  "transferAndCall(address,((uint256,uint256),bytes),bytes)": TypedContractMethod<
+    [to: AddressLike, amount: ItUint256Struct, data: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+
+  "transferAndCall(address,uint256,bytes)": TypedContractMethod<
+    [to: AddressLike, amount: BigNumberish, data: BytesLike],
+    [void],
     "nonpayable"
   >;
 
   "transferFrom(address,address,uint256)": TypedContractMethod<
-    [from: AddressLike, to: AddressLike, value: BigNumberish],
-    [bigint],
+    [from: AddressLike, to: AddressLike, amount: BigNumberish],
+    [void],
     "nonpayable"
   >;
 
   "transferFrom(address,address,((uint256,uint256),bytes))": TypedContractMethod<
     [from: AddressLike, to: AddressLike, value: ItUint256Struct],
-    [bigint],
+    [void],
+    "nonpayable"
+  >;
+
+  transferFromGT: TypedContractMethod<
+    [from: AddressLike, to: AddressLike, value: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  transferGT: TypedContractMethod<
+    [to: AddressLike, value: BigNumberish],
+    [void],
     "nonpayable"
   >;
 
@@ -357,15 +646,22 @@ export interface IPrivateERC20 extends BaseContract {
   getFunction(
     nameOrSignature: "approve(address,uint256)"
   ): TypedContractMethod<
-    [spender: AddressLike, value: BigNumberish],
-    [boolean],
+    [spender: AddressLike, amount: BigNumberish],
+    [void],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "approve(address,((uint256,uint256),bytes))"
   ): TypedContractMethod<
     [spender: AddressLike, value: ItUint256Struct],
-    [boolean],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "approveGT"
+  ): TypedContractMethod<
+    [spender: AddressLike, value: BigNumberish],
+    [void],
     "nonpayable"
   >;
   getFunction(
@@ -379,8 +675,86 @@ export interface IPrivateERC20 extends BaseContract {
     nameOrSignature: "balanceOf()"
   ): TypedContractMethod<[], [bigint], "nonpayable">;
   getFunction(
+    nameOrSignature: "burn(uint256)"
+  ): TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "burn(((uint256,uint256),bytes))"
+  ): TypedContractMethod<[amount: ItUint256Struct], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "burnGt"
+  ): TypedContractMethod<[amount: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "decreaseAllowance(address,uint256)"
+  ): TypedContractMethod<
+    [spender: AddressLike, subtractedValue: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "decreaseAllowance(address,((uint256,uint256),bytes))"
+  ): TypedContractMethod<
+    [spender: AddressLike, subtractedValue: ItUint256Struct],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "decreaseAllowanceGT"
+  ): TypedContractMethod<
+    [spender: AddressLike, subtractedValue: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "increaseAllowance(address,uint256)"
+  ): TypedContractMethod<
+    [spender: AddressLike, addedValue: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "increaseAllowance(address,((uint256,uint256),bytes))"
+  ): TypedContractMethod<
+    [spender: AddressLike, addedValue: ItUint256Struct],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "increaseAllowanceGT"
+  ): TypedContractMethod<
+    [spender: AddressLike, addedValue: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "mint(address,uint256)"
+  ): TypedContractMethod<
+    [to: AddressLike, amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "mint(address,((uint256,uint256),bytes))"
+  ): TypedContractMethod<
+    [to: AddressLike, amount: ItUint256Struct],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "mintGt"
+  ): TypedContractMethod<
+    [to: AddressLike, amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "publicAmountsEnabled"
+  ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
     nameOrSignature: "setAccountEncryptionAddress"
   ): TypedContractMethod<[addr: AddressLike], [boolean], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setPublicAmountsEnabled"
+  ): TypedContractMethod<[enabled: boolean], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "totalSupply"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -388,31 +762,66 @@ export interface IPrivateERC20 extends BaseContract {
     nameOrSignature: "transfer(address,((uint256,uint256),bytes))"
   ): TypedContractMethod<
     [to: AddressLike, value: ItUint256Struct],
-    [bigint],
+    [void],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "transfer(address,uint256)"
   ): TypedContractMethod<
-    [to: AddressLike, value: BigNumberish],
-    [bigint],
+    [to: AddressLike, amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "transferAndCall(address,((uint256,uint256),bytes),bytes)"
+  ): TypedContractMethod<
+    [to: AddressLike, amount: ItUint256Struct, data: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "transferAndCall(address,uint256,bytes)"
+  ): TypedContractMethod<
+    [to: AddressLike, amount: BigNumberish, data: BytesLike],
+    [void],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "transferFrom(address,address,uint256)"
   ): TypedContractMethod<
-    [from: AddressLike, to: AddressLike, value: BigNumberish],
-    [bigint],
+    [from: AddressLike, to: AddressLike, amount: BigNumberish],
+    [void],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "transferFrom(address,address,((uint256,uint256),bytes))"
   ): TypedContractMethod<
     [from: AddressLike, to: AddressLike, value: ItUint256Struct],
-    [bigint],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "transferFromGT"
+  ): TypedContractMethod<
+    [from: AddressLike, to: AddressLike, value: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "transferGT"
+  ): TypedContractMethod<
+    [to: AddressLike, value: BigNumberish],
+    [void],
     "nonpayable"
   >;
 
+  getEvent(
+    key: "AllowanceReencrypted"
+  ): TypedContractEvent<
+    AllowanceReencryptedEvent.InputTuple,
+    AllowanceReencryptedEvent.OutputTuple,
+    AllowanceReencryptedEvent.OutputObject
+  >;
   getEvent(
     key: "Approval"
   ): TypedContractEvent<
@@ -429,6 +838,17 @@ export interface IPrivateERC20 extends BaseContract {
   >;
 
   filters: {
+    "AllowanceReencrypted(address,address,bool)": TypedContractEvent<
+      AllowanceReencryptedEvent.InputTuple,
+      AllowanceReencryptedEvent.OutputTuple,
+      AllowanceReencryptedEvent.OutputObject
+    >;
+    AllowanceReencrypted: TypedContractEvent<
+      AllowanceReencryptedEvent.InputTuple,
+      AllowanceReencryptedEvent.OutputTuple,
+      AllowanceReencryptedEvent.OutputObject
+    >;
+
     "Approval(address,address,tuple,tuple)": TypedContractEvent<
       ApprovalEvent.InputTuple,
       ApprovalEvent.OutputTuple,

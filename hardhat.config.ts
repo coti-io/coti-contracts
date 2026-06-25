@@ -12,11 +12,13 @@ const accounts = process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [];
 
 const config: HardhatUserConfig = {
   defaultNetwork: "coti-testnet",
+  // Pinned compiler versions for reproducible bytecode; bump only alongside contract pragma / CI review.
   solidity: {
     compilers: [
       {
         version: "0.8.20",
         settings: {
+          viaIR: true,
           optimizer: {
             enabled: true,
             runs: 10000
@@ -32,6 +34,7 @@ const config: HardhatUserConfig = {
       {
         version: "0.8.19",
         settings: {
+          viaIR: true,
           optimizer: {
             enabled: true,
             runs: 10000
@@ -73,8 +76,8 @@ const config: HardhatUserConfig = {
         network: "coti-mainnet",
         chainId: 2632500,
         urls: {
-          apiURL: "https://cotiscan.io/api",
-          browserURL: "https://cotiscan.io/",
+          apiURL: "https://mainnet.cotiscan.io/api",
+          browserURL: "https://mainnet.cotiscan.io/",
         },
       },
     ],

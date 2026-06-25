@@ -104,7 +104,7 @@ export interface PrivateERC20WalletMock extends BaseContract {
 
   approve: TypedContractMethod<
     [token: AddressLike, spender: AddressLike, value: BigNumberish],
-    [boolean],
+    [void],
     "nonpayable"
   >;
 
@@ -116,7 +116,7 @@ export interface PrivateERC20WalletMock extends BaseContract {
 
   transfer: TypedContractMethod<
     [token: AddressLike, to: AddressLike, value: BigNumberish],
-    [bigint],
+    [void],
     "nonpayable"
   >;
 
@@ -127,7 +127,7 @@ export interface PrivateERC20WalletMock extends BaseContract {
       to: AddressLike,
       value: BigNumberish
     ],
-    [bigint],
+    [void],
     "nonpayable"
   >;
 
@@ -139,7 +139,7 @@ export interface PrivateERC20WalletMock extends BaseContract {
     nameOrSignature: "approve"
   ): TypedContractMethod<
     [token: AddressLike, spender: AddressLike, value: BigNumberish],
-    [boolean],
+    [void],
     "nonpayable"
   >;
   getFunction(
@@ -153,7 +153,7 @@ export interface PrivateERC20WalletMock extends BaseContract {
     nameOrSignature: "transfer"
   ): TypedContractMethod<
     [token: AddressLike, to: AddressLike, value: BigNumberish],
-    [bigint],
+    [void],
     "nonpayable"
   >;
   getFunction(
@@ -165,7 +165,7 @@ export interface PrivateERC20WalletMock extends BaseContract {
       to: AddressLike,
       value: BigNumberish
     ],
-    [bigint],
+    [void],
     "nonpayable"
   >;
 

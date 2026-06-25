@@ -3,7 +3,11 @@
 /* eslint-disable */
 export * as access from "./access";
 export * as disperse from "./disperse";
+export * as messaging from "./messaging";
 export * as mocks from "./mocks";
+export * as node from "./node";
 export * as onboard from "./onboard";
+export * as oracle from "./oracle";
+export * as privacyBridge from "./privacyBridge";
 export * as token from "./token";
 export * as utils from "./utils";

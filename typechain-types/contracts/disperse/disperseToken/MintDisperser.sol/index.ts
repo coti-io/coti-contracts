@@ -2,4 +2,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { IMintableERC20 } from "./IMintableERC20";
+export type { IOwnable } from "./IOwnable";
 export type { MintDisperser } from "./MintDisperser";

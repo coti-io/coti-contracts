@@ -2,3 +2,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { FixedRatioCoinDisperser } from "./FixedRatioCoinDisperser";
+export type { FixedRatioCoinDisperserLeftoverS1 } from "./FixedRatioCoinDisperserLeftoverS1";
+export type { FixedRatioCoinDisperserUnlimitedWindow } from "./FixedRatioCoinDisperserUnlimitedWindow";

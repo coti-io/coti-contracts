@@ -10,6 +10,36 @@ import type {
 
 const _abi = [
   {
+    inputs: [],
+    name: "ERC20UnsafeApprove",
+    type: "error",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "spender",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "bool",
+        name: "isSpender",
+        type: "bool",
+      },
+    ],
+    name: "AllowanceReencrypted",
+    type: "event",
+  },
+  {
     anonymous: false,
     inputs: [
       {
@@ -228,19 +258,13 @@ const _abi = [
         type: "address",
       },
       {
-        internalType: "gtUint256",
-        name: "value",
+        internalType: "uint256",
+        name: "amount",
         type: "uint256",
       },
     ],
     name: "approve",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
@@ -282,13 +306,25 @@ const _abi = [
       },
     ],
     name: "approve",
-    outputs: [
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
       {
-        internalType: "bool",
-        name: "",
-        type: "bool",
+        internalType: "address",
+        name: "spender",
+        type: "address",
+      },
+      {
+        internalType: "gtUint256",
+        name: "value",
+        type: "uint256",
       },
     ],
+    name: "approveGT",
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
@@ -339,6 +375,316 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "burn",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        components: [
+          {
+            components: [
+              {
+                internalType: "ctUint128",
+                name: "ciphertextHigh",
+                type: "uint256",
+              },
+              {
+                internalType: "ctUint128",
+                name: "ciphertextLow",
+                type: "uint256",
+              },
+            ],
+            internalType: "struct ctUint256",
+            name: "ciphertext",
+            type: "tuple",
+          },
+          {
+            internalType: "bytes",
+            name: "signature",
+            type: "bytes",
+          },
+        ],
+        internalType: "struct itUint256",
+        name: "amount",
+        type: "tuple",
+      },
+    ],
+    name: "burn",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "gtUint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "burnGt",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "spender",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "subtractedValue",
+        type: "uint256",
+      },
+    ],
+    name: "decreaseAllowance",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "spender",
+        type: "address",
+      },
+      {
+        components: [
+          {
+            components: [
+              {
+                internalType: "ctUint128",
+                name: "ciphertextHigh",
+                type: "uint256",
+              },
+              {
+                internalType: "ctUint128",
+                name: "ciphertextLow",
+                type: "uint256",
+              },
+            ],
+            internalType: "struct ctUint256",
+            name: "ciphertext",
+            type: "tuple",
+          },
+          {
+            internalType: "bytes",
+            name: "signature",
+            type: "bytes",
+          },
+        ],
+        internalType: "struct itUint256",
+        name: "subtractedValue",
+        type: "tuple",
+      },
+    ],
+    name: "decreaseAllowance",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "spender",
+        type: "address",
+      },
+      {
+        internalType: "gtUint256",
+        name: "subtractedValue",
+        type: "uint256",
+      },
+    ],
+    name: "decreaseAllowanceGT",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "spender",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "addedValue",
+        type: "uint256",
+      },
+    ],
+    name: "increaseAllowance",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "spender",
+        type: "address",
+      },
+      {
+        components: [
+          {
+            components: [
+              {
+                internalType: "ctUint128",
+                name: "ciphertextHigh",
+                type: "uint256",
+              },
+              {
+                internalType: "ctUint128",
+                name: "ciphertextLow",
+                type: "uint256",
+              },
+            ],
+            internalType: "struct ctUint256",
+            name: "ciphertext",
+            type: "tuple",
+          },
+          {
+            internalType: "bytes",
+            name: "signature",
+            type: "bytes",
+          },
+        ],
+        internalType: "struct itUint256",
+        name: "addedValue",
+        type: "tuple",
+      },
+    ],
+    name: "increaseAllowance",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "spender",
+        type: "address",
+      },
+      {
+        internalType: "gtUint256",
+        name: "addedValue",
+        type: "uint256",
+      },
+    ],
+    name: "increaseAllowanceGT",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "mint",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        components: [
+          {
+            components: [
+              {
+                internalType: "ctUint128",
+                name: "ciphertextHigh",
+                type: "uint256",
+              },
+              {
+                internalType: "ctUint128",
+                name: "ciphertextLow",
+                type: "uint256",
+              },
+            ],
+            internalType: "struct ctUint256",
+            name: "ciphertext",
+            type: "tuple",
+          },
+          {
+            internalType: "bytes",
+            name: "signature",
+            type: "bytes",
+          },
+        ],
+        internalType: "struct itUint256",
+        name: "amount",
+        type: "tuple",
+      },
+    ],
+    name: "mint",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        internalType: "gtUint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "mintGt",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "publicAmountsEnabled",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "address",
         name: "addr",
         type: "address",
@@ -352,6 +698,19 @@ const _abi = [
         type: "bool",
       },
     ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bool",
+        name: "enabled",
+        type: "bool",
+      },
+    ],
+    name: "setPublicAmountsEnabled",
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
@@ -406,13 +765,7 @@ const _abi = [
       },
     ],
     name: "transfer",
-    outputs: [
-      {
-        internalType: "gtBool",
-        name: "",
-        type: "uint256",
-      },
-    ],
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
@@ -424,19 +777,83 @@ const _abi = [
         type: "address",
       },
       {
-        internalType: "gtUint256",
-        name: "value",
+        internalType: "uint256",
+        name: "amount",
         type: "uint256",
       },
     ],
     name: "transfer",
-    outputs: [
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
       {
-        internalType: "gtBool",
-        name: "",
-        type: "uint256",
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        components: [
+          {
+            components: [
+              {
+                internalType: "ctUint128",
+                name: "ciphertextHigh",
+                type: "uint256",
+              },
+              {
+                internalType: "ctUint128",
+                name: "ciphertextLow",
+                type: "uint256",
+              },
+            ],
+            internalType: "struct ctUint256",
+            name: "ciphertext",
+            type: "tuple",
+          },
+          {
+            internalType: "bytes",
+            name: "signature",
+            type: "bytes",
+          },
+        ],
+        internalType: "struct itUint256",
+        name: "amount",
+        type: "tuple",
+      },
+      {
+        internalType: "bytes",
+        name: "data",
+        type: "bytes",
       },
     ],
+    name: "transferAndCall",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        internalType: "bytes",
+        name: "data",
+        type: "bytes",
+      },
+    ],
+    name: "transferAndCall",
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
@@ -453,19 +870,13 @@ const _abi = [
         type: "address",
       },
       {
-        internalType: "gtUint256",
-        name: "value",
+        internalType: "uint256",
+        name: "amount",
         type: "uint256",
       },
     ],
     name: "transferFrom",
-    outputs: [
-      {
-        internalType: "gtBool",
-        name: "",
-        type: "uint256",
-      },
-    ],
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
@@ -512,13 +923,48 @@ const _abi = [
       },
     ],
     name: "transferFrom",
-    outputs: [
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
       {
-        internalType: "gtBool",
-        name: "",
+        internalType: "address",
+        name: "from",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        internalType: "gtUint256",
+        name: "value",
         type: "uint256",
       },
     ],
+    name: "transferFromGT",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        internalType: "gtUint256",
+        name: "value",
+        type: "uint256",
+      },
+    ],
+    name: "transferGT",
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },

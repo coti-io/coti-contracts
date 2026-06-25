@@ -3,6 +3,10 @@
 /* eslint-disable */
 import type * as access from "./access";
 export type { access };
+import type * as messaging from "./messaging";
+export type { messaging };
+import type * as oracle from "./oracle";
+export type { oracle };
 import type * as token from "./token";
 export type { token };
 import type * as utils from "./utils";

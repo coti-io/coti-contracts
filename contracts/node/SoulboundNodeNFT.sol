@@ -67,7 +67,7 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
     /// @notice Last minted token ID (starts at 0, first mint = 1)
     uint256 public nextTokenId;
 
-    /// @notice Maximum length (in bytes) for nodeName and socialURL
+    /// @notice Maximum length (in bytes) for name and socialURL
     uint256 public constant MAX_TEXT_BYTES = 150;
 
     /**
@@ -78,8 +78,8 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
 
     /// @notice Node-specific metadata stored on-chain
     struct NodeData {
-        string nodeName; // required
-        string nodeImageURI; // optional (ipfs:// or https://)
+        string name; // required
+        string image; // optional (ipfs:// or https://)
         string socialURL; // optional
         bool isHot; // true = hot node, false = cold node
     }
@@ -91,8 +91,8 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
     event NodeMinted(
         address indexed to,
         uint256 indexed tokenId,
-        string nodeName,
-        string nodeImageURI,
+        string name,
+        string image,
         string socialURL
     );
 
@@ -187,8 +187,8 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
     /**
      * @notice Mint a new soulbound Node NFT
      * @param to Recipient address
-     * @param nodeName Node name (required, <=150 bytes)
-     * @param nodeImageURI Optional image URI
+     * @param name Node name (required, <=150 bytes)
+     * @param image Optional image URI
      * @param socialURL Optional social URL (<=150 bytes)
      * @return tokenId The ID of the newly minted token
      * @dev Restrictions:
@@ -199,22 +199,22 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
      *  - Minting is paused (MintPaused)
      *  - to is the zero address (InvalidRecipient)
      *  - to already owns an NFT (AlreadyOwnsNodeNFT)
-     *  - nodeName is empty (NodeNameRequired)
-     *  - nodeName exceeds MAX_TEXT_BYTES (NodeNameTooLong)
+     *  - name is empty (NodeNameRequired)
+     *  - name exceeds MAX_TEXT_BYTES (NodeNameTooLong)
      *  - socialURL exceeds MAX_TEXT_BYTES (SocialURLTooLong)
      * @dev Emits Locked and NodeMinted events
      */
     function mintNode(
         address to,
-        string calldata nodeName,
-        string calldata nodeImageURI,
+        string calldata name,
+        string calldata image,
         string calldata socialURL
     ) external onlyOwner returns (uint256 tokenId) {
         if (mintPaused) revert MintPaused();
         if (to == address(0)) revert InvalidRecipient();
         if (balanceOf(to) != 0) revert AlreadyOwnsNodeNFT();
-        if (bytes(nodeName).length == 0) revert NodeNameRequired();
-        if (bytes(nodeName).length > MAX_TEXT_BYTES) revert NodeNameTooLong();
+        if (bytes(name).length == 0) revert NodeNameRequired();
+        if (bytes(name).length > MAX_TEXT_BYTES) revert NodeNameTooLong();
         if (bytes(socialURL).length > MAX_TEXT_BYTES) revert SocialURLTooLong();
 
         tokenId = ++nextTokenId;
@@ -222,21 +222,21 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
         _safeMint(to, tokenId);
 
         _nodeData[tokenId] = NodeData({
-            nodeName: nodeName,
-            nodeImageURI: nodeImageURI,
+            name: name,
+            image: image,
             socialURL: socialURL,
             // Default new nodes to hot; can be updated later via setNodeHotStatus
             isHot: true
         });
 
         emit Locked(tokenId);
-        emit NodeMinted(to, tokenId, nodeName, nodeImageURI, socialURL);
+        emit NodeMinted(to, tokenId, name, image, socialURL);
     }
 
     /**
      * @notice Get node metadata for a token
      * @param tokenId Token ID to query
-     * @return NodeData struct containing nodeName, nodeImageURI, and socialURL
+     * @return NodeData struct containing name, image, and socialURL
      * @dev Reverts if the token does not exist (NonexistentToken)
      */
     function nodeData(uint256 tokenId) external view returns (NodeData memory) {
@@ -295,7 +295,7 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
         if (msg.sender != tokenOwner && msg.sender != owner())
             revert NotAuthorized();
 
-        _nodeData[tokenId].nodeImageURI = newImageURI;
+        _nodeData[tokenId].image = newImageURI;
         emit ImageURIUpdated(tokenId, newImageURI);
     }
 
@@ -349,7 +349,7 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
         if (bytes(newNodeName).length > MAX_TEXT_BYTES)
             revert NodeNameTooLong();
 
-        _nodeData[tokenId].nodeName = newNodeName;
+        _nodeData[tokenId].name = newNodeName;
         emit NodeNameUpdated(tokenId, newNodeName);
     }
 
@@ -456,16 +456,16 @@ contract SoulboundNodeNFT is ERC721, Ownable, IERC5192 {
 
         string memory attributes = string.concat(
             '[{"trait_type":"Node name","value":"',
-            _escapeJSON(d.nodeName),
+            _escapeJSON(d.name),
             '"}',
             ',{"trait_type":"Social URL","value":"',
             _escapeJSON(d.socialURL),
             '"}]'
         );
 
-        string memory imagePart = bytes(d.nodeImageURI).length == 0
+        string memory imagePart = bytes(d.image).length == 0
             ? ""
-            : string.concat(',"image":"', _escapeJSON(d.nodeImageURI), '"');
+            : string.concat(',"image":"', _escapeJSON(d.image), '"');
 
         string memory json = string.concat(
             '{"name":"Node #',

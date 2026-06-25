@@ -7,7 +7,12 @@ import "../../../privacyBridge/PrivacyBridgeERC20.sol";
  * @dev Mock contract for testing PrivacyBridgeERC20
  */
 contract PrivacyBridgeERC20Mock is PrivacyBridgeERC20 {
-    constructor(address _token, address _privateToken) 
-        PrivacyBridgeERC20(_token, _privateToken) 
-    {}
+    constructor(
+        address _token,
+        address _privateToken,
+        string memory _tokenSymbol,
+        address _feeRecipient,
+        address _rescueRecipient,
+        address _priceOracle
+    ) PrivacyBridgeERC20(_token, _privateToken, _tokenSymbol, _feeRecipient, _rescueRecipient, _priceOracle) {}
 }

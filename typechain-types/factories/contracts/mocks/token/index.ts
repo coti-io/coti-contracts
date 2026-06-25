@@ -3,3 +3,5 @@
 /* eslint-disable */
 export * as privateErc20 from "./PrivateERC20";
 export * as privateErc721 from "./PrivateERC721";
+export { ERC20DecimalsMock__factory } from "./ERC20DecimalsMock__factory";
+export { ERC20Mock__factory } from "./ERC20Mock__factory";
