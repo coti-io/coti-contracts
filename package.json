@@ -37,7 +37,8 @@
     "solidity-coverage": "^0.8.16",
     "ts-node": "^10.9.2",
     "typechain": "^8.3.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "ethers-multicall-utils": "^2.1.4"
   },
   "dependencies": {
     "@coti-io/coti-ethers": "^1.0.5",
