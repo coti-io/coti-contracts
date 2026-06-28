@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import "../../../utils/mpc/MpcCore.sol";
 import "../../InboxUser.sol";
 import "../../fee/IInboxFeeManager.sol";
 import "../../mpccodec/MpcAbiCodec.sol";
