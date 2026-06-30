@@ -11,7 +11,7 @@ contract MpcAdderPausable is MpcAdder, Pausable {
     constructor(address _inbox) MpcAdder(_inbox) {}
 
     /// @inheritdoc MpcAdder
-    function receiveC(bytes memory data) external override onlyInbox whenNotPaused {
+    function receiveC(bytes memory data) external override onlyMpcExecutor whenNotPaused {
         _receiveResult(data);
     }
 
