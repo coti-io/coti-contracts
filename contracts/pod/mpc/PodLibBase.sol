@@ -65,7 +65,7 @@ abstract contract PodLibBase is PodUser {
         );
     }
 
-    function onDefaultMpcError(bytes32 requestId) external onlyInbox {
+    function onDefaultMpcError(bytes32 requestId) external onlyMpcExecutor {
         (uint256 code, string memory message) = inbox.getOutboxError(requestId);
         emit ErrorRemoteCall(requestId, code, message);
     }
