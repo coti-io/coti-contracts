@@ -2,4 +2,3 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as mintDisperserSol from "./MintDisperser.sol";
-export { TokenDisperser__factory } from "./TokenDisperser__factory";

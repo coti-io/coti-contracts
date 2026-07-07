@@ -3,4 +3,3 @@
 /* eslint-disable */
 import type * as mintDisperserSol from "./MintDisperser.sol";
 export type { mintDisperserSol };
-export type { TokenDisperser } from "./TokenDisperser";

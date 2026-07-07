@@ -14,30 +14,6 @@ import * as Contracts from ".";
 declare module "hardhat/types/runtime" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
     getContractFactory(
-      name: "AccessControl",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.AccessControl__factory>;
-    getContractFactory(
-      name: "AccessControlEnumerable",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.AccessControlEnumerable__factory>;
-    getContractFactory(
-      name: "AccessControlEnumerable",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.AccessControlEnumerable__factory>;
-    getContractFactory(
-      name: "IAccessControlEnumerable",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IAccessControlEnumerable__factory>;
-    getContractFactory(
-      name: "IAccessControl",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IAccessControl__factory>;
-    getContractFactory(
-      name: "IAccessControlEnumerable",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IAccessControlEnumerable__factory>;
-    getContractFactory(
       name: "Ownable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Ownable__factory>;
@@ -58,41 +34,21 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC1363__factory>;
     getContractFactory(
-      name: "IERC4906",
+      name: "Clones",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC4906__factory>;
+    ): Promise<Contracts.Clones__factory>;
     getContractFactory(
-      name: "IERC5267",
+      name: "Initializable",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC5267__factory>;
-    getContractFactory(
-      name: "Pausable",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Pausable__factory>;
+    ): Promise<Contracts.Initializable__factory>;
     getContractFactory(
       name: "ERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC20__factory>;
     getContractFactory(
-      name: "ERC20Burnable",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC20Burnable__factory>;
-    getContractFactory(
-      name: "ERC20Pausable",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC20Pausable__factory>;
-    getContractFactory(
-      name: "ERC20Permit",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC20Permit__factory>;
-    getContractFactory(
       name: "IERC20Metadata",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20Metadata__factory>;
-    getContractFactory(
-      name: "IERC20Permit",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC20Permit__factory>;
     getContractFactory(
       name: "IERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -102,29 +58,17 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.SafeERC20__factory>;
     getContractFactory(
-      name: "ERC721",
+      name: "Create2",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC721__factory>;
-    getContractFactory(
-      name: "IERC721Metadata",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC721Metadata__factory>;
-    getContractFactory(
-      name: "IERC721",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC721__factory>;
-    getContractFactory(
-      name: "IERC721Receiver",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC721Receiver__factory>;
+    ): Promise<Contracts.Create2__factory>;
     getContractFactory(
       name: "ECDSA",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ECDSA__factory>;
     getContractFactory(
-      name: "EIP712",
+      name: "Errors",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.EIP712__factory>;
+    ): Promise<Contracts.Errors__factory>;
     getContractFactory(
       name: "ERC165",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -138,10 +82,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.SafeCast__factory>;
     getContractFactory(
-      name: "Nonces",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Nonces__factory>;
-    getContractFactory(
       name: "Pausable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Pausable__factory>;
@@ -150,461 +90,193 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ReentrancyGuard__factory>;
     getContractFactory(
-      name: "ShortStrings",
+      name: "ReentrancyGuardTransient",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ShortStrings__factory>;
+    ): Promise<Contracts.ReentrancyGuardTransient__factory>;
     getContractFactory(
-      name: "Strings",
+      name: "PodAdder128",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Strings__factory>;
+    ): Promise<Contracts.PodAdder128__factory>;
     getContractFactory(
-      name: "DataPrivacyFramework",
+      name: "PodAdder256",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.DataPrivacyFramework__factory>;
+    ): Promise<Contracts.PodAdder256__factory>;
     getContractFactory(
-      name: "DataPrivacyFrameworkMpc",
+      name: "MpcAdder",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.DataPrivacyFrameworkMpc__factory>;
+    ): Promise<Contracts.MpcAdder__factory>;
     getContractFactory(
-      name: "FixedRatioCoinDisperser",
+      name: "MpcAdderPausable",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.FixedRatioCoinDisperser__factory>;
+    ): Promise<Contracts.MpcAdderPausable__factory>;
     getContractFactory(
-      name: "FixedRatioCoinDisperserLeftoverS1",
+      name: "IInboxFeeManager",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.FixedRatioCoinDisperserLeftoverS1__factory>;
+    ): Promise<Contracts.IInboxFeeManager__factory>;
     getContractFactory(
-      name: "FixedRatioCoinDisperserUnlimitedWindow",
+      name: "IInbox",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.FixedRatioCoinDisperserUnlimitedWindow__factory>;
+    ): Promise<Contracts.IInbox__factory>;
     getContractFactory(
-      name: "IMintableERC20",
+      name: "IInboxMiner",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IMintableERC20__factory>;
+    ): Promise<Contracts.IInboxMiner__factory>;
     getContractFactory(
-      name: "IOwnable",
+      name: "InboxUser",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IOwnable__factory>;
+    ): Promise<Contracts.InboxUser__factory>;
     getContractFactory(
-      name: "MintDisperser",
+      name: "InboxUserCotiTestnet",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.MintDisperser__factory>;
+    ): Promise<Contracts.InboxUserCotiTestnet__factory>;
     getContractFactory(
-      name: "TokenDisperser",
+      name: "IPodExecutor128",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TokenDisperser__factory>;
+    ): Promise<Contracts.IPodExecutor128__factory>;
     getContractFactory(
-      name: "PrivateMessaging",
+      name: "IPodExecutor256",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateMessaging__factory>;
+    ): Promise<Contracts.IPodExecutor256__factory>;
     getContractFactory(
-      name: "DataPrivacyFrameworkMock",
+      name: "IPodExecutor64",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.DataPrivacyFrameworkMock__factory>;
+    ): Promise<Contracts.IPodExecutor64__factory>;
     getContractFactory(
-      name: "PrivateMessagingHarness",
+      name: "PodLib",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateMessagingHarness__factory>;
+    ): Promise<Contracts.PodLib__factory>;
     getContractFactory(
-      name: "CotiPriceConsumerMock",
+      name: "PodLib128",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.CotiPriceConsumerMock__factory>;
+    ): Promise<Contracts.PodLib128__factory>;
     getContractFactory(
-      name: "ERC20DecimalsMock",
+      name: "PodLib256",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC20DecimalsMock__factory>;
+    ): Promise<Contracts.PodLib256__factory>;
     getContractFactory(
-      name: "ERC20Mock",
+      name: "PodLib64",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC20Mock__factory>;
+    ): Promise<Contracts.PodLib64__factory>;
     getContractFactory(
-      name: "EncryptedTokenReceiverMock",
+      name: "PodLibBase",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.EncryptedTokenReceiverMock__factory>;
+    ): Promise<Contracts.PodLibBase__factory>;
     getContractFactory(
-      name: "PrivacyBridgeERC20Mock",
+      name: "PodUser",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivacyBridgeERC20Mock__factory>;
+    ): Promise<Contracts.PodUser__factory>;
     getContractFactory(
-      name: "PrivateERC20AuditorSupplyMock",
+      name: "PodUserFuji",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateERC20AuditorSupplyMock__factory>;
+    ): Promise<Contracts.PodUserFuji__factory>;
     getContractFactory(
-      name: "PrivateERC20CappedMock",
+      name: "PodUserSepolia",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateERC20CappedMock__factory>;
+    ): Promise<Contracts.PodUserSepolia__factory>;
     getContractFactory(
-      name: "PrivateERC20GtCallerMock",
+      name: "MpcAbiCodec",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateERC20GtCallerMock__factory>;
+    ): Promise<Contracts.MpcAbiCodec__factory>;
     getContractFactory(
-      name: "PrivateERC20Mock",
+      name: "IPodPriceOracle",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateERC20Mock__factory>;
+    ): Promise<Contracts.IPodPriceOracle__factory>;
     getContractFactory(
-      name: "IPrivateERC20TransferAndCallEncrypted",
+      name: "IPrivacyPortal",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IPrivateERC20TransferAndCallEncrypted__factory>;
+    ): Promise<Contracts.IPrivacyPortal__factory>;
     getContractFactory(
-      name: "PrivateERC20ReentrantReceiverMock",
+      name: "IPrivacyPortalFactory",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateERC20ReentrantReceiverMock__factory>;
+    ): Promise<Contracts.IPrivacyPortalFactory__factory>;
     getContractFactory(
-      name: "PublicReentrantTokenReceiverMock",
+      name: "IPrivacyPortalPauseController",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PublicReentrantTokenReceiverMock__factory>;
+    ): Promise<Contracts.IPrivacyPortalPauseController__factory>;
     getContractFactory(
-      name: "PublicTokenReceiverBoolMock",
+      name: "IPrivacyPortalFeeOracle",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PublicTokenReceiverBoolMock__factory>;
+    ): Promise<Contracts.IPrivacyPortalFeeOracle__factory>;
     getContractFactory(
-      name: "PublicTokenReceiverMock",
+      name: "CloneHelper",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PublicTokenReceiverMock__factory>;
+    ): Promise<Contracts.CloneHelper__factory>;
     getContractFactory(
-      name: "PrivateERC721URIStorageMock",
+      name: "MockERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateERC721URIStorageMock__factory>;
+    ): Promise<Contracts.MockERC20__factory>;
     getContractFactory(
-      name: "Arithmetic128TestsContract",
+      name: "MockERC20Decimals",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Arithmetic128TestsContract__factory>;
+    ): Promise<Contracts.MockERC20Decimals__factory>;
     getContractFactory(
-      name: "Arithmetic256TestsContract",
+      name: "MockPodERC20ForPortal",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Arithmetic256TestsContract__factory>;
+    ): Promise<Contracts.MockPodERC20ForPortal__factory>;
     getContractFactory(
-      name: "ArithmeticTestsContract",
+      name: "MockPrivacyPortalFactory",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ArithmeticTestsContract__factory>;
+    ): Promise<Contracts.MockPrivacyPortalFactory__factory>;
     getContractFactory(
-      name: "Bitwise128TestsContract",
+      name: "MockWrappedNative",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Bitwise128TestsContract__factory>;
+    ): Promise<Contracts.MockWrappedNative__factory>;
     getContractFactory(
-      name: "Bitwise256TestsContract",
+      name: "PortalFeeOracle",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Bitwise256TestsContract__factory>;
+    ): Promise<Contracts.PortalFeeOracle__factory>;
     getContractFactory(
-      name: "BitwiseTestsContract",
+      name: "PrivacyPortal",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.BitwiseTestsContract__factory>;
+    ): Promise<Contracts.PrivacyPortal__factory>;
     getContractFactory(
-      name: "CheckedArithmetic128WithOverflowBitTestsContract",
+      name: "PrivacyPortalFactory",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.CheckedArithmetic128WithOverflowBitTestsContract__factory>;
+    ): Promise<Contracts.PrivacyPortalFactory__factory>;
     getContractFactory(
-      name: "CheckedArithmetic256WithOverflowBitTestsContract",
+      name: "PrivacyPortalFeeLib",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.CheckedArithmetic256WithOverflowBitTestsContract__factory>;
+    ): Promise<Contracts.PrivacyPortalFeeLib__factory>;
     getContractFactory(
-      name: "CheckedArithmeticWithOverflowBitTestsContract",
+      name: "IERC7984",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.CheckedArithmeticWithOverflowBitTestsContract__factory>;
+    ): Promise<Contracts.IERC7984__factory>;
     getContractFactory(
-      name: "Comparison128TestsContract",
+      name: "IERC7984PortalWrapper",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Comparison128TestsContract__factory>;
+    ): Promise<Contracts.IERC7984PortalWrapper__factory>;
     getContractFactory(
-      name: "Comparison1TestsContract",
+      name: "PodErc7984Mixin",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Comparison1TestsContract__factory>;
+    ): Promise<Contracts.PodErc7984Mixin__factory>;
     getContractFactory(
-      name: "Comparison256TestsContract",
+      name: "IPodErc20CotiSide",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Comparison256TestsContract__factory>;
+    ): Promise<Contracts.IPodErc20CotiSide__factory>;
     getContractFactory(
-      name: "Comparison2TestsContract",
+      name: "PodErc20CotiMother",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Comparison2TestsContract__factory>;
+    ): Promise<Contracts.PodErc20CotiMother__factory>;
     getContractFactory(
-      name: "MinimalImplementation",
+      name: "IPodERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.MinimalImplementation__factory>;
+    ): Promise<Contracts.IPodERC20__factory>;
     getContractFactory(
-      name: "MinimalProxy",
+      name: "PodERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.MinimalProxy__factory>;
+    ): Promise<Contracts.PodERC20__factory>;
     getContractFactory(
-      name: "MinMax128TestsContract",
+      name: "PodErc20Mintable",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.MinMax128TestsContract__factory>;
+    ): Promise<Contracts.PodErc20Mintable__factory>;
     getContractFactory(
-      name: "MinMax256TestsContract",
+      name: "PodErc20MintableInitializable",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.MinMax256TestsContract__factory>;
+    ): Promise<Contracts.PodErc20MintableInitializable__factory>;
     getContractFactory(
-      name: "MinMaxTestsContract",
+      name: "IWrappedNative",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.MinMaxTestsContract__factory>;
-    getContractFactory(
-      name: "Miscellaneous1TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Miscellaneous1TestsContract__factory>;
-    getContractFactory(
-      name: "MiscellaneousTestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.MiscellaneousTestsContract__factory>;
-    getContractFactory(
-      name: "MpcOperations128TestContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.MpcOperations128TestContract__factory>;
-    getContractFactory(
-      name: "MpcOperationsTestContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.MpcOperationsTestContract__factory>;
-    getContractFactory(
-      name: "Mux128TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Mux128TestsContract__factory>;
-    getContractFactory(
-      name: "Mux256TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Mux256TestsContract__factory>;
-    getContractFactory(
-      name: "OffboardToUserKeyTestContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OffboardToUserKeyTestContract__factory>;
-    getContractFactory(
-      name: "OnBoard128TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OnBoard128TestsContract__factory>;
-    getContractFactory(
-      name: "OnBoard256TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OnBoard256TestsContract__factory>;
-    getContractFactory(
-      name: "PrivacyImplementationV1",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivacyImplementationV1__factory>;
-    getContractFactory(
-      name: "PrivacyImplementationV2",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivacyImplementationV2__factory>;
-    getContractFactory(
-      name: "PrivacyProxy",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivacyProxy__factory>;
-    getContractFactory(
-      name: "Random128TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Random128TestsContract__factory>;
-    getContractFactory(
-      name: "Random256TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Random256TestsContract__factory>;
-    getContractFactory(
-      name: "Shift128TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Shift128TestsContract__factory>;
-    getContractFactory(
-      name: "Shift256TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Shift256TestsContract__factory>;
-    getContractFactory(
-      name: "ShiftTestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ShiftTestsContract__factory>;
-    getContractFactory(
-      name: "StringTestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.StringTestsContract__factory>;
-    getContractFactory(
-      name: "Transfer128TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Transfer128TestsContract__factory>;
-    getContractFactory(
-      name: "Transfer256TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Transfer256TestsContract__factory>;
-    getContractFactory(
-      name: "TransferScalarTestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TransferScalarTestsContract__factory>;
-    getContractFactory(
-      name: "TransferTestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TransferTestsContract__factory>;
-    getContractFactory(
-      name: "TransferWithAllowance128TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TransferWithAllowance128TestsContract__factory>;
-    getContractFactory(
-      name: "TransferWithAllowance256TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TransferWithAllowance256TestsContract__factory>;
-    getContractFactory(
-      name: "TransferWithAllowance64_16TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TransferWithAllowance64_16TestsContract__factory>;
-    getContractFactory(
-      name: "TransferWithAllowance64_32TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TransferWithAllowance64_32TestsContract__factory>;
-    getContractFactory(
-      name: "TransferWithAllowance64_64TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TransferWithAllowance64_64TestsContract__factory>;
-    getContractFactory(
-      name: "TransferWithAllowance64_8TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TransferWithAllowance64_8TestsContract__factory>;
-    getContractFactory(
-      name: "TransferWithAllowanceScalarTestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TransferWithAllowanceScalarTestsContract__factory>;
-    getContractFactory(
-      name: "TransferWithAllowanceTestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TransferWithAllowanceTestsContract__factory>;
-    getContractFactory(
-      name: "ValidateCiphertext128TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ValidateCiphertext128TestsContract__factory>;
-    getContractFactory(
-      name: "ValidateCiphertext256TestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ValidateCiphertext256TestsContract__factory>;
-    getContractFactory(
-      name: "ValidateCiphertextTestsContract",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ValidateCiphertextTestsContract__factory>;
-    getContractFactory(
-      name: "PrivateERC20WalletMock",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateERC20WalletMock__factory>;
-    getContractFactory(
-      name: "CotiNodeRewards",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.CotiNodeRewards__factory>;
-    getContractFactory(
-      name: "IERC5192",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC5192__factory>;
-    getContractFactory(
-      name: "SoulboundNodeNFT",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.SoulboundNodeNFT__factory>;
-    getContractFactory(
-      name: "AccountOnboard",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.AccountOnboard__factory>;
-    getContractFactory(
-      name: "CotiPriceConsumer",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.CotiPriceConsumer__factory>;
-    getContractFactory(
-      name: "ICotiPriceConsumer",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ICotiPriceConsumer__factory>;
-    getContractFactory(
-      name: "IStdReference",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IStdReference__factory>;
-    getContractFactory(
-      name: "PrivacyBridge",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivacyBridge__factory>;
-    getContractFactory(
-      name: "PrivacyBridgeCotiNative",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivacyBridgeCotiNative__factory>;
-    getContractFactory(
-      name: "IHasDecimals",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IHasDecimals__factory>;
-    getContractFactory(
-      name: "PrivacyBridgeERC20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivacyBridgeERC20__factory>;
-    getContractFactory(
-      name: "PrivacyBridgegCoti",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivacyBridgegCoti__factory>;
-    getContractFactory(
-      name: "PrivacyBridgeUSDCe",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivacyBridgeUSDCe__factory>;
-    getContractFactory(
-      name: "PrivacyBridgeUSDT",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivacyBridgeUSDT__factory>;
-    getContractFactory(
-      name: "PrivacyBridgeWADA",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivacyBridgeWADA__factory>;
-    getContractFactory(
-      name: "PrivacyBridgeWBTC",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivacyBridgeWBTC__factory>;
-    getContractFactory(
-      name: "PrivacyBridgeWETH",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivacyBridgeWETH__factory>;
-    getContractFactory(
-      name: "CotiTokenPoints004",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.CotiTokenPoints004__factory>;
-    getContractFactory(
-      name: "IPrivateERC20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IPrivateERC20__factory>;
-    getContractFactory(
-      name: "ITokenReceiver",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ITokenReceiver__factory>;
-    getContractFactory(
-      name: "ITokenReceiverEncrypted",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ITokenReceiverEncrypted__factory>;
-    getContractFactory(
-      name: "PrivateERC20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateERC20__factory>;
-    getContractFactory(
-      name: "PrivateBridgedUSDC",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateBridgedUSDC__factory>;
-    getContractFactory(
-      name: "PrivateCOTI",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateCOTI__factory>;
-    getContractFactory(
-      name: "PrivateCOTITreasuryGovernanceToken",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateCOTITreasuryGovernanceToken__factory>;
-    getContractFactory(
-      name: "PrivateTetherUSD",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateTetherUSD__factory>;
-    getContractFactory(
-      name: "PrivateWrappedADA",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateWrappedADA__factory>;
-    getContractFactory(
-      name: "PrivateWrappedBTC",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateWrappedBTC__factory>;
-    getContractFactory(
-      name: "PrivateWrappedEther",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateWrappedEther__factory>;
-    getContractFactory(
-      name: "IPrivateERC721URIStorage",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IPrivateERC721URIStorage__factory>;
-    getContractFactory(
-      name: "PrivateERC721URIStorage",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateERC721URIStorage__factory>;
-    getContractFactory(
-      name: "IERC721Errors",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC721Errors__factory>;
-    getContractFactory(
-      name: "PrivateERC721",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.PrivateERC721__factory>;
+    ): Promise<Contracts.IWrappedNative__factory>;
     getContractFactory(
       name: "MpcCore",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -615,36 +287,6 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.ExtendedOperations__factory>;
 
     getContractAt(
-      name: "AccessControl",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.AccessControl>;
-    getContractAt(
-      name: "AccessControlEnumerable",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.AccessControlEnumerable>;
-    getContractAt(
-      name: "AccessControlEnumerable",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.AccessControlEnumerable>;
-    getContractAt(
-      name: "IAccessControlEnumerable",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IAccessControlEnumerable>;
-    getContractAt(
-      name: "IAccessControl",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IAccessControl>;
-    getContractAt(
-      name: "IAccessControlEnumerable",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IAccessControlEnumerable>;
-    getContractAt(
       name: "Ownable",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -670,50 +312,25 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IERC1363>;
     getContractAt(
-      name: "IERC4906",
+      name: "Clones",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.IERC4906>;
+    ): Promise<Contracts.Clones>;
     getContractAt(
-      name: "IERC5267",
+      name: "Initializable",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.IERC5267>;
-    getContractAt(
-      name: "Pausable",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Pausable>;
+    ): Promise<Contracts.Initializable>;
     getContractAt(
       name: "ERC20",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.ERC20>;
     getContractAt(
-      name: "ERC20Burnable",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ERC20Burnable>;
-    getContractAt(
-      name: "ERC20Pausable",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ERC20Pausable>;
-    getContractAt(
-      name: "ERC20Permit",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ERC20Permit>;
-    getContractAt(
       name: "IERC20Metadata",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC20Metadata>;
-    getContractAt(
-      name: "IERC20Permit",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC20Permit>;
     getContractAt(
       name: "IERC20",
       address: string | ethers.Addressable,
@@ -725,35 +342,20 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.SafeERC20>;
     getContractAt(
-      name: "ERC721",
+      name: "Create2",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.ERC721>;
-    getContractAt(
-      name: "IERC721Metadata",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC721Metadata>;
-    getContractAt(
-      name: "IERC721",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC721>;
-    getContractAt(
-      name: "IERC721Receiver",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC721Receiver>;
+    ): Promise<Contracts.Create2>;
     getContractAt(
       name: "ECDSA",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.ECDSA>;
     getContractAt(
-      name: "EIP712",
+      name: "Errors",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.EIP712>;
+    ): Promise<Contracts.Errors>;
     getContractAt(
       name: "ERC165",
       address: string | ethers.Addressable,
@@ -770,11 +372,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.SafeCast>;
     getContractAt(
-      name: "Nonces",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Nonces>;
-    getContractAt(
       name: "Pausable",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -785,575 +382,240 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.ReentrancyGuard>;
     getContractAt(
-      name: "ShortStrings",
+      name: "ReentrancyGuardTransient",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.ShortStrings>;
+    ): Promise<Contracts.ReentrancyGuardTransient>;
     getContractAt(
-      name: "Strings",
+      name: "PodAdder128",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.Strings>;
+    ): Promise<Contracts.PodAdder128>;
     getContractAt(
-      name: "DataPrivacyFramework",
+      name: "PodAdder256",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.DataPrivacyFramework>;
+    ): Promise<Contracts.PodAdder256>;
     getContractAt(
-      name: "DataPrivacyFrameworkMpc",
+      name: "MpcAdder",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.DataPrivacyFrameworkMpc>;
+    ): Promise<Contracts.MpcAdder>;
     getContractAt(
-      name: "FixedRatioCoinDisperser",
+      name: "MpcAdderPausable",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.FixedRatioCoinDisperser>;
+    ): Promise<Contracts.MpcAdderPausable>;
     getContractAt(
-      name: "FixedRatioCoinDisperserLeftoverS1",
+      name: "IInboxFeeManager",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.FixedRatioCoinDisperserLeftoverS1>;
+    ): Promise<Contracts.IInboxFeeManager>;
     getContractAt(
-      name: "FixedRatioCoinDisperserUnlimitedWindow",
+      name: "IInbox",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.FixedRatioCoinDisperserUnlimitedWindow>;
+    ): Promise<Contracts.IInbox>;
     getContractAt(
-      name: "IMintableERC20",
+      name: "IInboxMiner",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.IMintableERC20>;
+    ): Promise<Contracts.IInboxMiner>;
     getContractAt(
-      name: "IOwnable",
+      name: "InboxUser",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.IOwnable>;
+    ): Promise<Contracts.InboxUser>;
     getContractAt(
-      name: "MintDisperser",
+      name: "InboxUserCotiTestnet",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.MintDisperser>;
+    ): Promise<Contracts.InboxUserCotiTestnet>;
     getContractAt(
-      name: "TokenDisperser",
+      name: "IPodExecutor128",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.TokenDisperser>;
+    ): Promise<Contracts.IPodExecutor128>;
     getContractAt(
-      name: "PrivateMessaging",
+      name: "IPodExecutor256",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.PrivateMessaging>;
+    ): Promise<Contracts.IPodExecutor256>;
     getContractAt(
-      name: "DataPrivacyFrameworkMock",
+      name: "IPodExecutor64",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.DataPrivacyFrameworkMock>;
+    ): Promise<Contracts.IPodExecutor64>;
     getContractAt(
-      name: "PrivateMessagingHarness",
+      name: "PodLib",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.PrivateMessagingHarness>;
+    ): Promise<Contracts.PodLib>;
     getContractAt(
-      name: "CotiPriceConsumerMock",
+      name: "PodLib128",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.CotiPriceConsumerMock>;
+    ): Promise<Contracts.PodLib128>;
     getContractAt(
-      name: "ERC20DecimalsMock",
+      name: "PodLib256",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.ERC20DecimalsMock>;
+    ): Promise<Contracts.PodLib256>;
     getContractAt(
-      name: "ERC20Mock",
+      name: "PodLib64",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.ERC20Mock>;
+    ): Promise<Contracts.PodLib64>;
     getContractAt(
-      name: "EncryptedTokenReceiverMock",
+      name: "PodLibBase",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.EncryptedTokenReceiverMock>;
+    ): Promise<Contracts.PodLibBase>;
     getContractAt(
-      name: "PrivacyBridgeERC20Mock",
+      name: "PodUser",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.PrivacyBridgeERC20Mock>;
+    ): Promise<Contracts.PodUser>;
     getContractAt(
-      name: "PrivateERC20AuditorSupplyMock",
+      name: "PodUserFuji",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.PrivateERC20AuditorSupplyMock>;
+    ): Promise<Contracts.PodUserFuji>;
     getContractAt(
-      name: "PrivateERC20CappedMock",
+      name: "PodUserSepolia",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.PrivateERC20CappedMock>;
+    ): Promise<Contracts.PodUserSepolia>;
     getContractAt(
-      name: "PrivateERC20GtCallerMock",
+      name: "MpcAbiCodec",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.PrivateERC20GtCallerMock>;
+    ): Promise<Contracts.MpcAbiCodec>;
     getContractAt(
-      name: "PrivateERC20Mock",
+      name: "IPodPriceOracle",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.PrivateERC20Mock>;
+    ): Promise<Contracts.IPodPriceOracle>;
     getContractAt(
-      name: "IPrivateERC20TransferAndCallEncrypted",
+      name: "IPrivacyPortal",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.IPrivateERC20TransferAndCallEncrypted>;
+    ): Promise<Contracts.IPrivacyPortal>;
     getContractAt(
-      name: "PrivateERC20ReentrantReceiverMock",
+      name: "IPrivacyPortalFactory",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.PrivateERC20ReentrantReceiverMock>;
+    ): Promise<Contracts.IPrivacyPortalFactory>;
     getContractAt(
-      name: "PublicReentrantTokenReceiverMock",
+      name: "IPrivacyPortalPauseController",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.PublicReentrantTokenReceiverMock>;
+    ): Promise<Contracts.IPrivacyPortalPauseController>;
     getContractAt(
-      name: "PublicTokenReceiverBoolMock",
+      name: "IPrivacyPortalFeeOracle",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.PublicTokenReceiverBoolMock>;
+    ): Promise<Contracts.IPrivacyPortalFeeOracle>;
     getContractAt(
-      name: "PublicTokenReceiverMock",
+      name: "CloneHelper",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.PublicTokenReceiverMock>;
+    ): Promise<Contracts.CloneHelper>;
     getContractAt(
-      name: "PrivateERC721URIStorageMock",
+      name: "MockERC20",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.PrivateERC721URIStorageMock>;
+    ): Promise<Contracts.MockERC20>;
     getContractAt(
-      name: "Arithmetic128TestsContract",
+      name: "MockERC20Decimals",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.Arithmetic128TestsContract>;
+    ): Promise<Contracts.MockERC20Decimals>;
     getContractAt(
-      name: "Arithmetic256TestsContract",
+      name: "MockPodERC20ForPortal",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.Arithmetic256TestsContract>;
+    ): Promise<Contracts.MockPodERC20ForPortal>;
     getContractAt(
-      name: "ArithmeticTestsContract",
+      name: "MockPrivacyPortalFactory",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.ArithmeticTestsContract>;
+    ): Promise<Contracts.MockPrivacyPortalFactory>;
     getContractAt(
-      name: "Bitwise128TestsContract",
+      name: "MockWrappedNative",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.Bitwise128TestsContract>;
+    ): Promise<Contracts.MockWrappedNative>;
     getContractAt(
-      name: "Bitwise256TestsContract",
+      name: "PortalFeeOracle",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.Bitwise256TestsContract>;
+    ): Promise<Contracts.PortalFeeOracle>;
     getContractAt(
-      name: "BitwiseTestsContract",
+      name: "PrivacyPortal",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.BitwiseTestsContract>;
+    ): Promise<Contracts.PrivacyPortal>;
     getContractAt(
-      name: "CheckedArithmetic128WithOverflowBitTestsContract",
+      name: "PrivacyPortalFactory",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.CheckedArithmetic128WithOverflowBitTestsContract>;
+    ): Promise<Contracts.PrivacyPortalFactory>;
     getContractAt(
-      name: "CheckedArithmetic256WithOverflowBitTestsContract",
+      name: "PrivacyPortalFeeLib",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.CheckedArithmetic256WithOverflowBitTestsContract>;
+    ): Promise<Contracts.PrivacyPortalFeeLib>;
     getContractAt(
-      name: "CheckedArithmeticWithOverflowBitTestsContract",
+      name: "IERC7984",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.CheckedArithmeticWithOverflowBitTestsContract>;
+    ): Promise<Contracts.IERC7984>;
     getContractAt(
-      name: "Comparison128TestsContract",
+      name: "IERC7984PortalWrapper",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.Comparison128TestsContract>;
+    ): Promise<Contracts.IERC7984PortalWrapper>;
     getContractAt(
-      name: "Comparison1TestsContract",
+      name: "PodErc7984Mixin",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.Comparison1TestsContract>;
+    ): Promise<Contracts.PodErc7984Mixin>;
     getContractAt(
-      name: "Comparison256TestsContract",
+      name: "IPodErc20CotiSide",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.Comparison256TestsContract>;
+    ): Promise<Contracts.IPodErc20CotiSide>;
     getContractAt(
-      name: "Comparison2TestsContract",
+      name: "PodErc20CotiMother",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.Comparison2TestsContract>;
+    ): Promise<Contracts.PodErc20CotiMother>;
     getContractAt(
-      name: "MinimalImplementation",
+      name: "IPodERC20",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.MinimalImplementation>;
+    ): Promise<Contracts.IPodERC20>;
     getContractAt(
-      name: "MinimalProxy",
+      name: "PodERC20",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.MinimalProxy>;
+    ): Promise<Contracts.PodERC20>;
     getContractAt(
-      name: "MinMax128TestsContract",
+      name: "PodErc20Mintable",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.MinMax128TestsContract>;
+    ): Promise<Contracts.PodErc20Mintable>;
     getContractAt(
-      name: "MinMax256TestsContract",
+      name: "PodErc20MintableInitializable",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.MinMax256TestsContract>;
+    ): Promise<Contracts.PodErc20MintableInitializable>;
     getContractAt(
-      name: "MinMaxTestsContract",
+      name: "IWrappedNative",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.MinMaxTestsContract>;
-    getContractAt(
-      name: "Miscellaneous1TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Miscellaneous1TestsContract>;
-    getContractAt(
-      name: "MiscellaneousTestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.MiscellaneousTestsContract>;
-    getContractAt(
-      name: "MpcOperations128TestContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.MpcOperations128TestContract>;
-    getContractAt(
-      name: "MpcOperationsTestContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.MpcOperationsTestContract>;
-    getContractAt(
-      name: "Mux128TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Mux128TestsContract>;
-    getContractAt(
-      name: "Mux256TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Mux256TestsContract>;
-    getContractAt(
-      name: "OffboardToUserKeyTestContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OffboardToUserKeyTestContract>;
-    getContractAt(
-      name: "OnBoard128TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OnBoard128TestsContract>;
-    getContractAt(
-      name: "OnBoard256TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OnBoard256TestsContract>;
-    getContractAt(
-      name: "PrivacyImplementationV1",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivacyImplementationV1>;
-    getContractAt(
-      name: "PrivacyImplementationV2",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivacyImplementationV2>;
-    getContractAt(
-      name: "PrivacyProxy",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivacyProxy>;
-    getContractAt(
-      name: "Random128TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Random128TestsContract>;
-    getContractAt(
-      name: "Random256TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Random256TestsContract>;
-    getContractAt(
-      name: "Shift128TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Shift128TestsContract>;
-    getContractAt(
-      name: "Shift256TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Shift256TestsContract>;
-    getContractAt(
-      name: "ShiftTestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ShiftTestsContract>;
-    getContractAt(
-      name: "StringTestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.StringTestsContract>;
-    getContractAt(
-      name: "Transfer128TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Transfer128TestsContract>;
-    getContractAt(
-      name: "Transfer256TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Transfer256TestsContract>;
-    getContractAt(
-      name: "TransferScalarTestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TransferScalarTestsContract>;
-    getContractAt(
-      name: "TransferTestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TransferTestsContract>;
-    getContractAt(
-      name: "TransferWithAllowance128TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TransferWithAllowance128TestsContract>;
-    getContractAt(
-      name: "TransferWithAllowance256TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TransferWithAllowance256TestsContract>;
-    getContractAt(
-      name: "TransferWithAllowance64_16TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TransferWithAllowance64_16TestsContract>;
-    getContractAt(
-      name: "TransferWithAllowance64_32TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TransferWithAllowance64_32TestsContract>;
-    getContractAt(
-      name: "TransferWithAllowance64_64TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TransferWithAllowance64_64TestsContract>;
-    getContractAt(
-      name: "TransferWithAllowance64_8TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TransferWithAllowance64_8TestsContract>;
-    getContractAt(
-      name: "TransferWithAllowanceScalarTestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TransferWithAllowanceScalarTestsContract>;
-    getContractAt(
-      name: "TransferWithAllowanceTestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TransferWithAllowanceTestsContract>;
-    getContractAt(
-      name: "ValidateCiphertext128TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ValidateCiphertext128TestsContract>;
-    getContractAt(
-      name: "ValidateCiphertext256TestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ValidateCiphertext256TestsContract>;
-    getContractAt(
-      name: "ValidateCiphertextTestsContract",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ValidateCiphertextTestsContract>;
-    getContractAt(
-      name: "PrivateERC20WalletMock",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivateERC20WalletMock>;
-    getContractAt(
-      name: "CotiNodeRewards",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.CotiNodeRewards>;
-    getContractAt(
-      name: "IERC5192",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC5192>;
-    getContractAt(
-      name: "SoulboundNodeNFT",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.SoulboundNodeNFT>;
-    getContractAt(
-      name: "AccountOnboard",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.AccountOnboard>;
-    getContractAt(
-      name: "CotiPriceConsumer",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.CotiPriceConsumer>;
-    getContractAt(
-      name: "ICotiPriceConsumer",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ICotiPriceConsumer>;
-    getContractAt(
-      name: "IStdReference",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IStdReference>;
-    getContractAt(
-      name: "PrivacyBridge",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivacyBridge>;
-    getContractAt(
-      name: "PrivacyBridgeCotiNative",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivacyBridgeCotiNative>;
-    getContractAt(
-      name: "IHasDecimals",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IHasDecimals>;
-    getContractAt(
-      name: "PrivacyBridgeERC20",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivacyBridgeERC20>;
-    getContractAt(
-      name: "PrivacyBridgegCoti",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivacyBridgegCoti>;
-    getContractAt(
-      name: "PrivacyBridgeUSDCe",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivacyBridgeUSDCe>;
-    getContractAt(
-      name: "PrivacyBridgeUSDT",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivacyBridgeUSDT>;
-    getContractAt(
-      name: "PrivacyBridgeWADA",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivacyBridgeWADA>;
-    getContractAt(
-      name: "PrivacyBridgeWBTC",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivacyBridgeWBTC>;
-    getContractAt(
-      name: "PrivacyBridgeWETH",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivacyBridgeWETH>;
-    getContractAt(
-      name: "CotiTokenPoints004",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.CotiTokenPoints004>;
-    getContractAt(
-      name: "IPrivateERC20",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IPrivateERC20>;
-    getContractAt(
-      name: "ITokenReceiver",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ITokenReceiver>;
-    getContractAt(
-      name: "ITokenReceiverEncrypted",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ITokenReceiverEncrypted>;
-    getContractAt(
-      name: "PrivateERC20",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivateERC20>;
-    getContractAt(
-      name: "PrivateBridgedUSDC",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivateBridgedUSDC>;
-    getContractAt(
-      name: "PrivateCOTI",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivateCOTI>;
-    getContractAt(
-      name: "PrivateCOTITreasuryGovernanceToken",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivateCOTITreasuryGovernanceToken>;
-    getContractAt(
-      name: "PrivateTetherUSD",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivateTetherUSD>;
-    getContractAt(
-      name: "PrivateWrappedADA",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivateWrappedADA>;
-    getContractAt(
-      name: "PrivateWrappedBTC",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivateWrappedBTC>;
-    getContractAt(
-      name: "PrivateWrappedEther",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivateWrappedEther>;
-    getContractAt(
-      name: "IPrivateERC721URIStorage",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IPrivateERC721URIStorage>;
-    getContractAt(
-      name: "PrivateERC721URIStorage",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivateERC721URIStorage>;
-    getContractAt(
-      name: "IERC721Errors",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC721Errors>;
-    getContractAt(
-      name: "PrivateERC721",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.PrivateERC721>;
+    ): Promise<Contracts.IWrappedNative>;
     getContractAt(
       name: "MpcCore",
       address: string | ethers.Addressable,
@@ -1366,30 +628,6 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.ExtendedOperations>;
 
     deployContract(
-      name: "AccessControl",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.AccessControl>;
-    deployContract(
-      name: "AccessControlEnumerable",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.AccessControlEnumerable>;
-    deployContract(
-      name: "AccessControlEnumerable",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.AccessControlEnumerable>;
-    deployContract(
-      name: "IAccessControlEnumerable",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IAccessControlEnumerable>;
-    deployContract(
-      name: "IAccessControl",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IAccessControl>;
-    deployContract(
-      name: "IAccessControlEnumerable",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IAccessControlEnumerable>;
-    deployContract(
       name: "Ownable",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Ownable>;
@@ -1410,41 +648,21 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IERC1363>;
     deployContract(
-      name: "IERC4906",
+      name: "Clones",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC4906>;
+    ): Promise<Contracts.Clones>;
     deployContract(
-      name: "IERC5267",
+      name: "Initializable",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC5267>;
-    deployContract(
-      name: "Pausable",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Pausable>;
+    ): Promise<Contracts.Initializable>;
     deployContract(
       name: "ERC20",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ERC20>;
     deployContract(
-      name: "ERC20Burnable",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ERC20Burnable>;
-    deployContract(
-      name: "ERC20Pausable",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ERC20Pausable>;
-    deployContract(
-      name: "ERC20Permit",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ERC20Permit>;
-    deployContract(
       name: "IERC20Metadata",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IERC20Metadata>;
-    deployContract(
-      name: "IERC20Permit",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC20Permit>;
     deployContract(
       name: "IERC20",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -1454,29 +672,17 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.SafeERC20>;
     deployContract(
-      name: "ERC721",
+      name: "Create2",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ERC721>;
-    deployContract(
-      name: "IERC721Metadata",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC721Metadata>;
-    deployContract(
-      name: "IERC721",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC721>;
-    deployContract(
-      name: "IERC721Receiver",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC721Receiver>;
+    ): Promise<Contracts.Create2>;
     deployContract(
       name: "ECDSA",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ECDSA>;
     deployContract(
-      name: "EIP712",
+      name: "Errors",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.EIP712>;
+    ): Promise<Contracts.Errors>;
     deployContract(
       name: "ERC165",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -1490,10 +696,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.SafeCast>;
     deployContract(
-      name: "Nonces",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Nonces>;
-    deployContract(
       name: "Pausable",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Pausable>;
@@ -1502,461 +704,193 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ReentrancyGuard>;
     deployContract(
-      name: "ShortStrings",
+      name: "ReentrancyGuardTransient",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ShortStrings>;
+    ): Promise<Contracts.ReentrancyGuardTransient>;
     deployContract(
-      name: "Strings",
+      name: "PodAdder128",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Strings>;
+    ): Promise<Contracts.PodAdder128>;
     deployContract(
-      name: "DataPrivacyFramework",
+      name: "PodAdder256",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.DataPrivacyFramework>;
+    ): Promise<Contracts.PodAdder256>;
     deployContract(
-      name: "DataPrivacyFrameworkMpc",
+      name: "MpcAdder",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.DataPrivacyFrameworkMpc>;
+    ): Promise<Contracts.MpcAdder>;
     deployContract(
-      name: "FixedRatioCoinDisperser",
+      name: "MpcAdderPausable",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.FixedRatioCoinDisperser>;
+    ): Promise<Contracts.MpcAdderPausable>;
     deployContract(
-      name: "FixedRatioCoinDisperserLeftoverS1",
+      name: "IInboxFeeManager",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.FixedRatioCoinDisperserLeftoverS1>;
+    ): Promise<Contracts.IInboxFeeManager>;
     deployContract(
-      name: "FixedRatioCoinDisperserUnlimitedWindow",
+      name: "IInbox",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.FixedRatioCoinDisperserUnlimitedWindow>;
+    ): Promise<Contracts.IInbox>;
     deployContract(
-      name: "IMintableERC20",
+      name: "IInboxMiner",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IMintableERC20>;
+    ): Promise<Contracts.IInboxMiner>;
     deployContract(
-      name: "IOwnable",
+      name: "InboxUser",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IOwnable>;
+    ): Promise<Contracts.InboxUser>;
     deployContract(
-      name: "MintDisperser",
+      name: "InboxUserCotiTestnet",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MintDisperser>;
+    ): Promise<Contracts.InboxUserCotiTestnet>;
     deployContract(
-      name: "TokenDisperser",
+      name: "IPodExecutor128",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TokenDisperser>;
+    ): Promise<Contracts.IPodExecutor128>;
     deployContract(
-      name: "PrivateMessaging",
+      name: "IPodExecutor256",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateMessaging>;
+    ): Promise<Contracts.IPodExecutor256>;
     deployContract(
-      name: "DataPrivacyFrameworkMock",
+      name: "IPodExecutor64",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.DataPrivacyFrameworkMock>;
+    ): Promise<Contracts.IPodExecutor64>;
     deployContract(
-      name: "PrivateMessagingHarness",
+      name: "PodLib",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateMessagingHarness>;
+    ): Promise<Contracts.PodLib>;
     deployContract(
-      name: "CotiPriceConsumerMock",
+      name: "PodLib128",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.CotiPriceConsumerMock>;
+    ): Promise<Contracts.PodLib128>;
     deployContract(
-      name: "ERC20DecimalsMock",
+      name: "PodLib256",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ERC20DecimalsMock>;
+    ): Promise<Contracts.PodLib256>;
     deployContract(
-      name: "ERC20Mock",
+      name: "PodLib64",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ERC20Mock>;
+    ): Promise<Contracts.PodLib64>;
     deployContract(
-      name: "EncryptedTokenReceiverMock",
+      name: "PodLibBase",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.EncryptedTokenReceiverMock>;
+    ): Promise<Contracts.PodLibBase>;
     deployContract(
-      name: "PrivacyBridgeERC20Mock",
+      name: "PodUser",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgeERC20Mock>;
+    ): Promise<Contracts.PodUser>;
     deployContract(
-      name: "PrivateERC20AuditorSupplyMock",
+      name: "PodUserFuji",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC20AuditorSupplyMock>;
+    ): Promise<Contracts.PodUserFuji>;
     deployContract(
-      name: "PrivateERC20CappedMock",
+      name: "PodUserSepolia",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC20CappedMock>;
+    ): Promise<Contracts.PodUserSepolia>;
     deployContract(
-      name: "PrivateERC20GtCallerMock",
+      name: "MpcAbiCodec",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC20GtCallerMock>;
+    ): Promise<Contracts.MpcAbiCodec>;
     deployContract(
-      name: "PrivateERC20Mock",
+      name: "IPodPriceOracle",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC20Mock>;
+    ): Promise<Contracts.IPodPriceOracle>;
     deployContract(
-      name: "IPrivateERC20TransferAndCallEncrypted",
+      name: "IPrivacyPortal",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IPrivateERC20TransferAndCallEncrypted>;
+    ): Promise<Contracts.IPrivacyPortal>;
     deployContract(
-      name: "PrivateERC20ReentrantReceiverMock",
+      name: "IPrivacyPortalFactory",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC20ReentrantReceiverMock>;
+    ): Promise<Contracts.IPrivacyPortalFactory>;
     deployContract(
-      name: "PublicReentrantTokenReceiverMock",
+      name: "IPrivacyPortalPauseController",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PublicReentrantTokenReceiverMock>;
+    ): Promise<Contracts.IPrivacyPortalPauseController>;
     deployContract(
-      name: "PublicTokenReceiverBoolMock",
+      name: "IPrivacyPortalFeeOracle",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PublicTokenReceiverBoolMock>;
+    ): Promise<Contracts.IPrivacyPortalFeeOracle>;
     deployContract(
-      name: "PublicTokenReceiverMock",
+      name: "CloneHelper",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PublicTokenReceiverMock>;
+    ): Promise<Contracts.CloneHelper>;
     deployContract(
-      name: "PrivateERC721URIStorageMock",
+      name: "MockERC20",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC721URIStorageMock>;
+    ): Promise<Contracts.MockERC20>;
     deployContract(
-      name: "Arithmetic128TestsContract",
+      name: "MockERC20Decimals",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Arithmetic128TestsContract>;
+    ): Promise<Contracts.MockERC20Decimals>;
     deployContract(
-      name: "Arithmetic256TestsContract",
+      name: "MockPodERC20ForPortal",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Arithmetic256TestsContract>;
+    ): Promise<Contracts.MockPodERC20ForPortal>;
     deployContract(
-      name: "ArithmeticTestsContract",
+      name: "MockPrivacyPortalFactory",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ArithmeticTestsContract>;
+    ): Promise<Contracts.MockPrivacyPortalFactory>;
     deployContract(
-      name: "Bitwise128TestsContract",
+      name: "MockWrappedNative",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Bitwise128TestsContract>;
+    ): Promise<Contracts.MockWrappedNative>;
     deployContract(
-      name: "Bitwise256TestsContract",
+      name: "PortalFeeOracle",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Bitwise256TestsContract>;
+    ): Promise<Contracts.PortalFeeOracle>;
     deployContract(
-      name: "BitwiseTestsContract",
+      name: "PrivacyPortal",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BitwiseTestsContract>;
+    ): Promise<Contracts.PrivacyPortal>;
     deployContract(
-      name: "CheckedArithmetic128WithOverflowBitTestsContract",
+      name: "PrivacyPortalFactory",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.CheckedArithmetic128WithOverflowBitTestsContract>;
+    ): Promise<Contracts.PrivacyPortalFactory>;
     deployContract(
-      name: "CheckedArithmetic256WithOverflowBitTestsContract",
+      name: "PrivacyPortalFeeLib",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.CheckedArithmetic256WithOverflowBitTestsContract>;
+    ): Promise<Contracts.PrivacyPortalFeeLib>;
     deployContract(
-      name: "CheckedArithmeticWithOverflowBitTestsContract",
+      name: "IERC7984",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.CheckedArithmeticWithOverflowBitTestsContract>;
+    ): Promise<Contracts.IERC7984>;
     deployContract(
-      name: "Comparison128TestsContract",
+      name: "IERC7984PortalWrapper",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Comparison128TestsContract>;
+    ): Promise<Contracts.IERC7984PortalWrapper>;
     deployContract(
-      name: "Comparison1TestsContract",
+      name: "PodErc7984Mixin",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Comparison1TestsContract>;
+    ): Promise<Contracts.PodErc7984Mixin>;
     deployContract(
-      name: "Comparison256TestsContract",
+      name: "IPodErc20CotiSide",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Comparison256TestsContract>;
+    ): Promise<Contracts.IPodErc20CotiSide>;
     deployContract(
-      name: "Comparison2TestsContract",
+      name: "PodErc20CotiMother",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Comparison2TestsContract>;
+    ): Promise<Contracts.PodErc20CotiMother>;
     deployContract(
-      name: "MinimalImplementation",
+      name: "IPodERC20",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MinimalImplementation>;
+    ): Promise<Contracts.IPodERC20>;
     deployContract(
-      name: "MinimalProxy",
+      name: "PodERC20",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MinimalProxy>;
+    ): Promise<Contracts.PodERC20>;
     deployContract(
-      name: "MinMax128TestsContract",
+      name: "PodErc20Mintable",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MinMax128TestsContract>;
+    ): Promise<Contracts.PodErc20Mintable>;
     deployContract(
-      name: "MinMax256TestsContract",
+      name: "PodErc20MintableInitializable",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MinMax256TestsContract>;
+    ): Promise<Contracts.PodErc20MintableInitializable>;
     deployContract(
-      name: "MinMaxTestsContract",
+      name: "IWrappedNative",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MinMaxTestsContract>;
-    deployContract(
-      name: "Miscellaneous1TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Miscellaneous1TestsContract>;
-    deployContract(
-      name: "MiscellaneousTestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MiscellaneousTestsContract>;
-    deployContract(
-      name: "MpcOperations128TestContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MpcOperations128TestContract>;
-    deployContract(
-      name: "MpcOperationsTestContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MpcOperationsTestContract>;
-    deployContract(
-      name: "Mux128TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Mux128TestsContract>;
-    deployContract(
-      name: "Mux256TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Mux256TestsContract>;
-    deployContract(
-      name: "OffboardToUserKeyTestContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.OffboardToUserKeyTestContract>;
-    deployContract(
-      name: "OnBoard128TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.OnBoard128TestsContract>;
-    deployContract(
-      name: "OnBoard256TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.OnBoard256TestsContract>;
-    deployContract(
-      name: "PrivacyImplementationV1",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyImplementationV1>;
-    deployContract(
-      name: "PrivacyImplementationV2",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyImplementationV2>;
-    deployContract(
-      name: "PrivacyProxy",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyProxy>;
-    deployContract(
-      name: "Random128TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Random128TestsContract>;
-    deployContract(
-      name: "Random256TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Random256TestsContract>;
-    deployContract(
-      name: "Shift128TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Shift128TestsContract>;
-    deployContract(
-      name: "Shift256TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Shift256TestsContract>;
-    deployContract(
-      name: "ShiftTestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ShiftTestsContract>;
-    deployContract(
-      name: "StringTestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.StringTestsContract>;
-    deployContract(
-      name: "Transfer128TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Transfer128TestsContract>;
-    deployContract(
-      name: "Transfer256TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Transfer256TestsContract>;
-    deployContract(
-      name: "TransferScalarTestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferScalarTestsContract>;
-    deployContract(
-      name: "TransferTestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferTestsContract>;
-    deployContract(
-      name: "TransferWithAllowance128TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferWithAllowance128TestsContract>;
-    deployContract(
-      name: "TransferWithAllowance256TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferWithAllowance256TestsContract>;
-    deployContract(
-      name: "TransferWithAllowance64_16TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferWithAllowance64_16TestsContract>;
-    deployContract(
-      name: "TransferWithAllowance64_32TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferWithAllowance64_32TestsContract>;
-    deployContract(
-      name: "TransferWithAllowance64_64TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferWithAllowance64_64TestsContract>;
-    deployContract(
-      name: "TransferWithAllowance64_8TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferWithAllowance64_8TestsContract>;
-    deployContract(
-      name: "TransferWithAllowanceScalarTestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferWithAllowanceScalarTestsContract>;
-    deployContract(
-      name: "TransferWithAllowanceTestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferWithAllowanceTestsContract>;
-    deployContract(
-      name: "ValidateCiphertext128TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ValidateCiphertext128TestsContract>;
-    deployContract(
-      name: "ValidateCiphertext256TestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ValidateCiphertext256TestsContract>;
-    deployContract(
-      name: "ValidateCiphertextTestsContract",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ValidateCiphertextTestsContract>;
-    deployContract(
-      name: "PrivateERC20WalletMock",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC20WalletMock>;
-    deployContract(
-      name: "CotiNodeRewards",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.CotiNodeRewards>;
-    deployContract(
-      name: "IERC5192",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC5192>;
-    deployContract(
-      name: "SoulboundNodeNFT",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SoulboundNodeNFT>;
-    deployContract(
-      name: "AccountOnboard",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.AccountOnboard>;
-    deployContract(
-      name: "CotiPriceConsumer",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.CotiPriceConsumer>;
-    deployContract(
-      name: "ICotiPriceConsumer",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ICotiPriceConsumer>;
-    deployContract(
-      name: "IStdReference",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IStdReference>;
-    deployContract(
-      name: "PrivacyBridge",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridge>;
-    deployContract(
-      name: "PrivacyBridgeCotiNative",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgeCotiNative>;
-    deployContract(
-      name: "IHasDecimals",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IHasDecimals>;
-    deployContract(
-      name: "PrivacyBridgeERC20",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgeERC20>;
-    deployContract(
-      name: "PrivacyBridgegCoti",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgegCoti>;
-    deployContract(
-      name: "PrivacyBridgeUSDCe",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgeUSDCe>;
-    deployContract(
-      name: "PrivacyBridgeUSDT",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgeUSDT>;
-    deployContract(
-      name: "PrivacyBridgeWADA",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgeWADA>;
-    deployContract(
-      name: "PrivacyBridgeWBTC",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgeWBTC>;
-    deployContract(
-      name: "PrivacyBridgeWETH",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgeWETH>;
-    deployContract(
-      name: "CotiTokenPoints004",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.CotiTokenPoints004>;
-    deployContract(
-      name: "IPrivateERC20",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IPrivateERC20>;
-    deployContract(
-      name: "ITokenReceiver",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ITokenReceiver>;
-    deployContract(
-      name: "ITokenReceiverEncrypted",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ITokenReceiverEncrypted>;
-    deployContract(
-      name: "PrivateERC20",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC20>;
-    deployContract(
-      name: "PrivateBridgedUSDC",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateBridgedUSDC>;
-    deployContract(
-      name: "PrivateCOTI",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateCOTI>;
-    deployContract(
-      name: "PrivateCOTITreasuryGovernanceToken",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateCOTITreasuryGovernanceToken>;
-    deployContract(
-      name: "PrivateTetherUSD",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateTetherUSD>;
-    deployContract(
-      name: "PrivateWrappedADA",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateWrappedADA>;
-    deployContract(
-      name: "PrivateWrappedBTC",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateWrappedBTC>;
-    deployContract(
-      name: "PrivateWrappedEther",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateWrappedEther>;
-    deployContract(
-      name: "IPrivateERC721URIStorage",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IPrivateERC721URIStorage>;
-    deployContract(
-      name: "PrivateERC721URIStorage",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC721URIStorage>;
-    deployContract(
-      name: "IERC721Errors",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC721Errors>;
-    deployContract(
-      name: "PrivateERC721",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC721>;
+    ): Promise<Contracts.IWrappedNative>;
     deployContract(
       name: "MpcCore",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -1967,36 +901,6 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.ExtendedOperations>;
 
     deployContract(
-      name: "AccessControl",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.AccessControl>;
-    deployContract(
-      name: "AccessControlEnumerable",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.AccessControlEnumerable>;
-    deployContract(
-      name: "AccessControlEnumerable",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.AccessControlEnumerable>;
-    deployContract(
-      name: "IAccessControlEnumerable",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IAccessControlEnumerable>;
-    deployContract(
-      name: "IAccessControl",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IAccessControl>;
-    deployContract(
-      name: "IAccessControlEnumerable",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IAccessControlEnumerable>;
-    deployContract(
       name: "Ownable",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -2022,50 +926,25 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IERC1363>;
     deployContract(
-      name: "IERC4906",
+      name: "Clones",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC4906>;
+    ): Promise<Contracts.Clones>;
     deployContract(
-      name: "IERC5267",
+      name: "Initializable",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC5267>;
-    deployContract(
-      name: "Pausable",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Pausable>;
+    ): Promise<Contracts.Initializable>;
     deployContract(
       name: "ERC20",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ERC20>;
     deployContract(
-      name: "ERC20Burnable",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ERC20Burnable>;
-    deployContract(
-      name: "ERC20Pausable",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ERC20Pausable>;
-    deployContract(
-      name: "ERC20Permit",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ERC20Permit>;
-    deployContract(
       name: "IERC20Metadata",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IERC20Metadata>;
-    deployContract(
-      name: "IERC20Permit",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC20Permit>;
     deployContract(
       name: "IERC20",
       args: any[],
@@ -2077,35 +956,20 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.SafeERC20>;
     deployContract(
-      name: "ERC721",
+      name: "Create2",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ERC721>;
-    deployContract(
-      name: "IERC721Metadata",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC721Metadata>;
-    deployContract(
-      name: "IERC721",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC721>;
-    deployContract(
-      name: "IERC721Receiver",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC721Receiver>;
+    ): Promise<Contracts.Create2>;
     deployContract(
       name: "ECDSA",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ECDSA>;
     deployContract(
-      name: "EIP712",
+      name: "Errors",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.EIP712>;
+    ): Promise<Contracts.Errors>;
     deployContract(
       name: "ERC165",
       args: any[],
@@ -2122,11 +986,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.SafeCast>;
     deployContract(
-      name: "Nonces",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Nonces>;
-    deployContract(
       name: "Pausable",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -2137,575 +996,240 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ReentrancyGuard>;
     deployContract(
-      name: "ShortStrings",
+      name: "ReentrancyGuardTransient",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ShortStrings>;
+    ): Promise<Contracts.ReentrancyGuardTransient>;
     deployContract(
-      name: "Strings",
+      name: "PodAdder128",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Strings>;
+    ): Promise<Contracts.PodAdder128>;
     deployContract(
-      name: "DataPrivacyFramework",
+      name: "PodAdder256",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.DataPrivacyFramework>;
+    ): Promise<Contracts.PodAdder256>;
     deployContract(
-      name: "DataPrivacyFrameworkMpc",
+      name: "MpcAdder",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.DataPrivacyFrameworkMpc>;
+    ): Promise<Contracts.MpcAdder>;
     deployContract(
-      name: "FixedRatioCoinDisperser",
+      name: "MpcAdderPausable",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.FixedRatioCoinDisperser>;
+    ): Promise<Contracts.MpcAdderPausable>;
     deployContract(
-      name: "FixedRatioCoinDisperserLeftoverS1",
+      name: "IInboxFeeManager",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.FixedRatioCoinDisperserLeftoverS1>;
+    ): Promise<Contracts.IInboxFeeManager>;
     deployContract(
-      name: "FixedRatioCoinDisperserUnlimitedWindow",
+      name: "IInbox",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.FixedRatioCoinDisperserUnlimitedWindow>;
+    ): Promise<Contracts.IInbox>;
     deployContract(
-      name: "IMintableERC20",
+      name: "IInboxMiner",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IMintableERC20>;
+    ): Promise<Contracts.IInboxMiner>;
     deployContract(
-      name: "IOwnable",
+      name: "InboxUser",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IOwnable>;
+    ): Promise<Contracts.InboxUser>;
     deployContract(
-      name: "MintDisperser",
+      name: "InboxUserCotiTestnet",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MintDisperser>;
+    ): Promise<Contracts.InboxUserCotiTestnet>;
     deployContract(
-      name: "TokenDisperser",
+      name: "IPodExecutor128",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TokenDisperser>;
+    ): Promise<Contracts.IPodExecutor128>;
     deployContract(
-      name: "PrivateMessaging",
+      name: "IPodExecutor256",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateMessaging>;
+    ): Promise<Contracts.IPodExecutor256>;
     deployContract(
-      name: "DataPrivacyFrameworkMock",
+      name: "IPodExecutor64",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.DataPrivacyFrameworkMock>;
+    ): Promise<Contracts.IPodExecutor64>;
     deployContract(
-      name: "PrivateMessagingHarness",
+      name: "PodLib",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateMessagingHarness>;
+    ): Promise<Contracts.PodLib>;
     deployContract(
-      name: "CotiPriceConsumerMock",
+      name: "PodLib128",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.CotiPriceConsumerMock>;
+    ): Promise<Contracts.PodLib128>;
     deployContract(
-      name: "ERC20DecimalsMock",
+      name: "PodLib256",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ERC20DecimalsMock>;
+    ): Promise<Contracts.PodLib256>;
     deployContract(
-      name: "ERC20Mock",
+      name: "PodLib64",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ERC20Mock>;
+    ): Promise<Contracts.PodLib64>;
     deployContract(
-      name: "EncryptedTokenReceiverMock",
+      name: "PodLibBase",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.EncryptedTokenReceiverMock>;
+    ): Promise<Contracts.PodLibBase>;
     deployContract(
-      name: "PrivacyBridgeERC20Mock",
+      name: "PodUser",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgeERC20Mock>;
+    ): Promise<Contracts.PodUser>;
     deployContract(
-      name: "PrivateERC20AuditorSupplyMock",
+      name: "PodUserFuji",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC20AuditorSupplyMock>;
+    ): Promise<Contracts.PodUserFuji>;
     deployContract(
-      name: "PrivateERC20CappedMock",
+      name: "PodUserSepolia",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC20CappedMock>;
+    ): Promise<Contracts.PodUserSepolia>;
     deployContract(
-      name: "PrivateERC20GtCallerMock",
+      name: "MpcAbiCodec",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC20GtCallerMock>;
+    ): Promise<Contracts.MpcAbiCodec>;
     deployContract(
-      name: "PrivateERC20Mock",
+      name: "IPodPriceOracle",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC20Mock>;
+    ): Promise<Contracts.IPodPriceOracle>;
     deployContract(
-      name: "IPrivateERC20TransferAndCallEncrypted",
+      name: "IPrivacyPortal",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IPrivateERC20TransferAndCallEncrypted>;
+    ): Promise<Contracts.IPrivacyPortal>;
     deployContract(
-      name: "PrivateERC20ReentrantReceiverMock",
+      name: "IPrivacyPortalFactory",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC20ReentrantReceiverMock>;
+    ): Promise<Contracts.IPrivacyPortalFactory>;
     deployContract(
-      name: "PublicReentrantTokenReceiverMock",
+      name: "IPrivacyPortalPauseController",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PublicReentrantTokenReceiverMock>;
+    ): Promise<Contracts.IPrivacyPortalPauseController>;
     deployContract(
-      name: "PublicTokenReceiverBoolMock",
+      name: "IPrivacyPortalFeeOracle",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PublicTokenReceiverBoolMock>;
+    ): Promise<Contracts.IPrivacyPortalFeeOracle>;
     deployContract(
-      name: "PublicTokenReceiverMock",
+      name: "CloneHelper",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PublicTokenReceiverMock>;
+    ): Promise<Contracts.CloneHelper>;
     deployContract(
-      name: "PrivateERC721URIStorageMock",
+      name: "MockERC20",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC721URIStorageMock>;
+    ): Promise<Contracts.MockERC20>;
     deployContract(
-      name: "Arithmetic128TestsContract",
+      name: "MockERC20Decimals",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Arithmetic128TestsContract>;
+    ): Promise<Contracts.MockERC20Decimals>;
     deployContract(
-      name: "Arithmetic256TestsContract",
+      name: "MockPodERC20ForPortal",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Arithmetic256TestsContract>;
+    ): Promise<Contracts.MockPodERC20ForPortal>;
     deployContract(
-      name: "ArithmeticTestsContract",
+      name: "MockPrivacyPortalFactory",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ArithmeticTestsContract>;
+    ): Promise<Contracts.MockPrivacyPortalFactory>;
     deployContract(
-      name: "Bitwise128TestsContract",
+      name: "MockWrappedNative",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Bitwise128TestsContract>;
+    ): Promise<Contracts.MockWrappedNative>;
     deployContract(
-      name: "Bitwise256TestsContract",
+      name: "PortalFeeOracle",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Bitwise256TestsContract>;
+    ): Promise<Contracts.PortalFeeOracle>;
     deployContract(
-      name: "BitwiseTestsContract",
+      name: "PrivacyPortal",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BitwiseTestsContract>;
+    ): Promise<Contracts.PrivacyPortal>;
     deployContract(
-      name: "CheckedArithmetic128WithOverflowBitTestsContract",
+      name: "PrivacyPortalFactory",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.CheckedArithmetic128WithOverflowBitTestsContract>;
+    ): Promise<Contracts.PrivacyPortalFactory>;
     deployContract(
-      name: "CheckedArithmetic256WithOverflowBitTestsContract",
+      name: "PrivacyPortalFeeLib",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.CheckedArithmetic256WithOverflowBitTestsContract>;
+    ): Promise<Contracts.PrivacyPortalFeeLib>;
     deployContract(
-      name: "CheckedArithmeticWithOverflowBitTestsContract",
+      name: "IERC7984",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.CheckedArithmeticWithOverflowBitTestsContract>;
+    ): Promise<Contracts.IERC7984>;
     deployContract(
-      name: "Comparison128TestsContract",
+      name: "IERC7984PortalWrapper",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Comparison128TestsContract>;
+    ): Promise<Contracts.IERC7984PortalWrapper>;
     deployContract(
-      name: "Comparison1TestsContract",
+      name: "PodErc7984Mixin",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Comparison1TestsContract>;
+    ): Promise<Contracts.PodErc7984Mixin>;
     deployContract(
-      name: "Comparison256TestsContract",
+      name: "IPodErc20CotiSide",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Comparison256TestsContract>;
+    ): Promise<Contracts.IPodErc20CotiSide>;
     deployContract(
-      name: "Comparison2TestsContract",
+      name: "PodErc20CotiMother",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Comparison2TestsContract>;
+    ): Promise<Contracts.PodErc20CotiMother>;
     deployContract(
-      name: "MinimalImplementation",
+      name: "IPodERC20",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MinimalImplementation>;
+    ): Promise<Contracts.IPodERC20>;
     deployContract(
-      name: "MinimalProxy",
+      name: "PodERC20",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MinimalProxy>;
+    ): Promise<Contracts.PodERC20>;
     deployContract(
-      name: "MinMax128TestsContract",
+      name: "PodErc20Mintable",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MinMax128TestsContract>;
+    ): Promise<Contracts.PodErc20Mintable>;
     deployContract(
-      name: "MinMax256TestsContract",
+      name: "PodErc20MintableInitializable",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MinMax256TestsContract>;
+    ): Promise<Contracts.PodErc20MintableInitializable>;
     deployContract(
-      name: "MinMaxTestsContract",
+      name: "IWrappedNative",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MinMaxTestsContract>;
-    deployContract(
-      name: "Miscellaneous1TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Miscellaneous1TestsContract>;
-    deployContract(
-      name: "MiscellaneousTestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MiscellaneousTestsContract>;
-    deployContract(
-      name: "MpcOperations128TestContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MpcOperations128TestContract>;
-    deployContract(
-      name: "MpcOperationsTestContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.MpcOperationsTestContract>;
-    deployContract(
-      name: "Mux128TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Mux128TestsContract>;
-    deployContract(
-      name: "Mux256TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Mux256TestsContract>;
-    deployContract(
-      name: "OffboardToUserKeyTestContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.OffboardToUserKeyTestContract>;
-    deployContract(
-      name: "OnBoard128TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.OnBoard128TestsContract>;
-    deployContract(
-      name: "OnBoard256TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.OnBoard256TestsContract>;
-    deployContract(
-      name: "PrivacyImplementationV1",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyImplementationV1>;
-    deployContract(
-      name: "PrivacyImplementationV2",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyImplementationV2>;
-    deployContract(
-      name: "PrivacyProxy",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyProxy>;
-    deployContract(
-      name: "Random128TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Random128TestsContract>;
-    deployContract(
-      name: "Random256TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Random256TestsContract>;
-    deployContract(
-      name: "Shift128TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Shift128TestsContract>;
-    deployContract(
-      name: "Shift256TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Shift256TestsContract>;
-    deployContract(
-      name: "ShiftTestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ShiftTestsContract>;
-    deployContract(
-      name: "StringTestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.StringTestsContract>;
-    deployContract(
-      name: "Transfer128TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Transfer128TestsContract>;
-    deployContract(
-      name: "Transfer256TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Transfer256TestsContract>;
-    deployContract(
-      name: "TransferScalarTestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferScalarTestsContract>;
-    deployContract(
-      name: "TransferTestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferTestsContract>;
-    deployContract(
-      name: "TransferWithAllowance128TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferWithAllowance128TestsContract>;
-    deployContract(
-      name: "TransferWithAllowance256TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferWithAllowance256TestsContract>;
-    deployContract(
-      name: "TransferWithAllowance64_16TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferWithAllowance64_16TestsContract>;
-    deployContract(
-      name: "TransferWithAllowance64_32TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferWithAllowance64_32TestsContract>;
-    deployContract(
-      name: "TransferWithAllowance64_64TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferWithAllowance64_64TestsContract>;
-    deployContract(
-      name: "TransferWithAllowance64_8TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferWithAllowance64_8TestsContract>;
-    deployContract(
-      name: "TransferWithAllowanceScalarTestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferWithAllowanceScalarTestsContract>;
-    deployContract(
-      name: "TransferWithAllowanceTestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.TransferWithAllowanceTestsContract>;
-    deployContract(
-      name: "ValidateCiphertext128TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ValidateCiphertext128TestsContract>;
-    deployContract(
-      name: "ValidateCiphertext256TestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ValidateCiphertext256TestsContract>;
-    deployContract(
-      name: "ValidateCiphertextTestsContract",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ValidateCiphertextTestsContract>;
-    deployContract(
-      name: "PrivateERC20WalletMock",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC20WalletMock>;
-    deployContract(
-      name: "CotiNodeRewards",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.CotiNodeRewards>;
-    deployContract(
-      name: "IERC5192",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC5192>;
-    deployContract(
-      name: "SoulboundNodeNFT",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SoulboundNodeNFT>;
-    deployContract(
-      name: "AccountOnboard",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.AccountOnboard>;
-    deployContract(
-      name: "CotiPriceConsumer",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.CotiPriceConsumer>;
-    deployContract(
-      name: "ICotiPriceConsumer",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ICotiPriceConsumer>;
-    deployContract(
-      name: "IStdReference",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IStdReference>;
-    deployContract(
-      name: "PrivacyBridge",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridge>;
-    deployContract(
-      name: "PrivacyBridgeCotiNative",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgeCotiNative>;
-    deployContract(
-      name: "IHasDecimals",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IHasDecimals>;
-    deployContract(
-      name: "PrivacyBridgeERC20",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgeERC20>;
-    deployContract(
-      name: "PrivacyBridgegCoti",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgegCoti>;
-    deployContract(
-      name: "PrivacyBridgeUSDCe",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgeUSDCe>;
-    deployContract(
-      name: "PrivacyBridgeUSDT",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgeUSDT>;
-    deployContract(
-      name: "PrivacyBridgeWADA",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgeWADA>;
-    deployContract(
-      name: "PrivacyBridgeWBTC",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgeWBTC>;
-    deployContract(
-      name: "PrivacyBridgeWETH",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivacyBridgeWETH>;
-    deployContract(
-      name: "CotiTokenPoints004",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.CotiTokenPoints004>;
-    deployContract(
-      name: "IPrivateERC20",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IPrivateERC20>;
-    deployContract(
-      name: "ITokenReceiver",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ITokenReceiver>;
-    deployContract(
-      name: "ITokenReceiverEncrypted",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ITokenReceiverEncrypted>;
-    deployContract(
-      name: "PrivateERC20",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC20>;
-    deployContract(
-      name: "PrivateBridgedUSDC",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateBridgedUSDC>;
-    deployContract(
-      name: "PrivateCOTI",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateCOTI>;
-    deployContract(
-      name: "PrivateCOTITreasuryGovernanceToken",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateCOTITreasuryGovernanceToken>;
-    deployContract(
-      name: "PrivateTetherUSD",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateTetherUSD>;
-    deployContract(
-      name: "PrivateWrappedADA",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateWrappedADA>;
-    deployContract(
-      name: "PrivateWrappedBTC",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateWrappedBTC>;
-    deployContract(
-      name: "PrivateWrappedEther",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateWrappedEther>;
-    deployContract(
-      name: "IPrivateERC721URIStorage",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IPrivateERC721URIStorage>;
-    deployContract(
-      name: "PrivateERC721URIStorage",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC721URIStorage>;
-    deployContract(
-      name: "IERC721Errors",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC721Errors>;
-    deployContract(
-      name: "PrivateERC721",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PrivateERC721>;
+    ): Promise<Contracts.IWrappedNative>;
     deployContract(
       name: "MpcCore",
       args: any[],
