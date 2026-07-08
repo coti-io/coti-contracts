@@ -92,6 +92,17 @@ interface IPodERC20 {
     /// @notice Status of an async request submitted by this token.
     function requests(bytes32 requestId) external view returns (RequestStatus);
 
+    /**
+     * @notice Estimate the native fee split used by auto-fee two-way token methods.
+     * @return totalFeeWei Sum of target and callback fee estimates.
+     * @return targetFeeWei Estimated local-token wei for the remote COTI execution leg.
+     * @return callbackFeeWei Estimated local-token wei for the PoD callback leg.
+     */
+    function estimateFee()
+        external
+        view
+        returns (uint256 totalFeeWei, uint256 targetFeeWei, uint256 callbackFeeWei);
+
     // --- Balances ---
 
     /**

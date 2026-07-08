@@ -8,10 +8,15 @@ import "../IInbox.sol";
 import "../token/perc20/PodErc20MintableInitializable.sol";
 import "../token/perc20/cotiside/PodErc20CotiMother.sol";
 import "./IPrivacyPortal.sol";
+import "./IPrivacyPortalFactory.sol";
+import "./IPodPriceOracle.sol";
+import "./PrivacyPortalFeeLib.sol";
 
 /// @title PrivacyPortalFactory
 /// @notice Deploys one-shot minimal-clone portals and pTokens for public ERC20 collateral.
-contract PrivacyPortalFactory is Ownable {
+contract PrivacyPortalFactory is IPrivacyPortalFactory, Ownable {
+    using PrivacyPortalFeeLib for bytes32;
+
     /// @notice Source-chain inbox used by pToken clones and registration messages.
     address public immutable inbox;
     /// @notice COTI chain id used by pToken clones for remote MPC execution.
@@ -22,10 +27,21 @@ contract PrivacyPortalFactory is Ownable {
     address public immutable podTokenImplementation;
     /// @notice Clone implementation for portals.
     address public immutable portalImplementation;
+    /// @notice Recipient of swept portal protocol fees from all portals created here.
+    address public immutable feeRecipient;
+    /// @notice Wrapped native token on this chain (WETH/WAVAX) for portal gas fee pricing.
+    address public immutable nativeToken;
     /// @notice Global flag exposed through the pause-controller interface for all portals created here.
     bool public withdrawalsPaused;
     /// @notice Global flag exposed through the pause-controller interface for deposits on factory-created portals.
     bool public depositsPaused;
+
+    /// @notice Optional USD oracle for dynamic portal fees; zero disables dynamic pricing.
+    IPodPriceOracle public priceOracle;
+    /// @notice Factory default packed deposit fee config.
+    bytes32 public defaultDepositFeePacked;
+    /// @notice Factory default packed withdraw fee config.
+    bytes32 public defaultWithdrawFeePacked;
 
     /// @notice Addresses allowed to deploy portal/pToken pairs.
     mapping(address => bool) public deployers;
@@ -54,6 +70,10 @@ contract PrivacyPortalFactory is Ownable {
     );
     /// @notice One-way registration message submitted to the COTI mother contract.
     event TokenRegistrationRequested(address indexed pToken, bytes32 indexed requestId);
+    /// @notice Factory default portal fee config updated.
+    event DefaultPortalFeeUpdated(bool indexed isDeposit, bytes32 packedConfig);
+    /// @notice Portal fee oracle upgraded or disabled.
+    event PriceOracleUpdated(address indexed previousOracle, address indexed newOracle);
 
     /// @notice Caller is not an allowlisted deployer.
     error OnlyDeployer(address caller);
@@ -61,6 +81,8 @@ contract PrivacyPortalFactory is Ownable {
     error InvalidAddress();
     /// @notice A portal already exists for the underlying token.
     error PortalAlreadyExists(address underlying, address portal);
+    /// @notice Oracle is not configured.
+    error OracleNotConfigured();
 
     /// @notice Restrict a function to an allowlisted deployer.
     modifier onlyDeployer() {
@@ -76,18 +98,37 @@ contract PrivacyPortalFactory is Ownable {
     /// @param cotiMotherContract_ Unified COTI-side pToken ledger.
     /// @param podTokenImplementation_ Clone implementation for source-chain pTokens.
     /// @param portalImplementation_ Clone implementation for portals.
+    /// @param feeRecipient_ Recipient of swept portal protocol fees.
+    /// @param nativeToken_ Wrapped native token (WETH/WAVAX) for dynamic fee gas pricing.
+    /// @param priceOracle_ Optional USD oracle; zero for min-fee-only deployments.
+    /// @param defaultDepositFixedFee_ Default deposit fee floor in native wei.
+    /// @param defaultDepositPercentageBps_ Default deposit percentage (FEE_DIVISOR scale).
+    /// @param defaultDepositMaxFee_ Default deposit fee cap in native wei.
+    /// @param defaultWithdrawFixedFee_ Default withdraw fee floor in native wei.
+    /// @param defaultWithdrawPercentageBps_ Default withdraw percentage (FEE_DIVISOR scale).
+    /// @param defaultWithdrawMaxFee_ Default withdraw fee cap in native wei.
     constructor(
         address initialOwner,
         address inbox_,
         uint256 cotiChainId_,
         address cotiMotherContract_,
         address podTokenImplementation_,
-        address portalImplementation_
+        address portalImplementation_,
+        address feeRecipient_,
+        address nativeToken_,
+        address priceOracle_,
+        uint256 defaultDepositFixedFee_,
+        uint256 defaultDepositPercentageBps_,
+        uint256 defaultDepositMaxFee_,
+        uint256 defaultWithdrawFixedFee_,
+        uint256 defaultWithdrawPercentageBps_,
+        uint256 defaultWithdrawMaxFee_
     ) Ownable(initialOwner) {
         if (
             initialOwner == address(0) || inbox_ == address(0) || cotiChainId_ == 0
                 || cotiMotherContract_ == address(0) || podTokenImplementation_ == address(0)
-                || portalImplementation_ == address(0)
+                || portalImplementation_ == address(0) || feeRecipient_ == address(0)
+                || nativeToken_ == address(0)
         ) {
             revert InvalidAddress();
         }
@@ -96,13 +137,25 @@ contract PrivacyPortalFactory is Ownable {
         cotiMotherContract = cotiMotherContract_;
         podTokenImplementation = podTokenImplementation_;
         portalImplementation = portalImplementation_;
+        feeRecipient = feeRecipient_;
+        nativeToken = nativeToken_;
+        priceOracle = IPodPriceOracle(priceOracle_);
+        defaultDepositFeePacked = PrivacyPortalFeeLib.packFeeConfig(
+            defaultDepositFixedFee_, defaultDepositPercentageBps_, defaultDepositMaxFee_
+        );
+        defaultWithdrawFeePacked = PrivacyPortalFeeLib.packFeeConfig(
+            defaultWithdrawFixedFee_, defaultWithdrawPercentageBps_, defaultWithdrawMaxFee_
+        );
         deployers[initialOwner] = true;
         emit DeployerUpdated(initialOwner, true);
+        emit DefaultPortalFeeUpdated(true, defaultDepositFeePacked);
+        emit DefaultPortalFeeUpdated(false, defaultWithdrawFeePacked);
+        if (priceOracle_ != address(0)) {
+            emit PriceOracleUpdated(address(0), priceOracle_);
+        }
     }
 
     /// @notice Add or remove a portal deployer.
-    /// @param deployer Address to update.
-    /// @param allowed Whether the address may create portals.
     function setDeployer(address deployer, bool allowed) external onlyOwner {
         if (deployer == address(0)) {
             revert InvalidAddress();
@@ -112,21 +165,18 @@ contract PrivacyPortalFactory is Ownable {
     }
 
     /// @notice Set the global pause flag read by portals initialized from this factory.
-    /// @param paused True to make new withdrawal requests revert.
     function setWithdrawalsPaused(bool paused) external onlyOwner {
         withdrawalsPaused = paused;
         emit WithdrawalsPausedUpdated(paused);
     }
 
     /// @notice Set the global deposit pause flag read by portals initialized from this factory.
-    /// @param paused True to make new deposits / wraps revert.
     function setDepositsPaused(bool paused) external onlyOwner {
         depositsPaused = paused;
         emit DepositsPausedUpdated(paused);
     }
 
     /// @notice Pause or unpause both deposits and withdrawals (emergency circuit breaker).
-    /// @param paused True to halt new deposits and withdrawal requests on factory-created portals.
     function setOperationsPaused(bool paused) external onlyOwner {
         withdrawalsPaused = paused;
         depositsPaused = paused;
@@ -135,17 +185,76 @@ contract PrivacyPortalFactory is Ownable {
         emit DepositsPausedUpdated(paused);
     }
 
+    /// @notice Update factory default deposit fee config.
+    function setDefaultDepositFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external onlyOwner {
+        bytes32 packed = PrivacyPortalFeeLib.packFeeConfig(fixedFee, percentageBps, maxFee);
+        defaultDepositFeePacked = packed;
+        emit DefaultPortalFeeUpdated(true, packed);
+    }
+
+    /// @notice Update factory default withdraw fee config.
+    function setDefaultWithdrawFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external onlyOwner {
+        bytes32 packed = PrivacyPortalFeeLib.packFeeConfig(fixedFee, percentageBps, maxFee);
+        defaultWithdrawFeePacked = packed;
+        emit DefaultPortalFeeUpdated(false, packed);
+    }
+
+    /// @notice Upgrade or disable the portal fee oracle.
+    function setPriceOracle(address newOracle) external onlyOwner {
+        address previous = address(priceOracle);
+        priceOracle = IPodPriceOracle(newOracle);
+        emit PriceOracleUpdated(previous, newOracle);
+    }
+
+    /// @inheritdoc IPrivacyPortalFactory
+    function estimateDepositPortalFee(address underlying, uint256 amount, uint8 decimals)
+        external
+        view
+        returns (uint256 fee, bool usedDynamicPricing)
+    {
+        return _estimatePortalFee(defaultDepositFeePacked, underlying, amount, decimals);
+    }
+
+    /// @inheritdoc IPrivacyPortalFactory
+    function estimateWithdrawPortalFee(address underlying, uint256 amount, uint8 decimals)
+        external
+        view
+        returns (uint256 fee, bool usedDynamicPricing)
+    {
+        return _estimatePortalFee(defaultWithdrawFeePacked, underlying, amount, decimals);
+    }
+
+    /// @inheritdoc IPrivacyPortalFactory
+    function getDepositPortalFeeFloor(address underlying, uint256 amount, uint8 decimals)
+        external
+        view
+        returns (uint256 floor, uint128 maxFee)
+    {
+        return _portalFeeFloor(defaultDepositFeePacked, underlying, amount, decimals);
+    }
+
+    /// @inheritdoc IPrivacyPortalFactory
+    function getWithdrawPortalFeeFloor(address underlying, uint256 amount, uint8 decimals)
+        external
+        view
+        returns (uint256 floor, uint128 maxFee)
+    {
+        return _portalFeeFloor(defaultWithdrawFeePacked, underlying, amount, decimals);
+    }
+
+    /// @inheritdoc IPrivacyPortalFactory
+    function getFeeConfig(bool isDeposit) external view returns (PortalFeeConfig memory config) {
+        return PrivacyPortalFeeLib.decodeFeeConfig(
+            isDeposit ? defaultDepositFeePacked : defaultWithdrawFeePacked
+        );
+    }
+
+    /// @inheritdoc IPrivacyPortalFactory
+    function decodeFeeConfig(bytes32 packed) external pure returns (PortalFeeConfig memory config) {
+        return PrivacyPortalFeeLib.decodeFeeConfig(packed);
+    }
+
     /// @notice Deploy a portal and pToken clone for an underlying token and register on the COTI mother ledger.
-    /// @dev Clone deployment and `initialize` run atomically in this transaction. Do not deploy a clone and call
-    ///      `initialize` in a separate transaction—an attacker can front-run initialization and seize the instance.
-    /// @param underlying Public ERC20 collateral token.
-    /// @param name Source pToken name.
-    /// @param symbol Source pToken symbol.
-    /// @param decimals Token decimals.
-    /// @param nativeWrappedUnderlying True when underlying is WETH/WAVAX (native wrap deposit + unwrap withdraw).
-    /// @param portalOwner Owner assigned to the portal clone.
-    /// @return portal Deployed portal clone.
-    /// @return pToken Deployed source-chain pToken clone.
     function createPortal(
         address underlying,
         string calldata name,
@@ -185,7 +294,51 @@ contract PrivacyPortalFactory is Ownable {
         emit TokenRegistrationRequested(pToken, requestId);
     }
 
-    /// @dev Submits a one-way inbox message to register `pToken` on the COTI mother contract.
+    function _estimatePortalFee(
+        bytes32 packed,
+        address underlying,
+        uint256 amount,
+        uint8 decimals
+    ) private view returns (uint256 fee, bool usedDynamicPricing) {
+        IPodPriceOracle oracle = priceOracle;
+        if (address(oracle) == address(0)) {
+            (uint96 fixedFee,,) = PrivacyPortalFeeLib.unpackFeeConfig(packed);
+            return (fixedFee, false);
+        }
+
+        (uint256 nativeUsd, uint256 collateralUsd) =
+            oracle.getLivePrices(nativeToken, underlying);
+        return PrivacyPortalFeeLib.resolvePortalFee(
+            packed,
+            amount,
+            decimals,
+            collateralUsd,
+            nativeUsd
+        );
+    }
+
+    function _portalFeeFloor(bytes32 packed, address underlying, uint256 amount, uint8 decimals)
+        private
+        view
+        returns (uint256 floor, uint128 maxFee)
+    {
+        (uint96 fixedFee, uint32 bps, uint128 max) = PrivacyPortalFeeLib.unpackFeeConfig(packed);
+        maxFee = max;
+        IPodPriceOracle oracle = priceOracle;
+        if (address(oracle) == address(0) || bps == 0) {
+            return (fixedFee, maxFee);
+        }
+        (uint256 nativeUsd, uint256 collateralUsd) =
+            oracle.getLivePrices(nativeToken, underlying);
+        (floor,) = PrivacyPortalFeeLib.resolvePortalFee(
+            packed,
+            amount,
+            decimals,
+            collateralUsd,
+            nativeUsd
+        );
+    }
+
     function _requestMotherRegistration(
         address pToken,
         string calldata name,
