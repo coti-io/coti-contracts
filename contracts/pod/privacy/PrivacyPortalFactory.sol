@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/extensions/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
 import "../IInbox.sol";
@@ -14,8 +14,13 @@ import "./PrivacyPortalFeeLib.sol";
 
 /// @title PrivacyPortalFactory
 /// @notice Deploys one-shot minimal-clone portals and pTokens for public ERC20 collateral.
-contract PrivacyPortalFactory is IPrivacyPortalFactory, Ownable {
+/// @dev Governance uses OpenZeppelin {AccessControlEnumerable}: {DEFAULT_ADMIN_ROLE} for admin actions,
+///      {OPERATOR_ROLE} for default fee updates. Manage roles via {grantRole} and {revokeRole}.
+contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable {
     using PrivacyPortalFeeLib for bytes32;
+
+    /// @notice Operator role for routine fee-parameter updates (mirrors Privacy Bridge).
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     /// @notice Source-chain inbox used by pToken clones and registration messages.
     address public immutable inbox;
@@ -51,7 +56,13 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, Ownable {
     mapping(address => address) public pTokenForUnderlying;
     /// @notice Portal address by source-chain pToken.
     mapping(address => address) public portalForPToken;
+    /// @notice Addresses blocked from deposits and withdrawals on factory-created portals.
+    mapping(address => bool) public blacklisted;
 
+    /// @notice Address added to the factory blacklist.
+    event Blacklisted(address indexed account, address indexed by);
+    /// @notice Address removed from the factory blacklist.
+    event UnBlacklisted(address indexed account, address indexed by);
     /// @notice Deployer allowlist entry changed.
     event DeployerUpdated(address indexed deployer, bool allowed);
     /// @notice Global withdrawal pause flag changed.
@@ -83,6 +94,8 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, Ownable {
     error PortalAlreadyExists(address underlying, address portal);
     /// @notice Oracle is not configured.
     error OracleNotConfigured();
+    /// @notice No {DEFAULT_ADMIN_ROLE} holder is configured.
+    error AdminNotConfigured();
 
     /// @notice Restrict a function to an allowlisted deployer.
     modifier onlyDeployer() {
@@ -92,7 +105,7 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, Ownable {
         _;
     }
 
-    /// @param initialOwner Owner and initial deployer.
+    /// @param initialOwner Initial {DEFAULT_ADMIN_ROLE} holder and deployer.
     /// @param inbox_ Source-chain inbox used by pToken clones.
     /// @param cotiChainId_ COTI chain id used by pToken clones.
     /// @param cotiMotherContract_ Unified COTI-side pToken ledger.
@@ -123,7 +136,7 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, Ownable {
         uint256 defaultWithdrawFixedFee_,
         uint256 defaultWithdrawPercentageBps_,
         uint256 defaultWithdrawMaxFee_
-    ) Ownable(initialOwner) {
+    ) {
         if (
             initialOwner == address(0) || inbox_ == address(0) || cotiChainId_ == 0
                 || cotiMotherContract_ == address(0) || podTokenImplementation_ == address(0)
@@ -148,6 +161,8 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, Ownable {
         );
         deployers[initialOwner] = true;
         emit DeployerUpdated(initialOwner, true);
+        _grantRole(DEFAULT_ADMIN_ROLE, initialOwner);
+        _grantRole(OPERATOR_ROLE, initialOwner);
         emit DefaultPortalFeeUpdated(true, defaultDepositFeePacked);
         emit DefaultPortalFeeUpdated(false, defaultWithdrawFeePacked);
         if (priceOracle_ != address(0)) {
@@ -155,8 +170,36 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, Ownable {
         }
     }
 
+    /// @notice Primary factory admin: first holder of {DEFAULT_ADMIN_ROLE}.
+    /// @dev Mirrors `Ownable.owner()` for tooling compatibility. When multiple admins exist,
+    ///      returns `getRoleMember(DEFAULT_ADMIN_ROLE, 0)` (enumeration order).
+    function owner() external view returns (address) {
+        if (getRoleMemberCount(DEFAULT_ADMIN_ROLE) == 0) {
+            revert AdminNotConfigured();
+        }
+        return getRoleMember(DEFAULT_ADMIN_ROLE, 0);
+    }
+
+    /// @notice Add an address to the factory blacklist, blocking deposits and withdrawals on all portals here.
+    function addToBlacklist(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (account == address(0)) {
+            revert InvalidAddress();
+        }
+        blacklisted[account] = true;
+        emit Blacklisted(account, msg.sender);
+    }
+
+    /// @notice Remove an address from the factory blacklist.
+    function removeFromBlacklist(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (account == address(0)) {
+            revert InvalidAddress();
+        }
+        blacklisted[account] = false;
+        emit UnBlacklisted(account, msg.sender);
+    }
+
     /// @notice Add or remove a portal deployer.
-    function setDeployer(address deployer, bool allowed) external onlyOwner {
+    function setDeployer(address deployer, bool allowed) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (deployer == address(0)) {
             revert InvalidAddress();
         }
@@ -165,19 +208,19 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, Ownable {
     }
 
     /// @notice Set the global pause flag read by portals initialized from this factory.
-    function setWithdrawalsPaused(bool paused) external onlyOwner {
+    function setWithdrawalsPaused(bool paused) external onlyRole(DEFAULT_ADMIN_ROLE) {
         withdrawalsPaused = paused;
         emit WithdrawalsPausedUpdated(paused);
     }
 
     /// @notice Set the global deposit pause flag read by portals initialized from this factory.
-    function setDepositsPaused(bool paused) external onlyOwner {
+    function setDepositsPaused(bool paused) external onlyRole(DEFAULT_ADMIN_ROLE) {
         depositsPaused = paused;
         emit DepositsPausedUpdated(paused);
     }
 
     /// @notice Pause or unpause both deposits and withdrawals (emergency circuit breaker).
-    function setOperationsPaused(bool paused) external onlyOwner {
+    function setOperationsPaused(bool paused) external onlyRole(DEFAULT_ADMIN_ROLE) {
         withdrawalsPaused = paused;
         depositsPaused = paused;
         emit OperationsPausedUpdated(paused);
@@ -186,21 +229,27 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, Ownable {
     }
 
     /// @notice Update factory default deposit fee config.
-    function setDefaultDepositFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external onlyOwner {
+    function setDefaultDepositFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee)
+        external
+        onlyRole(OPERATOR_ROLE)
+    {
         bytes32 packed = PrivacyPortalFeeLib.packFeeConfig(fixedFee, percentageBps, maxFee);
         defaultDepositFeePacked = packed;
         emit DefaultPortalFeeUpdated(true, packed);
     }
 
     /// @notice Update factory default withdraw fee config.
-    function setDefaultWithdrawFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external onlyOwner {
+    function setDefaultWithdrawFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee)
+        external
+        onlyRole(OPERATOR_ROLE)
+    {
         bytes32 packed = PrivacyPortalFeeLib.packFeeConfig(fixedFee, percentageBps, maxFee);
         defaultWithdrawFeePacked = packed;
         emit DefaultPortalFeeUpdated(false, packed);
     }
 
     /// @notice Upgrade or disable the portal fee oracle.
-    function setPriceOracle(address newOracle) external onlyOwner {
+    function setPriceOracle(address newOracle) external onlyRole(DEFAULT_ADMIN_ROLE) {
         address previous = address(priceOracle);
         priceOracle = IPodPriceOracle(newOracle);
         emit PriceOracleUpdated(previous, newOracle);

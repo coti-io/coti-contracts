@@ -9,17 +9,24 @@ import "../PrivacyPortalFeeLib.sol";
 contract MockPrivacyPortalFactory is IPrivacyPortalFactory {
     address public immutable feeRecipient;
     address public immutable nativeToken;
+    address public immutable owner_;
     bool public withdrawalsPaused;
     bool public depositsPaused;
     IPodPriceOracle public priceOracle;
     bytes32 public defaultDepositFeePacked;
     bytes32 public defaultWithdrawFeePacked;
+    mapping(address => bool) public blacklisted;
 
     constructor(address feeRecipient_, address nativeToken_) {
         feeRecipient = feeRecipient_;
         nativeToken = nativeToken_;
+        owner_ = feeRecipient_;
         defaultDepositFeePacked = PrivacyPortalFeeLib.packFeeConfig(0, 0, type(uint128).max);
         defaultWithdrawFeePacked = PrivacyPortalFeeLib.packFeeConfig(0, 0, type(uint128).max);
+    }
+
+    function owner() external view returns (address) {
+        return owner_;
     }
 
     function setWithdrawalsPaused(bool paused) external {
@@ -28,6 +35,10 @@ contract MockPrivacyPortalFactory is IPrivacyPortalFactory {
 
     function setDepositsPaused(bool paused) external {
         depositsPaused = paused;
+    }
+
+    function setBlacklisted(address account, bool blocked) external {
+        blacklisted[account] = blocked;
     }
 
     function estimateDepositPortalFee(address, uint256, uint8)
