@@ -19,9 +19,18 @@ interface IPrivacyPortalPauseController {
     function depositsPaused() external view returns (bool);
 }
 
+/// @notice Factory-level address blocklist read by portal clones before user entry points.
+interface IPrivacyPortalBlacklistController {
+    /// @notice Whether `account` is blocked from deposits and withdrawals on factory portals.
+    function blacklisted(address account) external view returns (bool);
+}
+
 /// @title IPrivacyPortalFactory
-/// @notice Factory surface used by portal clones for pause control and fee configuration.
-interface IPrivacyPortalFactory is IPrivacyPortalPauseController {
+/// @notice Factory surface used by portal clones for pause control, blacklist, and fee configuration.
+interface IPrivacyPortalFactory is IPrivacyPortalPauseController, IPrivacyPortalBlacklistController {
+    /// @notice Primary factory admin ({DEFAULT_ADMIN_ROLE} holder with lowest enumeration index).
+    function owner() external view returns (address);
+
     /// @notice Recipient of swept portal protocol fees.
     function feeRecipient() external view returns (address);
 

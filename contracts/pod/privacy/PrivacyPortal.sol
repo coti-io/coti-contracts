@@ -45,6 +45,15 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
     /// @notice Monotonic nonce used to derive withdrawal ids.
     uint256 public withdrawalNonce;
 
+    /// @notice Maximum amount that can be deposited in a single transaction.
+    uint256 public maxDepositAmount;
+    /// @notice Maximum amount that can be withdrawn in a single transaction.
+    uint256 public maxWithdrawAmount;
+    /// @notice Minimum amount required for a deposit.
+    uint256 public minDepositAmount;
+    /// @notice Minimum amount required for a withdrawal.
+    uint256 public minWithdrawAmount;
+
     /// @notice Withdrawal state by withdrawal id.
     mapping(bytes32 => Withdrawal) public withdrawals;
 
@@ -79,6 +88,13 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
     event PortalFeeOverrideCleared(bool indexed isDeposit);
     /// @notice Pause controller was changed.
     event PauseControllerUpdated(address indexed pauseController);
+    /// @notice Per-portal deposit/withdraw limits changed.
+    event LimitsUpdated(
+        uint256 minDeposit,
+        uint256 maxDeposit,
+        uint256 minWithdraw,
+        uint256 maxWithdraw
+    );
     /// @notice Native token balance was swept by the owner.
     event NativeSwept(address indexed recipient, uint256 amount);
 
@@ -114,6 +130,18 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
     error NativeWrapDisabled();
     /// @notice Factory pause controller is not configured.
     error FactoryNotConfigured();
+    /// @notice Caller is on the factory blacklist.
+    error AddressBlacklisted(address account);
+    /// @notice Deposit amount is below the configured minimum.
+    error DepositBelowMinimum();
+    /// @notice Deposit amount exceeds the configured maximum.
+    error DepositExceedsMaximum();
+    /// @notice Withdraw amount is below the configured minimum.
+    error WithdrawBelowMinimum();
+    /// @notice Withdraw amount exceeds the configured maximum.
+    error WithdrawExceedsMaximum();
+    /// @notice Invalid min/max limit configuration.
+    error InvalidLimitConfiguration();
 
     /// @notice Lock implementation instance by assigning a non-zero owner placeholder.
     constructor() Ownable(address(1)) {
@@ -141,8 +169,33 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
         pToken = IPodERC20(pToken_);
         decimals = decimals_;
         nativeWrappedUnderlying = nativeWrappedUnderlying_;
+        maxDepositAmount = type(uint256).max;
+        maxWithdrawAmount = type(uint256).max;
+        minDepositAmount = 1;
+        minWithdrawAmount = 1;
         pauseController = msg.sender;
         emit PauseControllerUpdated(msg.sender);
+    }
+
+    /// @notice Update per-portal deposit and withdrawal amount limits.
+    /// @dev Setting `maxDeposit` or `maxWithdraw` to zero disables that operation.
+    function setLimits(
+        uint256 minDeposit,
+        uint256 maxDeposit,
+        uint256 minWithdraw,
+        uint256 maxWithdraw
+    ) external onlyOwner {
+        if (minDeposit > maxDeposit) {
+            revert InvalidLimitConfiguration();
+        }
+        if (minWithdraw > maxWithdraw) {
+            revert InvalidLimitConfiguration();
+        }
+        minDepositAmount = minDeposit;
+        maxDepositAmount = maxDeposit;
+        minWithdrawAmount = minWithdraw;
+        maxWithdrawAmount = maxWithdraw;
+        emit LimitsUpdated(minDeposit, maxDeposit, minWithdraw, maxWithdraw);
     }
 
     /// @notice Update the external pause controller checked before deposits and withdrawal requests.
@@ -192,12 +245,14 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
         returns (bytes32 requestId)
     {
         _checkDepositsNotPaused();
+        _checkNotBlacklisted();
         if (recipient == address(0)) {
             revert InvalidAddress();
         }
         if (amount == 0) {
             revert InvalidAmount();
         }
+        _checkDepositLimits(amount);
 
         _validateAndCollectPortalFee(portalFee, amount, true);
         if (msg.value <= portalFee) {
@@ -222,12 +277,14 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
             revert NativeWrapDisabled();
         }
         _checkDepositsNotPaused();
+        _checkNotBlacklisted();
         if (recipient == address(0)) {
             revert InvalidAddress();
         }
         if (amount == 0) {
             revert InvalidAmount();
         }
+        _checkDepositLimits(amount);
 
         _validateAndCollectPortalFee(portalFee, amount, true);
         if (msg.value <= amount + portalFee) {
@@ -275,12 +332,14 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
         bytes32 s
     ) external payable override nonReentrant returns (bytes32 withdrawalId, bytes32 transferRequestId) {
         _checkWithdrawalsNotPaused();
+        _checkNotBlacklisted();
         if (recipient == address(0)) {
             revert InvalidAddress();
         }
         if (amount == 0) {
             revert InvalidAmount();
         }
+        _checkWithdrawLimits(amount);
 
         _validateAndCollectPortalFee(portalFee, amount, false);
         if (msg.value < portalFee) {
@@ -592,6 +651,30 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
     function _checkDepositsNotPaused() private view {
         if (_pauseFlag(IPrivacyPortalPauseController.depositsPaused.selector)) {
             revert DepositsPaused();
+        }
+    }
+
+    function _checkNotBlacklisted() private view {
+        if (_factory().blacklisted(msg.sender)) {
+            revert AddressBlacklisted(msg.sender);
+        }
+    }
+
+    function _checkDepositLimits(uint256 amount) private view {
+        if (amount < minDepositAmount) {
+            revert DepositBelowMinimum();
+        }
+        if (amount > maxDepositAmount) {
+            revert DepositExceedsMaximum();
+        }
+    }
+
+    function _checkWithdrawLimits(uint256 amount) private view {
+        if (amount < minWithdrawAmount) {
+            revert WithdrawBelowMinimum();
+        }
+        if (amount > maxWithdrawAmount) {
+            revert WithdrawExceedsMaximum();
         }
     }
 

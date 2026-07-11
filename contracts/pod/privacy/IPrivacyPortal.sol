@@ -131,6 +131,27 @@ interface IPrivacyPortal {
     /// @notice Clear per-portal withdraw fee override (inherit factory default).
     function clearWithdrawFeeOverride() external;
 
+    /// @notice Maximum amount that can be deposited in a single transaction.
+    function maxDepositAmount() external view returns (uint256);
+
+    /// @notice Maximum amount that can be withdrawn in a single transaction.
+    function maxWithdrawAmount() external view returns (uint256);
+
+    /// @notice Minimum amount required for a deposit.
+    function minDepositAmount() external view returns (uint256);
+
+    /// @notice Minimum amount required for a withdrawal.
+    function minWithdrawAmount() external view returns (uint256);
+
+    /// @notice Update per-portal deposit and withdrawal amount limits.
+    /// @dev Setting `maxDeposit` or `maxWithdraw` to zero disables that operation.
+    function setLimits(
+        uint256 minDeposit,
+        uint256 maxDeposit,
+        uint256 minWithdraw,
+        uint256 maxWithdraw
+    ) external;
+
     /// @notice Sweep accumulated portal protocol fees to the factory fee recipient.
     function withdrawPortalFees(uint256 amount) external;
 
