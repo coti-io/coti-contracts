@@ -9,6 +9,8 @@ contract MockPodERC20ForPortal {
     uint256 public lastMintAmount;
     uint256 public lastMintValue;
     uint256 public lastMintCallbackFee;
+    bytes32 public lastMintRequestId;
+    IPodERC20.RequestStatus private _lastMintStatus;
 
     address public lastTransferFrom;
     address public lastTransferTo;
@@ -24,6 +26,8 @@ contract MockPodERC20ForPortal {
 
     bool public burnShouldRevert;
     IPodERC20.RequestStatus private _lastTransferStatus;
+
+    mapping(bytes32 => IPodERC20.RequestStatus) private _requestStatus;
 
     function estimateFee()
         external
@@ -43,6 +47,9 @@ contract MockPodERC20ForPortal {
         lastMintValue = msg.value;
         lastMintCallbackFee = callbackFeeLocalWei;
         requestId = keccak256(abi.encodePacked("mint", to, amount, block.number));
+        lastMintRequestId = requestId;
+        _lastMintStatus = IPodERC20.RequestStatus.Pending;
+        _requestStatus[requestId] = IPodERC20.RequestStatus.Pending;
         return requestId;
     }
 
@@ -63,17 +70,25 @@ contract MockPodERC20ForPortal {
         _lastTransferStatus = IPodERC20.RequestStatus.Pending;
         requestId = keccak256(abi.encodePacked("transfer", from, to, amount, block.number));
         lastTransferRequestId = requestId;
+        _requestStatus[requestId] = IPodERC20.RequestStatus.Pending;
         return requestId;
     }
 
-    function requests(bytes32 requestId) external view returns (IPodERC20.RequestStatus) {
-        if (requestId == lastTransferRequestId && _lastTransferStatus == IPodERC20.RequestStatus.Success) {
-            return IPodERC20.RequestStatus.Success;
+    function requests(bytes32 requestId) external view returns (IPodERC20.RequestRecord memory) {
+        IPodERC20.RequestStatus status = _requestStatus[requestId];
+        if (status == IPodERC20.RequestStatus.None) {
+            if (requestId == lastTransferRequestId) {
+                status = _lastTransferStatus;
+            } else if (requestId == lastMintRequestId) {
+                status = _lastMintStatus;
+            }
         }
-        if (requestId == lastTransferRequestId) {
-            return _lastTransferStatus;
-        }
-        return IPodERC20.RequestStatus.None;
+        return IPodERC20.RequestRecord({
+            status: status,
+            recipientLocked: false,
+            account: address(0),
+            spender: address(0)
+        });
     }
 
     function balanceOf(address) external pure returns (uint256) {
@@ -98,6 +113,45 @@ contract MockPodERC20ForPortal {
 
     function markLastTransferSuccessful() external {
         _lastTransferStatus = IPodERC20.RequestStatus.Success;
+        if (lastTransferRequestId != bytes32(0)) {
+            _requestStatus[lastTransferRequestId] = IPodERC20.RequestStatus.Success;
+        }
+    }
+
+    function markLastTransferFailed() external {
+        _lastTransferStatus = IPodERC20.RequestStatus.Failed;
+        if (lastTransferRequestId != bytes32(0)) {
+            _requestStatus[lastTransferRequestId] = IPodERC20.RequestStatus.Failed;
+        }
+    }
+
+    function markLastTransferSystemFailed() external {
+        _lastTransferStatus = IPodERC20.RequestStatus.SystemFailed;
+        if (lastTransferRequestId != bytes32(0)) {
+            _requestStatus[lastTransferRequestId] = IPodERC20.RequestStatus.SystemFailed;
+        }
+    }
+
+    function markLastMintSuccessful() external {
+        _lastMintStatus = IPodERC20.RequestStatus.Success;
+        if (lastMintRequestId != bytes32(0)) {
+            _requestStatus[lastMintRequestId] = IPodERC20.RequestStatus.Success;
+        }
+    }
+
+    function markLastMintFailed() external {
+        _lastMintStatus = IPodERC20.RequestStatus.SystemFailed;
+        if (lastMintRequestId != bytes32(0)) {
+            _requestStatus[lastMintRequestId] = IPodERC20.RequestStatus.SystemFailed;
+        }
+    }
+
+    /// @dev Simulate app `raise` on mint (not refundable via portal).
+    function markLastMintRaised() external {
+        _lastMintStatus = IPodERC20.RequestStatus.Failed;
+        if (lastMintRequestId != bytes32(0)) {
+            _requestStatus[lastMintRequestId] = IPodERC20.RequestStatus.Failed;
+        }
     }
 
     function setBurnShouldRevert(bool shouldRevert) external {

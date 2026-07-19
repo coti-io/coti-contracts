@@ -14,7 +14,33 @@ interface IPrivacyPortal {
         /// @notice pToken transfer to the portal has been requested but not yet released.
         TransferPending,
         /// @notice Underlying collateral was released to the recipient.
-        Released
+        Released,
+        /// @notice Async pToken transfer failed; withdrawal abandoned without releasing collateral.
+        Failed
+    }
+
+    /// @notice Deposit escrow lifecycle for collateral locked pending async mint.
+    enum DepositEscrowStatus {
+        /// @notice No escrow exists for the mint request id.
+        None,
+        /// @notice Underlying is locked awaiting mint success or failure.
+        Pending,
+        /// @notice Mint request hit an Inbox system error; collateral is eligible for refund.
+        Failed,
+        /// @notice Underlying was returned to the depositor after a failed mint.
+        Refunded
+    }
+
+    /// @notice Escrow of public collateral locked for an async pToken mint.
+    struct DepositEscrow {
+        /// @notice User who deposited the underlying (refund recipient).
+        address user;
+        /// @notice Intended pToken mint recipient.
+        address recipient;
+        /// @notice Locked underlying amount.
+        uint256 amount;
+        /// @notice Escrow lifecycle status.
+        DepositEscrowStatus status;
     }
 
     /// @notice Withdrawal request state stored by withdrawal id.
@@ -32,18 +58,23 @@ interface IPrivacyPortal {
     }
 
     /// @notice Initialize a clone portal.
-    /// @param owner Owner for admin functions.
+    /// @param owner Owner / DEFAULT_ADMIN / initial OPERATOR.
     /// @param underlyingToken Public ERC20 locked and released by this portal (WETH/WAVAX when native-wrapped).
     /// @param pToken PoD pToken minted and burned for the underlying token.
     /// @param decimals Token decimals exposed for UI compatibility.
     /// @param nativeWrappedUnderlying When true, {depositNative} accepts native coin (wraps in-contract); withdraw releases wrapped underlying ERC20.
+    /// @param factory PrivacyPortalFactory (or compatible) for fees, blacklist, and rescue recipient.
     function initialize(
         address owner,
         address underlyingToken,
         address pToken,
         uint8 decimals,
-        bool nativeWrappedUnderlying
+        bool nativeWrappedUnderlying,
+        address factory
     ) external;
+
+    /// @notice Factory that created / binds this portal.
+    function factory() external view returns (address);
 
     /// @notice Whether this portal accepts native coin on deposit via {depositNative}.
     function nativeWrappedUnderlying() external view returns (bool);
@@ -110,6 +141,24 @@ interface IPrivacyPortal {
     /// @notice Manually release a pending withdrawal after its pToken transfer request is marked successful.
     function triggerWithdrawalRelease(bytes32 withdrawalId) external;
 
+    /// @notice Refund underlying collateral after a mint Inbox system error
+    ///         (`pToken.requests(requestId).status == SystemFailed`).
+    /// @dev App `raise` / `Failed` is not refundable (mint should not raise). Portal protocol fee is kept.
+    ///      Only the original depositor may claim.
+    /// @param requestId Mint request id returned by {deposit} / {depositNative} / {wrap}.
+    function refundFailedDeposit(bytes32 requestId) external;
+
+    /// @notice Mark a pending withdrawal as Failed after its pToken transfer request fails.
+    /// @dev Does not release underlying; user retains pTokens. Portal protocol fee is kept.
+    /// @param withdrawalId Portal withdrawal id from {requestWithdrawWithPermit}.
+    function cancelFailedWithdrawal(bytes32 withdrawalId) external;
+
+    /// @notice Escrow state for a deposit mint request id.
+    function depositEscrows(bytes32 requestId)
+        external
+        view
+        returns (address user, address recipient, uint256 amount, DepositEscrowStatus status);
+
     /// @notice Owner batch-burn for pTokens accumulated from completed withdrawals.
     function burnAccumulatedPTokens(uint256 amount, uint256 burnCallbackFee)
         external
@@ -155,8 +204,11 @@ interface IPrivacyPortal {
     /// @notice Sweep accumulated portal protocol fees to the factory fee recipient.
     function withdrawPortalFees(uint256 amount) external;
 
-    /// @notice Sweep accidental native-token balance to `recipient`.
-    function sweepNative(address payable recipient, uint256 amount) external;
+    /// @notice Rescue native to the factory {rescueRecipient} while paused.
+    function rescueNative(uint256 amount) external;
+
+    /// @notice Rescue ERC20 to the factory {rescueRecipient} while paused (not the paired pToken).
+    function rescueERC20(address token, uint256 amount) external;
 
     /// @notice Estimate deposit fees for UI quoting.
     function estimateDepositFees(uint256 amount)

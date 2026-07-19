@@ -34,6 +34,9 @@ interface IPrivacyPortalFactory is IPrivacyPortalPauseController, IPrivacyPortal
     /// @notice Recipient of swept portal protocol fees.
     function feeRecipient() external view returns (address);
 
+    /// @notice Catastrophe rescue destination used by portals from this factory.
+    function rescueRecipient() external view returns (address);
+
     /// @notice Wrapped native token on this chain (WETH/WAVAX) used for portal fee gas pricing.
     function nativeToken() external view returns (address);
 

@@ -2,9 +2,11 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/extensions/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
 import "../IInbox.sol";
+import "../token/perc20/IPodERC20.sol";
 import "../token/perc20/PodErc20MintableInitializable.sol";
 import "../token/perc20/cotiside/PodErc20CotiMother.sol";
 import "./IPrivacyPortal.sol";
@@ -23,17 +25,19 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     /// @notice Source-chain inbox used by pToken clones and registration messages.
-    address public immutable inbox;
+    address public inbox;
     /// @notice COTI chain id used by pToken clones for remote MPC execution.
-    uint256 public immutable cotiChainId;
+    uint256 public cotiChainId;
     /// @notice Unified COTI-side pToken ledger all clones talk to.
-    address public immutable cotiMotherContract;
+    address public cotiMotherContract;
     /// @notice Clone implementation for source-chain pTokens.
     address public immutable podTokenImplementation;
     /// @notice Clone implementation for portals.
     address public immutable portalImplementation;
     /// @notice Recipient of swept portal protocol fees from all portals created here.
-    address public immutable feeRecipient;
+    address public feeRecipient;
+    /// @notice Catastrophe rescue destination for all portals created here (pause + owner rescue).
+    address public rescueRecipient;
     /// @notice Wrapped native token on this chain (WETH/WAVAX) for portal gas fee pricing.
     address public immutable nativeToken;
     /// @notice Global flag exposed through the pause-controller interface for all portals created here.
@@ -43,6 +47,11 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
 
     /// @notice Optional USD oracle for dynamic portal fees; zero disables dynamic pricing.
     IPodPriceOracle public priceOracle;
+    /// @notice Admin knob mirroring Privacy Bridge freshness policy.
+    /// @dev Current {IPodPriceOracle} adapters already return `0` when stale (fixed-fee fallback). Kept for ops parity
+    ///      and future timestamp-aware fee binding; not enforced in fee math today.
+    uint256 public constant DEFAULT_MAX_ORACLE_AGE = 30 minutes + 5 minutes;
+    uint256 public maxOracleAge;
     /// @notice Factory default packed deposit fee config.
     bytes32 public defaultDepositFeePacked;
     /// @notice Factory default packed withdraw fee config.
@@ -85,6 +94,14 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
     event DefaultPortalFeeUpdated(bool indexed isDeposit, bytes32 packedConfig);
     /// @notice Portal fee oracle upgraded or disabled.
     event PriceOracleUpdated(address indexed previousOracle, address indexed newOracle);
+    /// @notice Max oracle age admin knob updated (see {maxOracleAge} docs).
+    event MaxOracleAgeUpdated(uint256 previousAge, uint256 newAge);
+    /// @notice Inbox / COTI mother routing updated for newly created portals and registration messages.
+    event RoutingUpdated(address indexed inbox, uint256 cotiChainId, address indexed cotiMotherContract);
+    /// @notice Fee recipient updated for swept portal protocol fees.
+    event FeeRecipientUpdated(address indexed previousRecipient, address indexed newRecipient);
+    /// @notice Rescue recipient updated for paused portal rescue paths.
+    event RescueRecipientUpdated(address indexed previousRecipient, address indexed newRecipient);
 
     /// @notice Caller is not an allowlisted deployer.
     error OnlyDeployer(address caller);
@@ -92,10 +109,14 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
     error InvalidAddress();
     /// @notice A portal already exists for the underlying token.
     error PortalAlreadyExists(address underlying, address portal);
+    /// @notice pToken is not registered to a portal created by this factory.
+    error UnknownPToken(address pToken);
     /// @notice Oracle is not configured.
     error OracleNotConfigured();
     /// @notice No {DEFAULT_ADMIN_ROLE} holder is configured.
     error AdminNotConfigured();
+    /// @notice maxOracleAge cannot be zero.
+    error OracleMaxAgeZeroDisallowed();
 
     /// @notice Restrict a function to an allowlisted deployer.
     modifier onlyDeployer() {
@@ -112,6 +133,7 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
     /// @param podTokenImplementation_ Clone implementation for source-chain pTokens.
     /// @param portalImplementation_ Clone implementation for portals.
     /// @param feeRecipient_ Recipient of swept portal protocol fees.
+    /// @param rescueRecipient_ Catastrophe rescue destination for portals from this factory.
     /// @param nativeToken_ Wrapped native token (WETH/WAVAX) for dynamic fee gas pricing.
     /// @param priceOracle_ Optional USD oracle; zero for min-fee-only deployments.
     /// @param defaultDepositFixedFee_ Default deposit fee floor in native wei.
@@ -128,6 +150,7 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
         address podTokenImplementation_,
         address portalImplementation_,
         address feeRecipient_,
+        address rescueRecipient_,
         address nativeToken_,
         address priceOracle_,
         uint256 defaultDepositFixedFee_,
@@ -141,7 +164,7 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
             initialOwner == address(0) || inbox_ == address(0) || cotiChainId_ == 0
                 || cotiMotherContract_ == address(0) || podTokenImplementation_ == address(0)
                 || portalImplementation_ == address(0) || feeRecipient_ == address(0)
-                || nativeToken_ == address(0)
+                || rescueRecipient_ == address(0) || nativeToken_ == address(0)
         ) {
             revert InvalidAddress();
         }
@@ -151,8 +174,10 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
         podTokenImplementation = podTokenImplementation_;
         portalImplementation = portalImplementation_;
         feeRecipient = feeRecipient_;
+        rescueRecipient = rescueRecipient_;
         nativeToken = nativeToken_;
         priceOracle = IPodPriceOracle(priceOracle_);
+        maxOracleAge = DEFAULT_MAX_ORACLE_AGE;
         defaultDepositFeePacked = PrivacyPortalFeeLib.packFeeConfig(
             defaultDepositFixedFee_, defaultDepositPercentageBps_, defaultDepositMaxFee_
         );
@@ -207,6 +232,63 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
         emit DeployerUpdated(deployer, allowed);
     }
 
+    /// @notice Admin: rotate inbox, COTI chain id, and mother ledger used for new portals / registration.
+    /// @dev Existing pToken clones keep their peer until {configurePToken} (factory is their Ownable owner).
+    function configureRouting(address inbox_, uint256 cotiChainId_, address cotiMotherContract_)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        if (inbox_ == address(0) || cotiChainId_ == 0 || cotiMotherContract_ == address(0)) {
+            revert InvalidAddress();
+        }
+        inbox = inbox_;
+        cotiChainId = cotiChainId_;
+        cotiMotherContract = cotiMotherContract_;
+        emit RoutingUpdated(inbox_, cotiChainId_, cotiMotherContract_);
+    }
+
+    /// @notice Admin: rotate inbox / COTI peer on an existing factory-deployed pToken clone ({cotiChainId} is immutable on the token).
+    function configurePToken(address pToken_, address inbox_, address cotiSideContract_)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        if (portalForPToken[pToken_] == address(0)) {
+            revert UnknownPToken(pToken_);
+        }
+        IPodERC20(pToken_).configure(inbox_, cotiSideContract_);
+    }
+
+    /// @notice Admin: transfer Ownable of a factory-deployed pToken (e.g. hand off after launch).
+    function transferPTokenOwnership(address pToken_, address newOwner_) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (portalForPToken[pToken_] == address(0)) {
+            revert UnknownPToken(pToken_);
+        }
+        if (newOwner_ == address(0)) {
+            revert InvalidAddress();
+        }
+        Ownable(pToken_).transferOwnership(newOwner_);
+    }
+
+    /// @notice Admin: rotate the recipient of swept portal protocol fees.
+    function setFeeRecipient(address feeRecipient_) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (feeRecipient_ == address(0)) {
+            revert InvalidAddress();
+        }
+        address previous = feeRecipient;
+        feeRecipient = feeRecipient_;
+        emit FeeRecipientUpdated(previous, feeRecipient_);
+    }
+
+    /// @notice Admin: rotate the catastrophe rescue destination used by all portals from this factory.
+    function setRescueRecipient(address rescueRecipient_) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (rescueRecipient_ == address(0)) {
+            revert InvalidAddress();
+        }
+        address previous = rescueRecipient;
+        rescueRecipient = rescueRecipient_;
+        emit RescueRecipientUpdated(previous, rescueRecipient_);
+    }
+
     /// @notice Set the global pause flag read by portals initialized from this factory.
     function setWithdrawalsPaused(bool paused) external onlyRole(DEFAULT_ADMIN_ROLE) {
         withdrawalsPaused = paused;
@@ -253,6 +335,16 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
         address previous = address(priceOracle);
         priceOracle = IPodPriceOracle(newOracle);
         emit PriceOracleUpdated(previous, newOracle);
+    }
+
+    /// @notice Set max oracle age (ops parity with Privacy Bridge). Zero disallowed.
+    function setMaxOracleAge(uint256 maxOracleAge_) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (maxOracleAge_ == 0) {
+            revert OracleMaxAgeZeroDisallowed();
+        }
+        uint256 previous = maxOracleAge;
+        maxOracleAge = maxOracleAge_;
+        emit MaxOracleAgeUpdated(previous, maxOracleAge_);
     }
 
     /// @inheritdoc IPrivacyPortalFactory
@@ -322,8 +414,11 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
         portal = Clones.clone(portalImplementation);
         pToken = Clones.clone(podTokenImplementation);
 
+        // Factory retains Ownable on the pToken so admins can {configurePToken} after inbox / mother upgrades.
+        // Portal minter is the portal; portal Ownable is `portalOwner`.
         PodErc20MintableInitializable(payable(pToken)).initialize(
             portal,
+            address(this),
             cotiChainId,
             inbox,
             cotiMotherContract,
@@ -331,7 +426,9 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
             symbol,
             decimals
         );
-        IPrivacyPortal(portal).initialize(portalOwner, underlying, pToken, decimals, nativeWrappedUnderlying);
+        IPrivacyPortal(portal).initialize(
+            portalOwner, underlying, pToken, decimals, nativeWrappedUnderlying, address(this)
+        );
 
         portalForUnderlying[underlying] = portal;
         pTokenForUnderlying[underlying] = pToken;

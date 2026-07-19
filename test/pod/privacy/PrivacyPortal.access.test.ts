@@ -36,9 +36,9 @@ describe("PrivacyPortal access controls", function () {
             await underlying.getAddress(),
             await pToken.getAddress(),
             6,
-            false
+            false,
+            await factory.getAddress()
         )
-        await portal.connect(owner).setPauseController(await factory.getAddress())
 
         const depositAmount = parseUnits("100", 6)
         await underlying.mint(user.address, depositAmount)
@@ -75,6 +75,7 @@ describe("PrivacyPortal access controls", function () {
             other.address,
             await pTokenImpl.getAddress(),
             await portalImpl.getAddress(),
+            owner.address,
             owner.address,
             owner.address,
             hre.ethers.ZeroAddress,
@@ -118,8 +119,7 @@ describe("PrivacyPortal access controls", function () {
         const portalAddress = await cloneHelper.lastClone()
         const portal = PortalImpl.attach(portalAddress) as Awaited<ReturnType<typeof PortalImpl.deploy>>
 
-        await portal.initialize(owner.address, wethAddress, await pToken.getAddress(), 18, true)
-        await portal.connect(owner).setPauseController(await factory.getAddress())
+        await portal.initialize(owner.address, wethAddress, await pToken.getAddress(), 18, true, await factory.getAddress())
 
         const depositAmount = parseEther("1")
 
@@ -329,6 +329,24 @@ describe("PrivacyPortal access controls", function () {
             const { owner, factory } = await deployFactoryFixture()
 
             expect(await factory.owner()).to.equal(owner.address)
+        })
+
+        it("lets admin set fee and rescue recipients", async function () {
+            const { owner, operator, other, factory } = await deployFactoryFixture()
+
+            await expect(factory.connect(owner).setFeeRecipient(other.address))
+                .to.emit(factory, "FeeRecipientUpdated")
+                .withArgs(owner.address, other.address)
+            expect(await factory.feeRecipient()).to.equal(other.address)
+
+            await expect(factory.connect(owner).setRescueRecipient(operator.address))
+                .to.emit(factory, "RescueRecipientUpdated")
+                .withArgs(owner.address, operator.address)
+            expect(await factory.rescueRecipient()).to.equal(operator.address)
+
+            await expect(
+                factory.connect(operator).setRescueRecipient(other.address)
+            ).to.be.revertedWithCustomError(factory, "AccessControlUnauthorizedAccount")
         })
 
         it("returns the first DEFAULT_ADMIN_ROLE holder when multiple admins exist", async function () {

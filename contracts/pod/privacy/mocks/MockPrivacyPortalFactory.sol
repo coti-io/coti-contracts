@@ -8,6 +8,7 @@ import "../PrivacyPortalFeeLib.sol";
 /// @dev Minimal factory for direct PrivacyPortal unit tests (zero portal fees by default).
 contract MockPrivacyPortalFactory is IPrivacyPortalFactory {
     address public immutable feeRecipient;
+    address public rescueRecipient;
     address public immutable nativeToken;
     address public immutable owner_;
     bool public withdrawalsPaused;
@@ -19,10 +20,15 @@ contract MockPrivacyPortalFactory is IPrivacyPortalFactory {
 
     constructor(address feeRecipient_, address nativeToken_) {
         feeRecipient = feeRecipient_;
+        rescueRecipient = feeRecipient_;
         nativeToken = nativeToken_;
         owner_ = feeRecipient_;
         defaultDepositFeePacked = PrivacyPortalFeeLib.packFeeConfig(0, 0, type(uint128).max);
         defaultWithdrawFeePacked = PrivacyPortalFeeLib.packFeeConfig(0, 0, type(uint128).max);
+    }
+
+    function setRescueRecipient(address rescueRecipient_) external {
+        rescueRecipient = rescueRecipient_;
     }
 
     function owner() external view returns (address) {
