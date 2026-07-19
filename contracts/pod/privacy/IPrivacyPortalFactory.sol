@@ -29,8 +29,11 @@ interface IPrivacyPortalBlacklistController {
 /// @title IPrivacyPortalFactory
 /// @notice Factory surface used by portal clones for pause control, blacklist, fees, and operators.
 interface IPrivacyPortalFactory is IPrivacyPortalPauseController, IPrivacyPortalBlacklistController {
-    /// @notice Primary factory admin ({DEFAULT_ADMIN_ROLE} holder with lowest enumeration index).
+    /// @notice Primary factory admin for tooling (`Ownable.owner()`-shaped).
     function owner() external view returns (address);
+
+    /// @notice Whether `account` holds factory {DEFAULT_ADMIN_ROLE} (portal admin / pause / rescue / limits).
+    function isAdmin(address account) external view returns (bool);
 
     /// @notice Whether `account` holds factory {OPERATOR_ROLE} (portal fee / soft-deposit controls).
     function isOperator(address account) external view returns (bool);

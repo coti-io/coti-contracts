@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/extensions/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
@@ -17,16 +17,19 @@ import "./PrivacyPortalFeeLib.sol";
 
 /// @title PrivacyPortalFactory
 /// @notice Deploys one-shot minimal-clone portals and pTokens for public ERC20 collateral.
-/// @dev Governance uses OpenZeppelin {AccessControlEnumerable}: {DEFAULT_ADMIN_ROLE} for admin actions,
+/// @dev Governance uses OpenZeppelin {AccessControl}: {DEFAULT_ADMIN_ROLE} for admin actions,
 ///      {OPERATOR_ROLE} for factory default fees and portal fee / soft-deposit controls. Manage roles via
 ///      {grantRole} and {revokeRole}. Portals have no local operator role — they call {isOperator}.
 ///      Admin {pause}/{unpause} pauses deposits and withdrawals on every portal from this factory.
-contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable, Pausable {
+///      Uses plain {AccessControl} (not Enumerable) so bytecode stays Paris-compatible for COTI.
+contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControl, Pausable {
     using PrivacyPortalFeeLib for bytes32;
 
     /// @notice Operator role for routine fee-parameter updates (mirrors Privacy Bridge).
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
+    /// @dev Primary admin for {owner()} tooling; kept in sync with {DEFAULT_ADMIN_ROLE} grants/revokes.
+    address private _owner;
     /// @notice Source-chain inbox used by pToken clones and registration messages.
     address public inbox;
     /// @notice COTI chain id used by pToken clones for remote MPC execution.
@@ -178,14 +181,34 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable,
         }
     }
 
-    /// @notice Primary factory admin: first holder of {DEFAULT_ADMIN_ROLE}.
-    /// @dev Mirrors `Ownable.owner()` for tooling compatibility. When multiple admins exist,
-    ///      returns `getRoleMember(DEFAULT_ADMIN_ROLE, 0)` (enumeration order).
+    /// @notice Primary factory admin for tooling (`Ownable.owner()`-shaped).
+    /// @dev Tracks the first granted {DEFAULT_ADMIN_ROLE}; clears when that account is revoked.
     function owner() external view returns (address) {
-        if (getRoleMemberCount(DEFAULT_ADMIN_ROLE) == 0) {
+        if (_owner == address(0) || !hasRole(DEFAULT_ADMIN_ROLE, _owner)) {
             revert AdminNotConfigured();
         }
-        return getRoleMember(DEFAULT_ADMIN_ROLE, 0);
+        return _owner;
+    }
+
+    /// @notice Whether `account` holds {DEFAULT_ADMIN_ROLE}.
+    function isAdmin(address account) external view returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, account);
+    }
+
+    function _grantRole(bytes32 role, address account) internal override returns (bool) {
+        bool granted = super._grantRole(role, account);
+        if (granted && role == DEFAULT_ADMIN_ROLE && _owner == address(0)) {
+            _owner = account;
+        }
+        return granted;
+    }
+
+    function _revokeRole(bytes32 role, address account) internal override returns (bool) {
+        bool revoked = super._revokeRole(role, account);
+        if (revoked && role == DEFAULT_ADMIN_ROLE && account == _owner) {
+            _owner = address(0);
+        }
+        return revoked;
     }
 
     /// @notice Whether `account` holds {OPERATOR_ROLE}.
@@ -378,10 +401,9 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable,
         string calldata name,
         string calldata symbol,
         uint8 decimals,
-        bool nativeWrappedUnderlying,
-        address portalOwner
+        bool nativeWrappedUnderlying
     ) external payable onlyDeployer returns (address portal, address pToken) {
-        if (underlying == address(0) || portalOwner == address(0)) {
+        if (underlying == address(0)) {
             revert InvalidAddress();
         }
         if (portalForUnderlying[underlying] != address(0)) {
@@ -392,7 +414,7 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable,
         pToken = Clones.clone(podTokenImplementation);
 
         // Factory retains Ownable on the pToken so admins can {configurePToken} after inbox / mother upgrades.
-        // Portal minter is the portal; portal Ownable is `portalOwner`.
+        // Portal minter is the portal; portal admin is factory {DEFAULT_ADMIN_ROLE} (no local Ownable).
         PodErc20MintableInitializable(payable(pToken)).initialize(
             portal,
             address(this),
@@ -404,7 +426,7 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable,
             decimals
         );
         IPrivacyPortal(portal).initialize(
-            portalOwner, underlying, pToken, decimals, nativeWrappedUnderlying, address(this)
+            underlying, pToken, decimals, nativeWrappedUnderlying, address(this)
         );
 
         portalForUnderlying[underlying] = portal;

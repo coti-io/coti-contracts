@@ -58,14 +58,12 @@ interface IPrivacyPortal {
     }
 
     /// @notice Initialize a clone portal.
-    /// @param owner Ownable portal owner (limits, pause/unpause, blacklist, batch burn, rescue).
     /// @param underlyingToken Public ERC20 locked and released by this portal (WETH/WAVAX when native-wrapped).
     /// @param pToken PoD pToken minted and burned for the underlying token.
     /// @param decimals Token decimals exposed for UI compatibility.
     /// @param nativeWrappedUnderlying When true, {depositNative} accepts native coin (wraps in-contract); withdraw releases wrapped underlying ERC20.
-    /// @param factory PrivacyPortalFactory (fees, pause, blacklist, rescue, operators).
+    /// @param factory PrivacyPortalFactory (admin, fees, pause, blacklist, rescue, operators).
     function initialize(
-        address owner,
         address underlyingToken,
         address pToken,
         uint8 decimals,
@@ -82,7 +80,7 @@ interface IPrivacyPortal {
     /// @notice Accumulated portal protocol fees awaiting sweep.
     function accumulatedPortalFees() external view returns (uint256);
 
-    /// @notice pToken amount held in portal custody pending owner batch burn.
+    /// @notice pToken amount held in portal custody pending factory-admin batch burn.
     function pendingBurnAmount() external view returns (uint256);
 
     /// @notice Lock public ERC20 and request a private pToken mint.
