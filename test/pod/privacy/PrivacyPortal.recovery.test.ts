@@ -96,11 +96,8 @@ describe("PrivacyPortal failed-request recovery", function () {
 
         await pToken.markLastMintFailed()
         const before = await underlying.balanceOf(user.address)
-        await expect(portal.connect(other).refundFailedDeposit(requestId)).to.be.revertedWithCustomError(
-            portal,
-            "OnlyDepositUser"
-        )
-        await expect(portal.connect(user).refundFailedDeposit(requestId))
+        // Permissionless: a third party may trigger; funds still return to the depositor.
+        await expect(portal.connect(other).refundFailedDeposit(requestId))
             .to.emit(portal, "DepositRefunded")
             .withArgs(user.address, requestId, amount)
 

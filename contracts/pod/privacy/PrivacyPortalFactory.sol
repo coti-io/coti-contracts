@@ -40,8 +40,8 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControl, Pausable 
     address public immutable podTokenImplementation;
     /// @notice Clone implementation for portals.
     address public immutable portalImplementation;
-    /// @notice Recipient of swept portal protocol fees from all portals created here.
-    address public feeRecipient;
+    /// @notice Recipient of swept portal protocol fees from all portals created here (fixed at deploy; no setter).
+    address public immutable feeRecipient;
     /// @notice Catastrophe rescue destination for all portals created here (pause + owner rescue).
     address public rescueRecipient;
     /// @notice Wrapped native token on this chain (WETH/WAVAX) for portal gas fee pricing.
@@ -87,8 +87,6 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControl, Pausable 
     event PriceOracleUpdated(address indexed previousOracle, address indexed newOracle);
     /// @notice Inbox / COTI mother routing updated for newly created portals and registration messages.
     event RoutingUpdated(address indexed inbox, uint256 cotiChainId, address indexed cotiMotherContract);
-    /// @notice Fee recipient updated for swept portal protocol fees.
-    event FeeRecipientUpdated(address indexed previousRecipient, address indexed newRecipient);
     /// @notice Rescue recipient updated for paused portal rescue paths.
     event RescueRecipientUpdated(address indexed previousRecipient, address indexed newRecipient);
 
@@ -119,7 +117,7 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControl, Pausable 
     /// @param cotiMotherContract_ Unified COTI-side pToken ledger.
     /// @param podTokenImplementation_ Clone implementation for source-chain pTokens.
     /// @param portalImplementation_ Clone implementation for portals.
-    /// @param feeRecipient_ Recipient of swept portal protocol fees.
+    /// @param feeRecipient_ Recipient of swept portal protocol fees (immutable for factory lifetime).
     /// @param rescueRecipient_ Catastrophe rescue destination for portals from this factory.
     /// @param nativeToken_ Wrapped native token (WETH/WAVAX) for dynamic fee gas pricing.
     /// @param priceOracle_ Optional USD oracle; zero for min-fee-only deployments.
@@ -278,16 +276,6 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControl, Pausable 
             revert InvalidAddress();
         }
         Ownable(pToken_).transferOwnership(newOwner_);
-    }
-
-    /// @notice Admin: rotate the recipient of swept portal protocol fees.
-    function setFeeRecipient(address feeRecipient_) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (feeRecipient_ == address(0)) {
-            revert InvalidAddress();
-        }
-        address previous = feeRecipient;
-        feeRecipient = feeRecipient_;
-        emit FeeRecipientUpdated(previous, feeRecipient_);
     }
 
     /// @notice Admin: rotate the catastrophe rescue destination used by all portals from this factory.
