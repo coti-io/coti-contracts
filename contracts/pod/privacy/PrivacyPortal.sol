@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
@@ -20,8 +19,8 @@ import "./PrivacyPortalFeeLib.sol";
 /// @notice Locks a public ERC20 and mints/burns its PoD private pToken counterpart.
 /// @dev The portal never reads private balances. It only reacts to successful pToken callbacks and records public bridge obligations.
 ///      Split deploy-then-initialize is unsafe on clones; use {PrivacyPortalFactory.createPortal} or an equivalent atomic path.
-///      Operator privileges ({OPERATOR_ROLE}) live on {factory} only — not on the portal.
-contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Pausable, ReentrancyGuard, Initializable {
+///      Admin and operator privileges live on {factory} only — portals have no local Ownable.
+contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, ReentrancyGuard, Initializable {
     using SafeERC20 for IERC20;
     using PrivacyPortalFeeLib for bytes32;
 
@@ -193,13 +192,15 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Pausab
     error DepositDisabled();
     /// @notice Caller is not a factory {OPERATOR_ROLE} holder.
     error OnlyFactoryOperator(address caller);
+    /// @notice Caller is not a factory {DEFAULT_ADMIN_ROLE} holder.
+    error OnlyFactoryAdmin(address caller);
     /// @notice Cannot rescue the paired pToken.
     error CannotRescuePToken();
     /// @notice Native transfer failed.
     error EthTransferFailed();
 
-    /// @notice Lock implementation instance by assigning a non-zero owner placeholder.
-    constructor() Ownable(address(1)) {
+    /// @notice Lock implementation so it cannot be initialized.
+    constructor() {
         _disableInitializers();
     }
 
@@ -207,20 +208,15 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Pausab
     receive() external payable {}
 
     function initialize(
-        address owner_,
         address underlyingToken_,
         address pToken_,
         uint8 decimals_,
         bool nativeWrappedUnderlying_,
         address factory_
     ) external initializer override {
-        if (owner_ == address(0)) {
-            revert OwnableInvalidOwner(owner_);
-        }
         if (underlyingToken_ == address(0) || pToken_ == address(0) || factory_ == address(0)) {
             revert InvalidAddress();
         }
-        _transferOwnership(owner_);
         underlyingToken = IERC20(underlyingToken_);
         pToken = IPodERC20(pToken_);
         decimals = decimals_;
@@ -234,25 +230,24 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Pausab
         emit FactorySet(factory_);
     }
 
-    /// @notice Owner hard-pause for this portal instance (enables rescue). Checked before factory pause.
-    function pause() external onlyOwner {
+    /// @notice Factory-admin hard-pause for this portal instance (enables rescue). Checked before factory pause.
+    function pause() external onlyFactoryAdmin {
         _pause();
     }
 
-    /// @notice Owner unpause for this portal instance.
-    function unpause() external onlyOwner {
+    /// @notice Factory-admin unpause for this portal instance.
+    function unpause() external onlyFactoryAdmin {
         _unpause();
     }
 
     /// @notice Soft deposit enable/disable (factory operator); does not enable rescue.
-    function setIsDepositEnabled(bool enabled) external {
-        _checkFactoryOperator();
+    function setIsDepositEnabled(bool enabled) external onlyFactoryOperator {
         isDepositEnabled = enabled;
         emit DepositEnabledUpdated(enabled);
     }
 
     /// @notice Add an address to this portal's blacklist.
-    function addToBlacklist(address account) external onlyOwner {
+    function addToBlacklist(address account) external onlyFactoryAdmin {
         if (account == address(0)) {
             revert InvalidAddress();
         }
@@ -261,7 +256,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Pausab
     }
 
     /// @notice Remove an address from this portal's blacklist.
-    function removeFromBlacklist(address account) external onlyOwner {
+    function removeFromBlacklist(address account) external onlyFactoryAdmin {
         if (account == address(0)) {
             revert InvalidAddress();
         }
@@ -276,7 +271,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Pausab
         uint256 maxDeposit,
         uint256 minWithdraw,
         uint256 maxWithdraw
-    ) external onlyOwner {
+    ) external onlyFactoryAdmin {
         if (minDeposit > maxDeposit) {
             revert InvalidLimitConfiguration();
         }
@@ -291,31 +286,27 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Pausab
     }
 
     /// @inheritdoc IPrivacyPortal
-    function setDepositFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external {
-        _checkFactoryOperator();
+    function setDepositFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external onlyFactoryOperator {
         bytes32 packed = PrivacyPortalFeeLib.packFeeConfig(fixedFee, percentageBps, maxFee);
         depositFeeOverridePacked = packed;
         emit PortalFeeOverrideUpdated(true, packed);
     }
 
     /// @inheritdoc IPrivacyPortal
-    function setWithdrawFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external {
-        _checkFactoryOperator();
+    function setWithdrawFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external onlyFactoryOperator {
         bytes32 packed = PrivacyPortalFeeLib.packFeeConfig(fixedFee, percentageBps, maxFee);
         withdrawFeeOverridePacked = packed;
         emit PortalFeeOverrideUpdated(false, packed);
     }
 
     /// @inheritdoc IPrivacyPortal
-    function clearDepositFeeOverride() external {
-        _checkFactoryOperator();
+    function clearDepositFeeOverride() external onlyFactoryOperator {
         depositFeeOverridePacked = bytes32(0);
         emit PortalFeeOverrideCleared(true);
     }
 
     /// @inheritdoc IPrivacyPortal
-    function clearWithdrawFeeOverride() external {
-        _checkFactoryOperator();
+    function clearWithdrawFeeOverride() external onlyFactoryOperator {
         withdrawFeeOverridePacked = bytes32(0);
         emit PortalFeeOverrideCleared(false);
     }
@@ -559,7 +550,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Pausab
     function burnAccumulatedPTokens(uint256 amount, uint256 burnCallbackFee)
         external
         payable
-        onlyOwner
+        onlyFactoryAdmin
         nonReentrant
         returns (bytes32 burnRequestId)
     {
@@ -579,7 +570,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Pausab
     }
 
     /// @inheritdoc IPrivacyPortal
-    function withdrawPortalFees(uint256 amount) external onlyOwner nonReentrant {
+    function withdrawPortalFees(uint256 amount) external onlyFactoryAdmin nonReentrant {
         if (amount == 0) {
             revert InvalidAmount();
         }
@@ -600,7 +591,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Pausab
     }
 
     /// @notice Rescue native balance to the factory rescue recipient while paused (catastrophe path).
-    function rescueNative(uint256 amount) external onlyOwner nonReentrant whenPaused {
+    function rescueNative(uint256 amount) external onlyFactoryAdmin nonReentrant whenPaused {
         if (amount == 0) {
             revert InvalidAmount();
         }
@@ -621,7 +612,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Pausab
     }
 
     /// @notice Rescue ERC20 balance to the factory rescue recipient while paused. Cannot rescue the paired pToken.
-    function rescueERC20(address token, uint256 amount) external onlyOwner nonReentrant whenPaused {
+    function rescueERC20(address token, uint256 amount) external onlyFactoryAdmin nonReentrant whenPaused {
         if (token == address(0) || amount == 0) {
             revert InvalidAmount();
         }
@@ -828,10 +819,18 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Pausab
         return IPrivacyPortalFactory(factory_);
     }
 
-    function _checkFactoryOperator() private view {
+    modifier onlyFactoryOperator() {
         if (!_factory().isOperator(msg.sender)) {
             revert OnlyFactoryOperator(msg.sender);
         }
+        _;
+    }
+
+    modifier onlyFactoryAdmin() {
+        if (!_factory().isAdmin(msg.sender)) {
+            revert OnlyFactoryAdmin(msg.sender);
+        }
+        _;
     }
 
     function _checkWithdrawalsNotPaused() private view {
