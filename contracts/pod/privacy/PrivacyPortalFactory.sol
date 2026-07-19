@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/access/extensions/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
 import "../IInbox.sol";
 import "../token/perc20/IPodERC20.sol";
@@ -17,8 +18,10 @@ import "./PrivacyPortalFeeLib.sol";
 /// @title PrivacyPortalFactory
 /// @notice Deploys one-shot minimal-clone portals and pTokens for public ERC20 collateral.
 /// @dev Governance uses OpenZeppelin {AccessControlEnumerable}: {DEFAULT_ADMIN_ROLE} for admin actions,
-///      {OPERATOR_ROLE} for default fee updates. Manage roles via {grantRole} and {revokeRole}.
-contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable {
+///      {OPERATOR_ROLE} for factory default fees and portal fee / soft-deposit controls. Manage roles via
+///      {grantRole} and {revokeRole}. Portals have no local operator role — they call {isOperator}.
+///      Admin {pause}/{unpause} pauses deposits and withdrawals on every portal from this factory.
+contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable, Pausable {
     using PrivacyPortalFeeLib for bytes32;
 
     /// @notice Operator role for routine fee-parameter updates (mirrors Privacy Bridge).
@@ -40,18 +43,9 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
     address public rescueRecipient;
     /// @notice Wrapped native token on this chain (WETH/WAVAX) for portal gas fee pricing.
     address public immutable nativeToken;
-    /// @notice Global flag exposed through the pause-controller interface for all portals created here.
-    bool public withdrawalsPaused;
-    /// @notice Global flag exposed through the pause-controller interface for deposits on factory-created portals.
-    bool public depositsPaused;
 
     /// @notice Optional USD oracle for dynamic portal fees; zero disables dynamic pricing.
     IPodPriceOracle public priceOracle;
-    /// @notice Admin knob mirroring Privacy Bridge freshness policy.
-    /// @dev Current {IPodPriceOracle} adapters already return `0` when stale (fixed-fee fallback). Kept for ops parity
-    ///      and future timestamp-aware fee binding; not enforced in fee math today.
-    uint256 public constant DEFAULT_MAX_ORACLE_AGE = 30 minutes + 5 minutes;
-    uint256 public maxOracleAge;
     /// @notice Factory default packed deposit fee config.
     bytes32 public defaultDepositFeePacked;
     /// @notice Factory default packed withdraw fee config.
@@ -74,12 +68,6 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
     event UnBlacklisted(address indexed account, address indexed by);
     /// @notice Deployer allowlist entry changed.
     event DeployerUpdated(address indexed deployer, bool allowed);
-    /// @notice Global withdrawal pause flag changed.
-    event WithdrawalsPausedUpdated(bool paused);
-    /// @notice Global deposit pause flag changed.
-    event DepositsPausedUpdated(bool paused);
-    /// @notice Both deposit and withdrawal pause flags changed together (emergency circuit breaker).
-    event OperationsPausedUpdated(bool paused);
     /// @notice A new portal and source-chain pToken clone pair was deployed.
     event PortalCreated(
         address indexed underlying,
@@ -94,8 +82,6 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
     event DefaultPortalFeeUpdated(bool indexed isDeposit, bytes32 packedConfig);
     /// @notice Portal fee oracle upgraded or disabled.
     event PriceOracleUpdated(address indexed previousOracle, address indexed newOracle);
-    /// @notice Max oracle age admin knob updated (see {maxOracleAge} docs).
-    event MaxOracleAgeUpdated(uint256 previousAge, uint256 newAge);
     /// @notice Inbox / COTI mother routing updated for newly created portals and registration messages.
     event RoutingUpdated(address indexed inbox, uint256 cotiChainId, address indexed cotiMotherContract);
     /// @notice Fee recipient updated for swept portal protocol fees.
@@ -115,8 +101,6 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
     error OracleNotConfigured();
     /// @notice No {DEFAULT_ADMIN_ROLE} holder is configured.
     error AdminNotConfigured();
-    /// @notice maxOracleAge cannot be zero.
-    error OracleMaxAgeZeroDisallowed();
 
     /// @notice Restrict a function to an allowlisted deployer.
     modifier onlyDeployer() {
@@ -177,7 +161,6 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
         rescueRecipient = rescueRecipient_;
         nativeToken = nativeToken_;
         priceOracle = IPodPriceOracle(priceOracle_);
-        maxOracleAge = DEFAULT_MAX_ORACLE_AGE;
         defaultDepositFeePacked = PrivacyPortalFeeLib.packFeeConfig(
             defaultDepositFixedFee_, defaultDepositPercentageBps_, defaultDepositMaxFee_
         );
@@ -203,6 +186,11 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
             revert AdminNotConfigured();
         }
         return getRoleMember(DEFAULT_ADMIN_ROLE, 0);
+    }
+
+    /// @notice Whether `account` holds {OPERATOR_ROLE}.
+    function isOperator(address account) external view returns (bool) {
+        return hasRole(OPERATOR_ROLE, account);
     }
 
     /// @notice Add an address to the factory blacklist, blocking deposits and withdrawals on all portals here.
@@ -289,25 +277,24 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
         emit RescueRecipientUpdated(previous, rescueRecipient_);
     }
 
-    /// @notice Set the global pause flag read by portals initialized from this factory.
-    function setWithdrawalsPaused(bool paused) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        withdrawalsPaused = paused;
-        emit WithdrawalsPausedUpdated(paused);
+    /// @notice Pause deposits and withdrawals on every portal from this factory.
+    function pause() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _pause();
     }
 
-    /// @notice Set the global deposit pause flag read by portals initialized from this factory.
-    function setDepositsPaused(bool paused) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        depositsPaused = paused;
-        emit DepositsPausedUpdated(paused);
+    /// @notice Unpause factory-wide deposit and withdrawal entry points.
+    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _unpause();
     }
 
-    /// @notice Pause or unpause both deposits and withdrawals (emergency circuit breaker).
-    function setOperationsPaused(bool paused) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        withdrawalsPaused = paused;
-        depositsPaused = paused;
-        emit OperationsPausedUpdated(paused);
-        emit WithdrawalsPausedUpdated(paused);
-        emit DepositsPausedUpdated(paused);
+    /// @inheritdoc IPrivacyPortalPauseController
+    function depositsPaused() external view returns (bool) {
+        return paused();
+    }
+
+    /// @inheritdoc IPrivacyPortalPauseController
+    function withdrawalsPaused() external view returns (bool) {
+        return paused();
     }
 
     /// @notice Update factory default deposit fee config.
@@ -335,16 +322,6 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControlEnumerable 
         address previous = address(priceOracle);
         priceOracle = IPodPriceOracle(newOracle);
         emit PriceOracleUpdated(previous, newOracle);
-    }
-
-    /// @notice Set max oracle age (ops parity with Privacy Bridge). Zero disallowed.
-    function setMaxOracleAge(uint256 maxOracleAge_) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (maxOracleAge_ == 0) {
-            revert OracleMaxAgeZeroDisallowed();
-        }
-        uint256 previous = maxOracleAge;
-        maxOracleAge = maxOracleAge_;
-        emit MaxOracleAgeUpdated(previous, maxOracleAge_);
     }
 
     /// @inheritdoc IPrivacyPortalFactory

@@ -6,7 +6,7 @@ import "../../fee/IInboxFeeManager.sol";
 import "../../mpccodec/MpcAbiCodec.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./IPodERC20.sol";
 import "./cotiside/IPodErc20CotiSide.sol";
 import "../erc7984/PodErc7984Mixin.sol";
@@ -15,8 +15,9 @@ import "../erc7984/PodErc7984Mixin.sol";
 /// @notice PoD-side private ERC-20: ciphertext cache and inbox-mediated async moves; COTI holds authoritative garbled state via {IPodErc20CotiSide}.
 /// @dev Callbacks only from `inbox` when the remote peer matches (`cotiChainId`, `cotiSideContract`). Public-amount methods expose amounts in calldata and logs; use encrypted `itUint256` entry points for privacy-sensitive flows.
 ///      {_sendPodTwoWay} is `nonReentrant` so a compromised inbox/oracle cannot re-enter before pending locks are written.
+///      Uses storage `ReentrancyGuard` (not transient) so the whole tree can compile for Paris — COTI rejects Shanghai `PUSH0`.
 ///      Owner may rotate inbox / COTI peer via {configure}.
-contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuardTransient, Ownable {
+contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Ownable {
     using MpcAbiCodec for MpcAbiCodec.MpcMethodCallContext;
 
     // --- State variables ---

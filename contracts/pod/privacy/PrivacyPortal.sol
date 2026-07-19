@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/access/extensions/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
@@ -21,7 +20,8 @@ import "./PrivacyPortalFeeLib.sol";
 /// @notice Locks a public ERC20 and mints/burns its PoD private pToken counterpart.
 /// @dev The portal never reads private balances. It only reacts to successful pToken callbacks and records public bridge obligations.
 ///      Split deploy-then-initialize is unsafe on clones; use {PrivacyPortalFactory.createPortal} or an equivalent atomic path.
-contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, AccessControlEnumerable, Pausable, ReentrancyGuard, Initializable {
+///      Operator privileges ({OPERATOR_ROLE}) live on {factory} only — not on the portal.
+contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Pausable, ReentrancyGuard, Initializable {
     using SafeERC20 for IERC20;
     using PrivacyPortalFeeLib for bytes32;
 
@@ -29,23 +29,15 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Access
     IERC20 public underlyingToken;
     /// @notice Private pToken minted and burned against the underlying collateral.
     IPodERC20 public pToken;
-    /// @notice Factory that created this portal (fees, blacklist, rescue recipient, defaults).
+    /// @notice Factory that created this portal (fees, pause, blacklist, rescue, operators).
     address public factory;
-    /// @notice Optional pause controller for deposits and withdrawals; zero disables pause checks.
-    address public pauseController;
     /// @notice Token decimals mirrored from the underlying/pToken pair.
     uint8 public decimals;
     /// @notice When true, {depositNative} wraps native coin; withdrawals release wrapped underlying ERC20.
     bool public nativeWrappedUnderlying;
 
-    /// @notice Operator role for fee / soft-deposit controls (mirrors Privacy Bridge).
-    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
-    /// @notice Soft deposit switch (operator); independent of pause / factory pause.
+    /// @notice Soft deposit switch (factory operator); independent of pause / factory pause.
     bool public isDepositEnabled = true;
-    /// @notice Per-portal deposit pause override (ORs with factory pause).
-    bool public depositsPausedLocal;
-    /// @notice Per-portal withdrawal pause override (ORs with factory pause).
-    bool public withdrawalsPausedLocal;
     /// @notice Per-portal blacklist (ORs with factory blacklist).
     mapping(address => bool) public blacklisted;
 
@@ -127,8 +119,6 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Access
     event PortalFeeOverrideUpdated(bool indexed isDeposit, bytes32 packedConfig);
     /// @notice Per-portal fee override cleared.
     event PortalFeeOverrideCleared(bool indexed isDeposit);
-    /// @notice Pause controller was changed.
-    event PauseControllerUpdated(address indexed pauseController);
     /// @notice Factory binding set at initialize (immutable thereafter).
     event FactorySet(address indexed factory);
     /// @notice Per-portal deposit/withdraw limits changed.
@@ -144,12 +134,6 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Access
     event ERC20Rescued(address indexed token, address indexed rescueRecipient, uint256 amount);
     /// @notice Soft deposit-enabled flag changed.
     event DepositEnabledUpdated(bool enabled);
-    /// @notice Local deposit/withdraw pause flags changed.
-    event LocalPauseUpdated(bool depositsPaused, bool withdrawalsPaused);
-    /// @notice Operator added.
-    event OperatorAdded(address indexed account, address indexed by);
-    /// @notice Operator removed.
-    event OperatorRemoved(address indexed account, address indexed by);
     /// @notice Address added to the portal blacklist.
     event Blacklisted(address indexed account, address indexed by);
     /// @notice Address removed from the portal blacklist.
@@ -179,8 +163,6 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Access
     error WithdrawalsPaused();
     /// @notice Pause controller reports deposits are paused.
     error DepositsPaused();
-    /// @notice Configured pause controller did not return a valid pause flag.
-    error PauseControllerFault();
     /// @notice pToken transfer request has not succeeded yet.
     error PTokenTransferNotSuccessful(bytes32 requestId, IPodERC20.RequestStatus status);
     /// @notice Deposit escrow is missing or not eligible for the requested action.
@@ -209,6 +191,8 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Access
     error InvalidLimitConfiguration();
     /// @notice Soft deposit switch is off.
     error DepositDisabled();
+    /// @notice Caller is not a factory {OPERATOR_ROLE} holder.
+    error OnlyFactoryOperator(address caller);
     /// @notice Cannot rescue the paired pToken.
     error CannotRescuePToken();
     /// @notice Native transfer failed.
@@ -237,8 +221,6 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Access
             revert InvalidAddress();
         }
         _transferOwnership(owner_);
-        _grantRole(DEFAULT_ADMIN_ROLE, owner_);
-        _grantRole(OPERATOR_ROLE, owner_);
         underlyingToken = IERC20(underlyingToken_);
         pToken = IPodERC20(pToken_);
         decimals = decimals_;
@@ -249,65 +231,24 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Access
         minDepositAmount = 1;
         minWithdrawAmount = 1;
         factory = factory_;
-        pauseController = factory_;
         emit FactorySet(factory_);
-        emit PauseControllerUpdated(factory_);
     }
 
-    /// @inheritdoc AccessControlEnumerable
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(AccessControlEnumerable)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
-    }
-
-    /// @notice Register an operator (fee / soft-deposit controls).
-    function addOperator(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (account == address(0)) {
-            revert InvalidAddress();
-        }
-        _grantRole(OPERATOR_ROLE, account);
-        emit OperatorAdded(account, msg.sender);
-    }
-
-    /// @notice Revoke an operator.
-    function removeOperator(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (account == address(0)) {
-            revert InvalidAddress();
-        }
-        _revokeRole(OPERATOR_ROLE, account);
-        emit OperatorRemoved(account, msg.sender);
-    }
-
-    /// @notice Whether `account` has {OPERATOR_ROLE}.
-    function isOperator(address account) external view returns (bool) {
-        return hasRole(OPERATOR_ROLE, account);
-    }
-
-    /// @notice Owner hard-pause (enables rescue). Also blocks user deposit/withdraw entry points.
+    /// @notice Owner hard-pause for this portal instance (enables rescue). Checked before factory pause.
     function pause() external onlyOwner {
         _pause();
     }
 
-    /// @notice Owner unpause.
+    /// @notice Owner unpause for this portal instance.
     function unpause() external onlyOwner {
         _unpause();
     }
 
-    /// @notice Soft deposit enable/disable (operator); does not enable rescue.
-    function setIsDepositEnabled(bool enabled) external onlyRole(OPERATOR_ROLE) {
+    /// @notice Soft deposit enable/disable (factory operator); does not enable rescue.
+    function setIsDepositEnabled(bool enabled) external {
+        _checkFactoryOperator();
         isDepositEnabled = enabled;
         emit DepositEnabledUpdated(enabled);
-    }
-
-    /// @notice Per-portal pause overrides (OR with factory pause flags).
-    function setLocalPause(bool depositsPaused, bool withdrawalsPaused) external onlyOwner {
-        depositsPausedLocal = depositsPaused;
-        withdrawalsPausedLocal = withdrawalsPaused;
-        emit LocalPauseUpdated(depositsPaused, withdrawalsPaused);
     }
 
     /// @notice Add an address to this portal's blacklist.
@@ -349,34 +290,32 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Access
         emit LimitsUpdated(minDeposit, maxDeposit, minWithdraw, maxWithdraw);
     }
 
-    /// @notice Update the external pause controller checked before deposits and withdrawal requests.
-    function setPauseController(address pauseController_) external onlyOwner {
-        pauseController = pauseController_;
-        emit PauseControllerUpdated(pauseController_);
-    }
-
     /// @inheritdoc IPrivacyPortal
-    function setDepositFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external onlyRole(OPERATOR_ROLE) {
+    function setDepositFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external {
+        _checkFactoryOperator();
         bytes32 packed = PrivacyPortalFeeLib.packFeeConfig(fixedFee, percentageBps, maxFee);
         depositFeeOverridePacked = packed;
         emit PortalFeeOverrideUpdated(true, packed);
     }
 
     /// @inheritdoc IPrivacyPortal
-    function setWithdrawFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external onlyRole(OPERATOR_ROLE) {
+    function setWithdrawFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external {
+        _checkFactoryOperator();
         bytes32 packed = PrivacyPortalFeeLib.packFeeConfig(fixedFee, percentageBps, maxFee);
         withdrawFeeOverridePacked = packed;
         emit PortalFeeOverrideUpdated(false, packed);
     }
 
     /// @inheritdoc IPrivacyPortal
-    function clearDepositFeeOverride() external onlyRole(OPERATOR_ROLE) {
+    function clearDepositFeeOverride() external {
+        _checkFactoryOperator();
         depositFeeOverridePacked = bytes32(0);
         emit PortalFeeOverrideCleared(true);
     }
 
     /// @inheritdoc IPrivacyPortal
-    function clearWithdrawFeeOverride() external onlyRole(OPERATOR_ROLE) {
+    function clearWithdrawFeeOverride() external {
+        _checkFactoryOperator();
         withdrawFeeOverridePacked = bytes32(0);
         emit PortalFeeOverrideCleared(false);
     }
@@ -889,24 +828,25 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Access
         return IPrivacyPortalFactory(factory_);
     }
 
-    function _checkWithdrawalsNotPaused() private view {
-        if (paused()) {
-            revert WithdrawalsPaused();
+    function _checkFactoryOperator() private view {
+        if (!_factory().isOperator(msg.sender)) {
+            revert OnlyFactoryOperator(msg.sender);
         }
-        if (withdrawalsPausedLocal || _pauseFlag(IPrivacyPortalPauseController.withdrawalsPaused.selector)) {
+    }
+
+    function _checkWithdrawalsNotPaused() private view {
+        // Local instance pause first, then factory-wide pause.
+        if (paused() || _factory().withdrawalsPaused()) {
             revert WithdrawalsPaused();
         }
     }
 
     function _checkDepositsNotPaused() private view {
-        if (paused()) {
+        if (paused() || _factory().depositsPaused()) {
             revert DepositsPaused();
         }
         if (!isDepositEnabled) {
             revert DepositDisabled();
-        }
-        if (depositsPausedLocal || _pauseFlag(IPrivacyPortalPauseController.depositsPaused.selector)) {
-            revert DepositsPaused();
         }
     }
 
@@ -932,20 +872,5 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Access
         if (amount > maxWithdrawAmount) {
             revert WithdrawExceedsMaximum();
         }
-    }
-
-    function _pauseFlag(bytes4 selector) private view returns (bool) {
-        address controller = pauseController;
-        if (controller == address(0)) {
-            return false;
-        }
-        if (controller.code.length == 0) {
-            return false;
-        }
-        (bool success, bytes memory data) = controller.staticcall(abi.encodeWithSelector(selector));
-        if (!success || data.length < 32) {
-            revert PauseControllerFault();
-        }
-        return abi.decode(data, (bool));
     }
 }
