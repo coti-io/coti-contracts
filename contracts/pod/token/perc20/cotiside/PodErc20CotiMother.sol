@@ -155,6 +155,15 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
         emit AllowedFactoryUpdated(sourceChainId, factory, allowed);
     }
 
+    /// @notice Owner-only: rotate the COTI-side inbox used for remote pToken / factory messages.
+    function configure(address inbox_) external onlyOwner {
+        if (inbox_ == address(0)) {
+            revert InvalidAddress();
+        }
+        setInbox(inbox_);
+        emit CotiMotherInitialized(inbox_, owner());
+    }
+
     /// @inheritdoc IPodErc20CotiSide
     /// @dev Not supported on the unified mother ledger; mint via inbox {mintPublic} from the paired pToken minter.
     function ownerMint(address, uint256) external pure override {

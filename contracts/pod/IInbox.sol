@@ -7,6 +7,26 @@ pragma solidity ^0.8.20;
 interface IInbox {
     // --- Types ---
 
+    /// @notice Classification of the current inbox execution when delivering an error callback.
+    /// @dev Used by source `errorSelector` handlers: ignore {NotErrorContext}; branch on {SystemError} vs {Exception}.
+    ///      Call only from `errorSelector` entrypoints — linked success `respond` legs can also report {Exception}.
+    enum InboxErrorType {
+        /// @notice No active message, or the active call is not a linked error/system delivery.
+        NotErrorContext,
+        /// @notice Inbox system-error return leg (`originalSender` is {SYSTEM_SENDER}).
+        SystemError,
+        /// @notice Linked return leg for a request that registered an `errorSelector` (app `raise`).
+        Exception
+    }
+
+    /// @notice Minimal payload for Inbox system-error callbacks (`errorSelector(bytes data)`).
+    /// @dev App `raise` payloads are dApp-defined; decode them only when {inboxErrorType()} is {Exception}.
+    ///      System encode failure uses `errorCode = 2`. Attribution is via {SYSTEM_SENDER} on the return leg.
+    struct ErrorData {
+        uint64 errorCode;
+        bytes message;
+    }
+
     /// @notice Encoded method call and optional MPC ABI metadata.
     struct MpcMethodCall {
         /// @notice Function selector to re-encode with MPC GTs; zero means `data` is raw calldata.
@@ -37,7 +57,10 @@ interface IInbox {
         uint64 timestamp;
         /// @notice Callback selector used for two-way success responses.
         bytes4 callbackSelector;
-        /// @notice Error selector used for failed execution responses.
+        /// @notice Error selector invoked with `errorSelector(bytes data)` for app `raise` **or** Inbox system errors.
+        /// @dev Same delivery path. Distinguish with {inboxErrorType()}: {SystemError} ({ErrorData} payload,
+        ///      {SYSTEM_SENDER}) vs {Exception} (dApp-defined `raise` bytes). System errors are not eligible for
+        ///      `retryFailedRequest`. Auth: `onlyInbox` + non-zero {inboxSourceRequestId}.
         bytes4 errorSelector;
         /// @notice True when a success response is expected.
         bool isTwoWay;
@@ -162,8 +185,10 @@ interface IInbox {
     function getIncomingRequest(bytes32 requestId) external view returns (Request memory);
 
     /// @notice Remote chain ID and contract for the currently executing incoming message.
+    /// @dev For system-error return legs, `contractAddress` is {SYSTEM_SENDER}. Success callbacks still
+    ///      come from the real remote peer; error callbacks should not require peer equality.
     /// @return chainId Remote chain ID.
-    /// @return contractAddress Remote caller contract.
+    /// @return contractAddress Remote caller contract (or {SYSTEM_SENDER} for Inbox system errors).
     function inboxMsgSender() external view returns (uint256 chainId, address contractAddress);
 
     /// @notice Request ID for the currently executing incoming message.
@@ -171,8 +196,16 @@ interface IInbox {
     function inboxRequestId() external view returns (bytes32);
 
     /// @notice Source request ID linked from the current incoming message (if any).
+    /// @dev Non-zero only for reply/error legs created by {respond}, {raise}, or system-error delivery.
+    ///      Public {sendOneWayMessage}/{sendTwoWayMessage} always use `sourceRequestId = 0`.
     /// @return sourceRequestId Linked request ID.
     function inboxSourceRequestId() external view returns (bytes32);
+
+    /// @notice Whether the current execution is delivering a system error, an app `raise`, or neither.
+    /// @dev Safe to call outside an active message (returns {InboxErrorType.NotErrorContext}). Prefer this over
+    ///      requiring `inboxMsgSender()` peer equality in error handlers.
+    /// @return errorType {InboxErrorType} for the active context.
+    function inboxErrorType() external view returns (InboxErrorType errorType);
 
     // --- External: pure ---
 

@@ -14,7 +14,22 @@ interface IPodERC20 {
         None,
         Pending,
         Success,
-        Failed
+        /// @notice App `raise` / Exception path. Not eligible for portal deposit refund.
+        Failed,
+        /// @notice Inbox system error (encode / `validateCiphertext`). Deposit refundable via portal.
+        SystemFailed
+    }
+
+    /// @notice Status plus lock metadata for an async inbox request.
+    /// @dev Transfer/burn: `account` = locked party, `spender` = 0, `recipientLocked` = false.
+    ///      Mint: `account` = recipient, `spender` = 0, `recipientLocked` = true.
+    ///      Approval: `account` = owner, `spender` = spender, `recipientLocked` unused.
+    ///      Sync: no lock (`account`/`spender` stay 0).
+    struct RequestRecord {
+        RequestStatus status;
+        bool recipientLocked;
+        address account;
+        address spender;
     }
 
     /// @notice Allowance represented twice: re-encrypted for the owner and for the spender so each party can decrypt their view.
@@ -89,8 +104,8 @@ interface IPodERC20 {
      */
     function totalSupply() external view returns (uint256);
 
-    /// @notice Status of an async request submitted by this token.
-    function requests(bytes32 requestId) external view returns (RequestStatus);
+    /// @notice Async request record (status + lock metadata) for a request submitted by this token.
+    function requests(bytes32 requestId) external view returns (RequestRecord memory);
 
     /**
      * @notice Estimate the native fee split used by auto-fee two-way token methods.
@@ -277,4 +292,7 @@ interface IPodERC20 {
      * @dev **Gotcha:** large account lists mean heavy MPC work and gas on COTI; empty list may fail on the COTI side.
      */
     function syncBalances(address[] calldata accounts, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId);
+
+    /// @notice Owner-only: set inbox when `inbox_ != address(0)`; always updates COTI peer. {cotiChainId} is fixed at init.
+    function configure(address inbox_, address cotiSideContract_) external;
 }

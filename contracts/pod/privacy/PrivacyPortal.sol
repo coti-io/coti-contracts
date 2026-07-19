@@ -4,6 +4,8 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/extensions/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
@@ -19,7 +21,7 @@ import "./PrivacyPortalFeeLib.sol";
 /// @notice Locks a public ERC20 and mints/burns its PoD private pToken counterpart.
 /// @dev The portal never reads private balances. It only reacts to successful pToken callbacks and records public bridge obligations.
 ///      Split deploy-then-initialize is unsafe on clones; use {PrivacyPortalFactory.createPortal} or an equivalent atomic path.
-contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, ReentrancyGuard, Initializable {
+contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, AccessControlEnumerable, Pausable, ReentrancyGuard, Initializable {
     using SafeERC20 for IERC20;
     using PrivacyPortalFeeLib for bytes32;
 
@@ -27,12 +29,25 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
     IERC20 public underlyingToken;
     /// @notice Private pToken minted and burned against the underlying collateral.
     IPodERC20 public pToken;
+    /// @notice Factory that created this portal (fees, blacklist, rescue recipient, defaults).
+    address public factory;
     /// @notice Optional pause controller for deposits and withdrawals; zero disables pause checks.
     address public pauseController;
     /// @notice Token decimals mirrored from the underlying/pToken pair.
     uint8 public decimals;
     /// @notice When true, {depositNative} wraps native coin; withdrawals release wrapped underlying ERC20.
     bool public nativeWrappedUnderlying;
+
+    /// @notice Operator role for fee / soft-deposit controls (mirrors Privacy Bridge).
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+    /// @notice Soft deposit switch (operator); independent of pause / factory pause.
+    bool public isDepositEnabled = true;
+    /// @notice Per-portal deposit pause override (ORs with factory pause).
+    bool public depositsPausedLocal;
+    /// @notice Per-portal withdrawal pause override (ORs with factory pause).
+    bool public withdrawalsPausedLocal;
+    /// @notice Per-portal blacklist (ORs with factory blacklist).
+    mapping(address => bool) public blacklisted;
 
     /// @notice Optional per-portal deposit fee override; bytes32(0) inherits factory default.
     bytes32 internal depositFeeOverridePacked;
@@ -56,6 +71,8 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
 
     /// @notice Withdrawal state by withdrawal id.
     mapping(bytes32 => Withdrawal) public withdrawals;
+    /// @notice Deposit escrow by mint request id.
+    mapping(bytes32 => DepositEscrow) public depositEscrows;
 
     /// @notice Public ERC20 was locked and an async private pToken mint was requested.
     event DepositRequested(
@@ -64,6 +81,8 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
         uint256 amount,
         bytes32 indexed mintRequestId
     );
+    /// @notice Failed mint collateral was returned to the depositor.
+    event DepositRefunded(address indexed user, bytes32 indexed mintRequestId, uint256 amount);
     /// @notice Public withdrawal was requested and a pToken transfer-to-portal request was submitted.
     event WithdrawalRequested(
         bytes32 indexed withdrawalId,
@@ -72,10 +91,32 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
         uint256 amount,
         bytes32 transferRequestId
     );
+    /// @notice Pending withdrawal was cancelled after a failed pToken transfer.
+    event WithdrawalFailed(bytes32 indexed withdrawalId, bytes32 indexed transferRequestId);
     /// @notice Underlying collateral was released to the withdrawal recipient.
     event WithdrawalReleased(bytes32 indexed withdrawalId, address indexed recipient, uint256 amount);
     /// @notice Portal protocol fee collected on a user-facing entry point.
+    /// @dev Prefer {OperationFeesPaid} for offline indexing of portal vs PoD fee legs.
     event PortalFeeCollected(address indexed payer, uint256 amount, bool isDeposit);
+    /// @notice Full native-fee breakdown for a deposit or withdraw (offline fee accounting).
+    /// @param payer User who paid `msg.value`.
+    /// @param correlationId Mint `requestId` (deposit/wrap) or `withdrawalId` (withdraw).
+    /// @param isDeposit True for deposit/wrap; false for withdraw.
+    /// @param isNativeWrap True when the deposit wrapped native coin into the underlying.
+    /// @param portalFee Protocol fee retained by this portal (native wei).
+    /// @param podFee Native wei forwarded to the pToken/inbox for the async PoD leg.
+    /// @param podCallbackFee Native wei reserved for the PoD callback slice within `podFee`.
+    /// @param amount Principal amount in underlying token units (not a fee).
+    event OperationFeesPaid(
+        address indexed payer,
+        bytes32 indexed correlationId,
+        bool indexed isDeposit,
+        bool isNativeWrap,
+        uint256 portalFee,
+        uint256 podFee,
+        uint256 podCallbackFee,
+        uint256 amount
+    );
     /// @notice pTokens from a release were queued for batch burn.
     event PendingBurnIncreased(bytes32 indexed withdrawalId, uint256 amount, uint256 pendingBurnAmount);
     /// @notice Owner submitted a batch burn for accumulated pTokens.
@@ -88,6 +129,8 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
     event PortalFeeOverrideCleared(bool indexed isDeposit);
     /// @notice Pause controller was changed.
     event PauseControllerUpdated(address indexed pauseController);
+    /// @notice Factory binding set at initialize (immutable thereafter).
+    event FactorySet(address indexed factory);
     /// @notice Per-portal deposit/withdraw limits changed.
     event LimitsUpdated(
         uint256 minDeposit,
@@ -95,8 +138,22 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
         uint256 minWithdraw,
         uint256 maxWithdraw
     );
-    /// @notice Native token balance was swept by the owner.
-    event NativeSwept(address indexed recipient, uint256 amount);
+    /// @notice Native token was rescued to the factory rescue recipient while paused.
+    event NativeRescued(address indexed rescueRecipient, uint256 amount);
+    /// @notice ERC20 was rescued to the factory rescue recipient while paused.
+    event ERC20Rescued(address indexed token, address indexed rescueRecipient, uint256 amount);
+    /// @notice Soft deposit-enabled flag changed.
+    event DepositEnabledUpdated(bool enabled);
+    /// @notice Local deposit/withdraw pause flags changed.
+    event LocalPauseUpdated(bool depositsPaused, bool withdrawalsPaused);
+    /// @notice Operator added.
+    event OperatorAdded(address indexed account, address indexed by);
+    /// @notice Operator removed.
+    event OperatorRemoved(address indexed account, address indexed by);
+    /// @notice Address added to the portal blacklist.
+    event Blacklisted(address indexed account, address indexed by);
+    /// @notice Address removed from the portal blacklist.
+    event UnBlacklisted(address indexed account, address indexed by);
 
     /// @notice A required address was zero.
     error InvalidAddress();
@@ -126,6 +183,14 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
     error PauseControllerFault();
     /// @notice pToken transfer request has not succeeded yet.
     error PTokenTransferNotSuccessful(bytes32 requestId, IPodERC20.RequestStatus status);
+    /// @notice Deposit escrow is missing or not eligible for the requested action.
+    error DepositEscrowInvalid(bytes32 requestId, DepositEscrowStatus status);
+    /// @notice Caller is not the original depositor for this escrow.
+    error OnlyDepositUser(address caller, address user);
+    /// @notice Mint request is not {IPodERC20.RequestStatus.SystemFailed}, so escrow cannot be refunded.
+    error DepositMintNotFailed(bytes32 requestId, IPodERC20.RequestStatus status);
+    /// @notice Transfer request is not Failed/SystemFailed, so withdrawal cannot be cancelled.
+    error WithdrawTransferNotFailed(bytes32 requestId, IPodERC20.RequestStatus status);
     /// @notice Portal underlying is not configured for native wrap deposits.
     error NativeWrapDisabled();
     /// @notice Factory pause controller is not configured.
@@ -142,6 +207,12 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
     error WithdrawExceedsMaximum();
     /// @notice Invalid min/max limit configuration.
     error InvalidLimitConfiguration();
+    /// @notice Soft deposit switch is off.
+    error DepositDisabled();
+    /// @notice Cannot rescue the paired pToken.
+    error CannotRescuePToken();
+    /// @notice Native transfer failed.
+    error EthTransferFailed();
 
     /// @notice Lock implementation instance by assigning a non-zero owner placeholder.
     constructor() Ownable(address(1)) {
@@ -156,25 +227,105 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
         address underlyingToken_,
         address pToken_,
         uint8 decimals_,
-        bool nativeWrappedUnderlying_
+        bool nativeWrappedUnderlying_,
+        address factory_
     ) external initializer override {
         if (owner_ == address(0)) {
             revert OwnableInvalidOwner(owner_);
         }
-        if (underlyingToken_ == address(0) || pToken_ == address(0)) {
+        if (underlyingToken_ == address(0) || pToken_ == address(0) || factory_ == address(0)) {
             revert InvalidAddress();
         }
         _transferOwnership(owner_);
+        _grantRole(DEFAULT_ADMIN_ROLE, owner_);
+        _grantRole(OPERATOR_ROLE, owner_);
         underlyingToken = IERC20(underlyingToken_);
         pToken = IPodERC20(pToken_);
         decimals = decimals_;
         nativeWrappedUnderlying = nativeWrappedUnderlying_;
+        isDepositEnabled = true;
         maxDepositAmount = type(uint256).max;
         maxWithdrawAmount = type(uint256).max;
         minDepositAmount = 1;
         minWithdrawAmount = 1;
-        pauseController = msg.sender;
-        emit PauseControllerUpdated(msg.sender);
+        factory = factory_;
+        pauseController = factory_;
+        emit FactorySet(factory_);
+        emit PauseControllerUpdated(factory_);
+    }
+
+    /// @inheritdoc AccessControlEnumerable
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(AccessControlEnumerable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    /// @notice Register an operator (fee / soft-deposit controls).
+    function addOperator(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (account == address(0)) {
+            revert InvalidAddress();
+        }
+        _grantRole(OPERATOR_ROLE, account);
+        emit OperatorAdded(account, msg.sender);
+    }
+
+    /// @notice Revoke an operator.
+    function removeOperator(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (account == address(0)) {
+            revert InvalidAddress();
+        }
+        _revokeRole(OPERATOR_ROLE, account);
+        emit OperatorRemoved(account, msg.sender);
+    }
+
+    /// @notice Whether `account` has {OPERATOR_ROLE}.
+    function isOperator(address account) external view returns (bool) {
+        return hasRole(OPERATOR_ROLE, account);
+    }
+
+    /// @notice Owner hard-pause (enables rescue). Also blocks user deposit/withdraw entry points.
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    /// @notice Owner unpause.
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
+    /// @notice Soft deposit enable/disable (operator); does not enable rescue.
+    function setIsDepositEnabled(bool enabled) external onlyRole(OPERATOR_ROLE) {
+        isDepositEnabled = enabled;
+        emit DepositEnabledUpdated(enabled);
+    }
+
+    /// @notice Per-portal pause overrides (OR with factory pause flags).
+    function setLocalPause(bool depositsPaused, bool withdrawalsPaused) external onlyOwner {
+        depositsPausedLocal = depositsPaused;
+        withdrawalsPausedLocal = withdrawalsPaused;
+        emit LocalPauseUpdated(depositsPaused, withdrawalsPaused);
+    }
+
+    /// @notice Add an address to this portal's blacklist.
+    function addToBlacklist(address account) external onlyOwner {
+        if (account == address(0)) {
+            revert InvalidAddress();
+        }
+        blacklisted[account] = true;
+        emit Blacklisted(account, msg.sender);
+    }
+
+    /// @notice Remove an address from this portal's blacklist.
+    function removeFromBlacklist(address account) external onlyOwner {
+        if (account == address(0)) {
+            revert InvalidAddress();
+        }
+        blacklisted[account] = false;
+        emit UnBlacklisted(account, msg.sender);
     }
 
     /// @notice Update per-portal deposit and withdrawal amount limits.
@@ -205,27 +356,27 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
     }
 
     /// @inheritdoc IPrivacyPortal
-    function setDepositFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external onlyOwner {
+    function setDepositFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external onlyRole(OPERATOR_ROLE) {
         bytes32 packed = PrivacyPortalFeeLib.packFeeConfig(fixedFee, percentageBps, maxFee);
         depositFeeOverridePacked = packed;
         emit PortalFeeOverrideUpdated(true, packed);
     }
 
     /// @inheritdoc IPrivacyPortal
-    function setWithdrawFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external onlyOwner {
+    function setWithdrawFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external onlyRole(OPERATOR_ROLE) {
         bytes32 packed = PrivacyPortalFeeLib.packFeeConfig(fixedFee, percentageBps, maxFee);
         withdrawFeeOverridePacked = packed;
         emit PortalFeeOverrideUpdated(false, packed);
     }
 
     /// @inheritdoc IPrivacyPortal
-    function clearDepositFeeOverride() external onlyOwner {
+    function clearDepositFeeOverride() external onlyRole(OPERATOR_ROLE) {
         depositFeeOverridePacked = bytes32(0);
         emit PortalFeeOverrideCleared(true);
     }
 
     /// @inheritdoc IPrivacyPortal
-    function clearWithdrawFeeOverride() external onlyOwner {
+    function clearWithdrawFeeOverride() external onlyRole(OPERATOR_ROLE) {
         withdrawFeeOverridePacked = bytes32(0);
         emit PortalFeeOverrideCleared(false);
     }
@@ -262,8 +413,17 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
 
         underlyingToken.safeTransferFrom(msg.sender, address(this), amount);
         requestId = pToken.mint{value: mintFee}(recipient, amount, mintCallbackFee);
+        depositEscrows[requestId] = DepositEscrow({
+            user: msg.sender,
+            recipient: recipient,
+            amount: amount,
+            status: DepositEscrowStatus.Pending
+        });
         emit DepositRequested(msg.sender, recipient, amount, requestId);
         emit WrapRequested(msg.sender, recipient, amount, requestId);
+        emit OperationFeesPaid(
+            msg.sender, requestId, true, false, portalFee, mintFee, mintCallbackFee, amount
+        );
     }
 
     /// @inheritdoc IPrivacyPortal
@@ -294,8 +454,17 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
 
         IWrappedNative(address(underlyingToken)).deposit{value: amount}();
         requestId = pToken.mint{value: mintFee}(recipient, amount, mintCallbackFee);
+        depositEscrows[requestId] = DepositEscrow({
+            user: msg.sender,
+            recipient: recipient,
+            amount: amount,
+            status: DepositEscrowStatus.Pending
+        });
         emit DepositRequested(msg.sender, recipient, amount, requestId);
         emit WrapRequested(msg.sender, recipient, amount, requestId);
+        emit OperationFeesPaid(
+            msg.sender, requestId, true, true, portalFee, mintFee, mintCallbackFee, amount
+        );
     }
 
     /// @inheritdoc IERC7984PortalWrapper
@@ -378,6 +547,16 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
             withdrawalId,
             keccak256(abi.encode(withdrawalId, transferRequestId))
         );
+        emit OperationFeesPaid(
+            msg.sender,
+            withdrawalId,
+            false,
+            false,
+            portalFee,
+            transferTotalFee,
+            transferCallbackFee,
+            amount
+        );
     }
 
     /// @inheritdoc IPrivacyPortal
@@ -386,6 +565,50 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
             revert OnlyPToken(msg.sender);
         }
         _releaseWithdrawal(withdrawalId);
+    }
+
+    /// @inheritdoc IPrivacyPortal
+    function refundFailedDeposit(bytes32 requestId) external override nonReentrant {
+        DepositEscrow storage escrow = depositEscrows[requestId];
+        DepositEscrowStatus status = escrow.status;
+        if (status != DepositEscrowStatus.Pending && status != DepositEscrowStatus.Failed) {
+            revert DepositEscrowInvalid(requestId, status);
+        }
+        if (msg.sender != escrow.user) {
+            revert OnlyDepositUser(msg.sender, escrow.user);
+        }
+        IPodERC20.RequestStatus mintStatus = pToken.requests(requestId).status;
+        // Mint should not `raise`; only Inbox system errors are refundable.
+        if (mintStatus != IPodERC20.RequestStatus.SystemFailed) {
+            revert DepositMintNotFailed(requestId, mintStatus);
+        }
+
+        uint256 amount = escrow.amount;
+        escrow.status = DepositEscrowStatus.Refunded;
+        escrow.amount = 0;
+        underlyingToken.safeTransfer(escrow.user, amount);
+        emit DepositRefunded(escrow.user, requestId, amount);
+    }
+
+    /// @inheritdoc IPrivacyPortal
+    function cancelFailedWithdrawal(bytes32 withdrawalId) external override nonReentrant {
+        Withdrawal storage withdrawal = withdrawals[withdrawalId];
+        if (withdrawal.user == address(0)) {
+            revert UnknownWithdrawal(withdrawalId);
+        }
+        if (withdrawal.status != WithdrawalStatus.TransferPending) {
+            revert WithdrawalNotPending(withdrawalId, withdrawal.status);
+        }
+        IPodERC20.RequestStatus requestStatus = pToken.requests(withdrawal.transferRequestId).status;
+        if (
+            requestStatus != IPodERC20.RequestStatus.Failed
+                && requestStatus != IPodERC20.RequestStatus.SystemFailed
+        ) {
+            revert WithdrawTransferNotFailed(withdrawal.transferRequestId, requestStatus);
+        }
+
+        withdrawal.status = WithdrawalStatus.Failed;
+        emit WithdrawalFailed(withdrawalId, withdrawal.transferRequestId);
     }
 
     /// @inheritdoc IPrivacyPortal
@@ -425,8 +648,8 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
             revert InsufficientAccumulatedFees(accumulatedPortalFees, amount);
         }
 
-        IPrivacyPortalFactory factory = _factory();
-        address recipient = factory.feeRecipient();
+        IPrivacyPortalFactory portalFactory = _factory();
+        address recipient = portalFactory.feeRecipient();
         if (recipient == address(0)) {
             revert InvalidAddress();
         }
@@ -437,17 +660,41 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
         emit PortalFeesWithdrawn(recipient, amount);
     }
 
-    /// @inheritdoc IPrivacyPortal
-    function sweepNative(address payable recipient, uint256 amount) external onlyOwner nonReentrant {
-        if (recipient == address(0)) {
-            revert InvalidAddress();
-        }
+    /// @notice Rescue native balance to the factory rescue recipient while paused (catastrophe path).
+    function rescueNative(uint256 amount) external onlyOwner nonReentrant whenPaused {
         if (amount == 0) {
             revert InvalidAmount();
         }
-        (bool ok,) = recipient.call{value: amount}("");
-        require(ok, "PrivacyPortal: sweep failed");
-        emit NativeSwept(recipient, amount);
+        address recipient = _factory().rescueRecipient();
+        if (recipient == address(0)) {
+            revert InvalidAddress();
+        }
+        (bool ok,) = payable(recipient).call{value: amount}("");
+        if (!ok) {
+            revert EthTransferFailed();
+        }
+        // Keep fee accounting consistent if rescue dips into fee balance.
+        uint256 bal = address(this).balance;
+        if (accumulatedPortalFees > bal) {
+            accumulatedPortalFees = bal;
+        }
+        emit NativeRescued(recipient, amount);
+    }
+
+    /// @notice Rescue ERC20 balance to the factory rescue recipient while paused. Cannot rescue the paired pToken.
+    function rescueERC20(address token, uint256 amount) external onlyOwner nonReentrant whenPaused {
+        if (token == address(0) || amount == 0) {
+            revert InvalidAmount();
+        }
+        if (token == address(pToken)) {
+            revert CannotRescuePToken();
+        }
+        address recipient = _factory().rescueRecipient();
+        if (recipient == address(0)) {
+            revert InvalidAddress();
+        }
+        IERC20(token).safeTransfer(recipient, amount);
+        emit ERC20Rescued(token, recipient, amount);
     }
 
     /// @inheritdoc IPrivacyPortal
@@ -527,7 +774,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
         if (withdrawal.status != WithdrawalStatus.TransferPending) {
             revert WithdrawalNotPending(withdrawalId, withdrawal.status);
         }
-        IPodERC20.RequestStatus requestStatus = pToken.requests(withdrawal.transferRequestId);
+        IPodERC20.RequestStatus requestStatus = pToken.requests(withdrawal.transferRequestId).status;
         if (requestStatus != IPodERC20.RequestStatus.Success) {
             revert PTokenTransferNotSuccessful(withdrawal.transferRequestId, requestStatus);
         }
@@ -564,15 +811,15 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
         returns (uint256 floor, uint128 maxFee)
     {
         bytes32 packed = _effectiveFeePacked(isDeposit);
-        IPrivacyPortalFactory factory = _factory();
+        IPrivacyPortalFactory portalFactory = _factory();
         (uint96 fixedFee, uint32 bps, uint128 max) = PrivacyPortalFeeLib.unpackFeeConfig(packed);
         maxFee = max;
-        if (address(factory.priceOracle()) == address(0) || bps == 0) {
+        if (address(portalFactory.priceOracle()) == address(0) || bps == 0) {
             return (fixedFee, maxFee);
         }
-        IPodPriceOracle oracle = factory.priceOracle();
+        IPodPriceOracle oracle = portalFactory.priceOracle();
         (uint256 nativeUsd, uint256 collateralUsd) = oracle.getLivePrices(
-            factory.nativeToken(),
+            portalFactory.nativeToken(),
             address(underlyingToken)
         );
         (floor,) = PrivacyPortalFeeLib.resolvePortalFee(
@@ -589,31 +836,31 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
         view
         returns (uint256 fee, bool usedDynamicPricing)
     {
-        IPrivacyPortalFactory factory = _factory();
+        IPrivacyPortalFactory portalFactory = _factory();
         if (isDeposit) {
             if (PrivacyPortalFeeLib.isOverrideSet(depositFeeOverridePacked)) {
-                return _estimateWithOverride(depositFeeOverridePacked, amount, factory);
+                return _estimateWithOverride(depositFeeOverridePacked, amount, portalFactory);
             }
-            return factory.estimateDepositPortalFee(address(underlyingToken), amount, decimals);
+            return portalFactory.estimateDepositPortalFee(address(underlyingToken), amount, decimals);
         }
         if (PrivacyPortalFeeLib.isOverrideSet(withdrawFeeOverridePacked)) {
-            return _estimateWithOverride(withdrawFeeOverridePacked, amount, factory);
+            return _estimateWithOverride(withdrawFeeOverridePacked, amount, portalFactory);
         }
-        return factory.estimateWithdrawPortalFee(address(underlyingToken), amount, decimals);
+        return portalFactory.estimateWithdrawPortalFee(address(underlyingToken), amount, decimals);
     }
 
-    function _estimateWithOverride(bytes32 packed, uint256 amount, IPrivacyPortalFactory factory)
+    function _estimateWithOverride(bytes32 packed, uint256 amount, IPrivacyPortalFactory portalFactory)
         private
         view
         returns (uint256 fee, bool usedDynamicPricing)
     {
-        if (address(factory.priceOracle()) == address(0)) {
+        if (address(portalFactory.priceOracle()) == address(0)) {
             (uint96 fixedFee,,) = PrivacyPortalFeeLib.unpackFeeConfig(packed);
             return (fixedFee, false);
         }
-        IPodPriceOracle oracle = factory.priceOracle();
+        IPodPriceOracle oracle = portalFactory.priceOracle();
         (uint256 nativeUsd, uint256 collateralUsd) = oracle.getLivePrices(
-            factory.nativeToken(),
+            portalFactory.nativeToken(),
             address(underlyingToken)
         );
         return PrivacyPortalFeeLib.resolvePortalFee(
@@ -630,32 +877,41 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Ownable, Reentr
         if (PrivacyPortalFeeLib.isOverrideSet(overridePacked)) {
             return overridePacked;
         }
-        IPrivacyPortalFactory factory = _factory();
-        return isDeposit ? factory.defaultDepositFeePacked() : factory.defaultWithdrawFeePacked();
+        IPrivacyPortalFactory portalFactory = _factory();
+        return isDeposit ? portalFactory.defaultDepositFeePacked() : portalFactory.defaultWithdrawFeePacked();
     }
 
     function _factory() private view returns (IPrivacyPortalFactory) {
-        address controller = pauseController;
-        if (controller == address(0)) {
+        address factory_ = factory;
+        if (factory_ == address(0)) {
             revert FactoryNotConfigured();
         }
-        return IPrivacyPortalFactory(controller);
+        return IPrivacyPortalFactory(factory_);
     }
 
     function _checkWithdrawalsNotPaused() private view {
-        if (_pauseFlag(IPrivacyPortalPauseController.withdrawalsPaused.selector)) {
+        if (paused()) {
+            revert WithdrawalsPaused();
+        }
+        if (withdrawalsPausedLocal || _pauseFlag(IPrivacyPortalPauseController.withdrawalsPaused.selector)) {
             revert WithdrawalsPaused();
         }
     }
 
     function _checkDepositsNotPaused() private view {
-        if (_pauseFlag(IPrivacyPortalPauseController.depositsPaused.selector)) {
+        if (paused()) {
+            revert DepositsPaused();
+        }
+        if (!isDepositEnabled) {
+            revert DepositDisabled();
+        }
+        if (depositsPausedLocal || _pauseFlag(IPrivacyPortalPauseController.depositsPaused.selector)) {
             revert DepositsPaused();
         }
     }
 
     function _checkNotBlacklisted() private view {
-        if (_factory().blacklisted(msg.sender)) {
+        if (blacklisted[msg.sender] || _factory().blacklisted(msg.sender)) {
             revert AddressBlacklisted(msg.sender);
         }
     }
