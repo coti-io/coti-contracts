@@ -38,7 +38,7 @@ interface IPrivacyPortalFactory is IPrivacyPortalPauseController, IPrivacyPortal
     /// @notice Whether `account` holds factory {OPERATOR_ROLE} (portal fee / soft-deposit controls).
     function isOperator(address account) external view returns (bool);
 
-    /// @notice Recipient of swept portal protocol fees.
+    /// @notice Recipient of swept portal protocol fees (fixed at factory deploy).
     function feeRecipient() external view returns (address);
 
     /// @notice Catastrophe rescue destination used by portals from this factory.

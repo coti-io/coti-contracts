@@ -330,13 +330,10 @@ describe("PrivacyPortal access controls", function () {
             expect(await factory.owner()).to.equal(owner.address)
         })
 
-        it("lets admin set fee and rescue recipients", async function () {
+        it("lets admin set rescue recipient (fee recipient is immutable)", async function () {
             const { owner, operator, other, factory } = await deployFactoryFixture()
 
-            await expect(factory.connect(owner).setFeeRecipient(other.address))
-                .to.emit(factory, "FeeRecipientUpdated")
-                .withArgs(owner.address, other.address)
-            expect(await factory.feeRecipient()).to.equal(other.address)
+            expect(await factory.feeRecipient()).to.equal(owner.address)
 
             await expect(factory.connect(owner).setRescueRecipient(operator.address))
                 .to.emit(factory, "RescueRecipientUpdated")
@@ -539,16 +536,15 @@ describe("PrivacyPortal access controls", function () {
             expect(withdraw.maxFee).to.equal(400)
         })
 
-        it("updates fee and rescue recipients as admin only", async function () {
-            const { owner, operator, other, factory } = await deployFactoryFixture()
+        it("updates rescue recipient as admin only; fee recipient is immutable", async function () {
+            const { owner, operator, factory } = await deployFactoryFixture()
 
-            await factory.connect(owner).setFeeRecipient(other.address)
+            expect(await factory.feeRecipient()).to.equal(owner.address)
             await factory.connect(owner).setRescueRecipient(operator.address)
-            expect(await factory.feeRecipient()).to.equal(other.address)
             expect(await factory.rescueRecipient()).to.equal(operator.address)
 
             await expect(
-                factory.connect(operator).setFeeRecipient(owner.address)
+                factory.connect(operator).setRescueRecipient(owner.address)
             ).to.be.revertedWithCustomError(factory, "AccessControlUnauthorizedAccount")
         })
 
