@@ -142,7 +142,7 @@ interface IPrivacyPortal {
     /// @notice Refund underlying collateral after a mint Inbox system error
     ///         (`pToken.requests(requestId).status == SystemFailed`).
     /// @dev App `raise` / `Failed` is not refundable (mint should not raise). Portal protocol fee is kept.
-    ///      Only the original depositor may claim.
+    ///      Permissionless: anyone may call; underlying is always sent to the original depositor.
     /// @param requestId Mint request id returned by {deposit} / {depositNative} / {wrap}.
     function refundFailedDeposit(bytes32 requestId) external;
 

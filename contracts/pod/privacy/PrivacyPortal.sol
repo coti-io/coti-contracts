@@ -166,8 +166,6 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     error PTokenTransferNotSuccessful(bytes32 requestId, IPodERC20.RequestStatus status);
     /// @notice Deposit escrow is missing or not eligible for the requested action.
     error DepositEscrowInvalid(bytes32 requestId, DepositEscrowStatus status);
-    /// @notice Caller is not the original depositor for this escrow.
-    error OnlyDepositUser(address caller, address user);
     /// @notice Mint request is not {IPodERC20.RequestStatus.SystemFailed}, so escrow cannot be refunded.
     error DepositMintNotFailed(bytes32 requestId, IPodERC20.RequestStatus status);
     /// @notice Transfer request is not Failed/SystemFailed, so withdrawal cannot be cancelled.
@@ -504,11 +502,9 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         if (status != DepositEscrowStatus.Pending && status != DepositEscrowStatus.Failed) {
             revert DepositEscrowInvalid(requestId, status);
         }
-        if (msg.sender != escrow.user) {
-            revert OnlyDepositUser(msg.sender, escrow.user);
-        }
         IPodERC20.RequestStatus mintStatus = pToken.requests(requestId).status;
         // Mint should not `raise`; only Inbox system errors are refundable.
+        // Permissionless: anyone may trigger; underlying always returns to {escrow.user}.
         if (mintStatus != IPodERC20.RequestStatus.SystemFailed) {
             revert DepositMintNotFailed(requestId, mintStatus);
         }
