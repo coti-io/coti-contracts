@@ -31,7 +31,6 @@ describe("PrivacyPortal failed-request recovery", function () {
         const portal = PortalImpl.attach(portalAddress) as Awaited<ReturnType<typeof PortalImpl.deploy>>
 
         await portal.initialize(
-            owner.address,
             await underlying.getAddress(),
             await pToken.getAddress(),
             6,

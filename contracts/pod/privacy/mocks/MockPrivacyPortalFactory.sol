@@ -12,8 +12,7 @@ contract MockPrivacyPortalFactory is IPrivacyPortalFactory, Pausable {
     address public immutable feeRecipient;
     address public rescueRecipient;
     address public immutable nativeToken;
-    /// @dev Mutable so tests can transfer factory admin and assert portals pick it up via {isAdmin}.
-    address public admin;
+    address public immutable owner_;
     IPodPriceOracle public priceOracle;
     bytes32 public defaultDepositFeePacked;
     bytes32 public defaultWithdrawFeePacked;
@@ -24,7 +23,7 @@ contract MockPrivacyPortalFactory is IPrivacyPortalFactory, Pausable {
         feeRecipient = feeRecipient_;
         rescueRecipient = feeRecipient_;
         nativeToken = nativeToken_;
-        admin = feeRecipient_;
+        owner_ = feeRecipient_;
         operators[feeRecipient_] = true;
         defaultDepositFeePacked = PrivacyPortalFeeLib.packFeeConfig(0, 0, type(uint128).max);
         defaultWithdrawFeePacked = PrivacyPortalFeeLib.packFeeConfig(0, 0, type(uint128).max);
@@ -35,18 +34,11 @@ contract MockPrivacyPortalFactory is IPrivacyPortalFactory, Pausable {
     }
 
     function owner() external view returns (address) {
-        return admin;
+        return owner_;
     }
 
     function isAdmin(address account) external view returns (bool) {
-        return account == admin;
-    }
-
-    /// @notice Test helper: transfer factory admin (mirrors granting/revoking {DEFAULT_ADMIN_ROLE}).
-    function setAdmin(address account) external {
-        require(msg.sender == admin, "MockPrivacyPortalFactory: only admin");
-        require(account != address(0), "MockPrivacyPortalFactory: zero admin");
-        admin = account;
+        return account == owner_;
     }
 
     function isOperator(address account) external view returns (bool) {
