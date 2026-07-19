@@ -58,12 +58,12 @@ interface IPrivacyPortal {
     }
 
     /// @notice Initialize a clone portal.
-    /// @param owner Owner / DEFAULT_ADMIN / initial OPERATOR.
+    /// @param owner Ownable portal owner (limits, pause/unpause, blacklist, batch burn, rescue).
     /// @param underlyingToken Public ERC20 locked and released by this portal (WETH/WAVAX when native-wrapped).
     /// @param pToken PoD pToken minted and burned for the underlying token.
     /// @param decimals Token decimals exposed for UI compatibility.
     /// @param nativeWrappedUnderlying When true, {depositNative} accepts native coin (wraps in-contract); withdraw releases wrapped underlying ERC20.
-    /// @param factory PrivacyPortalFactory (or compatible) for fees, blacklist, and rescue recipient.
+    /// @param factory PrivacyPortalFactory (fees, pause, blacklist, rescue, operators).
     function initialize(
         address owner,
         address underlyingToken,
@@ -165,10 +165,8 @@ interface IPrivacyPortal {
         payable
         returns (bytes32 burnRequestId);
 
-    /// @notice Update or disable the external pause controller for deposits and withdrawals.
-    function setPauseController(address pauseController) external;
-
     /// @notice Set per-portal deposit fee override; zero packed config clears override.
+    /// @dev Caller must hold factory {OPERATOR_ROLE}.
     function setDepositFee(uint256 fixedFee, uint256 percentageBps, uint256 maxFee) external;
 
     /// @notice Set per-portal withdraw fee override.

@@ -10,7 +10,8 @@ struct PortalFeeConfig {
     uint256 maxFee;
 }
 
-/// @notice Pause flags exposed by the factory to portal clones.
+/// @notice Pause flags exposed by the factory (and readable by portal clones).
+/// @dev Both views reflect the same {Pausable.paused} state after factory {pause}/{unpause}.
 interface IPrivacyPortalPauseController {
     /// @notice Whether new withdrawal requests should revert.
     function withdrawalsPaused() external view returns (bool);
@@ -26,10 +27,13 @@ interface IPrivacyPortalBlacklistController {
 }
 
 /// @title IPrivacyPortalFactory
-/// @notice Factory surface used by portal clones for pause control, blacklist, and fee configuration.
+/// @notice Factory surface used by portal clones for pause control, blacklist, fees, and operators.
 interface IPrivacyPortalFactory is IPrivacyPortalPauseController, IPrivacyPortalBlacklistController {
     /// @notice Primary factory admin ({DEFAULT_ADMIN_ROLE} holder with lowest enumeration index).
     function owner() external view returns (address);
+
+    /// @notice Whether `account` holds factory {OPERATOR_ROLE} (portal fee / soft-deposit controls).
+    function isOperator(address account) external view returns (bool);
 
     /// @notice Recipient of swept portal protocol fees.
     function feeRecipient() external view returns (address);
