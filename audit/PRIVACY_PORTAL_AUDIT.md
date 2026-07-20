@@ -291,6 +291,8 @@ The COTI ledger stays correct, but the PoD ciphertext cache shows `oldBalance - 
 
 **Recommendation:** add a `Completed` status set from the mint success callback so recovery can distinguish never-resolved from resolved deposits.
 
+**Resolution:** Declined. A permissionless `finalizeDepositEscrow` bookkeeping path would not be used in practice; successful mints are observed via pToken request status. Stuck `Pending` recovery remains {adminRefundPendingDeposit} (PP-02).
+
 ---
 
 ### PP-15 — Direct native sends inflate balance outside accounting (Informational)
