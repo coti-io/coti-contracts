@@ -76,6 +76,8 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
 
     // --- Errors ---
 
+    /// @notice Public-amount transfer, burn, or mint used a zero value.
+    error ZeroAmount();
     /// @notice A transfer or burn lock already exists for the sender (or mint lock for the recipient).
     error TransferAlreadyPending(address from, address to, bytes32 requestId);
     /// @notice An approval lock already exists for the owner/spender pair.
@@ -841,6 +843,9 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         uint256 totalValueWei,
         uint256 callbackFeeLocalWei
     ) internal returns (bytes32 requestId) {
+        if (amount == 0) {
+            revert ZeroAmount();
+        }
         if (_pendingTransferRequestIds[from] != bytes32(0)) {
             revert TransferAlreadyPending(from, to, _pendingTransferRequestIds[from]);
         }
@@ -872,6 +877,9 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         uint256 totalValueWei,
         uint256 callbackFeeLocalWei
     ) internal returns (bytes32 requestId) {
+        if (amount == 0) {
+            revert ZeroAmount();
+        }
         if (_pendingTransferRequestIds[from] != bytes32(0)) {
             revert TransferAlreadyPending(from, to, _pendingTransferRequestIds[from]);
         }
@@ -904,6 +912,9 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         uint256 totalValueWei,
         uint256 callbackFeeLocalWei
     ) internal returns (bytes32 requestId) {
+        if (amount == 0) {
+            revert ZeroAmount();
+        }
         if (_pendingTransferRequestIds[from] != bytes32(0)) {
             revert TransferAlreadyPending(from, to, _pendingTransferRequestIds[from]);
         }
@@ -964,6 +975,9 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         uint256 totalValueWei,
         uint256 callbackFeeLocalWei
     ) internal returns (bytes32 requestId) {
+        if (amount == 0) {
+            revert ZeroAmount();
+        }
         if (_pendingTransferRequestIds[from] != bytes32(0)) {
             revert TransferAlreadyPending(from, address(0), _pendingTransferRequestIds[from]);
         }
@@ -992,6 +1006,9 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         uint256 totalValueWei,
         uint256 callbackFeeLocalWei
     ) internal returns (bytes32 requestId) {
+        if (amount == 0) {
+            revert ZeroAmount();
+        }
         if (_pendingTransferRequestIds[to] != bytes32(0)) {
             revert TransferAlreadyPending(address(0), to, _pendingTransferRequestIds[to]);
         }
