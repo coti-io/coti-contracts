@@ -76,6 +76,13 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     event DepositRefunded(address indexed user, bytes32 indexed mintRequestId, uint256 amount);
     /// @notice Deposit escrow was marked {DepositEscrowStatus.Completed} after its mint request succeeded.
     event DepositCompleted(address indexed user, bytes32 indexed mintRequestId, uint256 amount);
+    /// @notice Factory admin force-refunded a deposit escrow stuck {DepositEscrowStatus.Pending} while paused.
+    event AdminRefundedPendingDeposit(
+        address indexed admin,
+        address indexed user,
+        bytes32 indexed mintRequestId,
+        uint256 amount
+    );
     /// @notice Public withdrawal was requested and a pToken transfer-to-portal request was submitted.
     event WithdrawalRequested(
         bytes32 indexed withdrawalId,
@@ -172,6 +179,8 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     error DepositMintNotFailed(bytes32 requestId, IPodERC20.RequestStatus status);
     /// @notice Mint request is not {IPodERC20.RequestStatus.Success}, so escrow cannot be finalized.
     error DepositMintNotSuccessful(bytes32 requestId, IPodERC20.RequestStatus status);
+    /// @notice Mint request already succeeded; admin refund would create unbacked pTokens.
+    error DepositMintAlreadySucceeded(bytes32 requestId);
     /// @notice Transfer request is not Failed/SystemFailed, so withdrawal cannot be cancelled.
     error WithdrawTransferNotFailed(bytes32 requestId, IPodERC20.RequestStatus status);
     /// @notice Portal underlying is not configured for native wrap deposits.
@@ -535,6 +544,41 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         escrow.amount = 0;
         underlyingToken.safeTransfer(escrow.user, amount);
         emit DepositRefunded(escrow.user, requestId, amount);
+    }
+
+    /// @notice Factory-admin forced refund for a deposit escrow stuck {DepositEscrowStatus.Pending}
+    ///         (e.g. a mint callback the inbox/miner never delivers).
+    /// @dev Gated on `whenPaused` (the admin must pause first) as a speed bump, not a proof of safety.
+    ///      **The caller (factory admin) is solely responsible for independently confirming — via the
+    ///      COTI-side ledger / mother contract, not elapsed time — that this mint request can no longer
+    ///      execute before calling this function.** A late mint success delivered after this refund would
+    ///      mint pTokens against collateral that was already returned, creating unbacked supply. As a
+    ///      cheap on-chain guard this reverts if the pToken already reports the mint {IPodERC20.RequestStatus.Success}
+    ///      — use {finalizeDepositEscrow} in that case instead. Portal protocol fee is kept.
+    function adminRefundPendingDeposit(bytes32 requestId)
+        external
+        override
+        onlyFactoryAdmin
+        nonReentrant
+        whenPaused
+    {
+        DepositEscrow storage escrow = depositEscrows[requestId];
+        DepositEscrowStatus status = escrow.status;
+        if (status != DepositEscrowStatus.Pending) {
+            revert DepositEscrowInvalid(requestId, status);
+        }
+        IPodERC20.RequestStatus mintStatus = pToken.requests(requestId).status;
+        if (mintStatus == IPodERC20.RequestStatus.Success) {
+            revert DepositMintAlreadySucceeded(requestId);
+        }
+
+        uint256 amount = escrow.amount;
+        address user = escrow.user;
+        escrow.status = DepositEscrowStatus.Refunded;
+        escrow.amount = 0;
+        underlyingToken.safeTransfer(user, amount);
+        emit DepositRefunded(user, requestId, amount);
+        emit AdminRefundedPendingDeposit(msg.sender, user, requestId, amount);
     }
 
     /// @inheritdoc IPrivacyPortal

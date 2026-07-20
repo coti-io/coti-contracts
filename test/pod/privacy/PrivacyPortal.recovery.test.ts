@@ -151,6 +151,72 @@ describe("PrivacyPortal failed-request recovery", function () {
         expect(await underlying.balanceOf(await portal.getAddress())).to.equal(amount)
     })
 
+    it("lets a paused factory admin force-refund a deposit escrow stuck Pending", async function () {
+        const { owner, user, underlying, pToken, portal, amount } = await deployPortalFixture()
+
+        const tx = await portal.connect(user).deposit(user.address, amount, 0, 100, { value: 1000 })
+        const receipt = await tx.wait()
+        const depositLog = receipt!.logs
+            .map((log) => {
+                try {
+                    return portal.interface.parseLog(log)
+                } catch {
+                    return null
+                }
+            })
+            .find((parsed) => parsed?.name === "DepositRequested")
+        const requestId = depositLog!.args.mintRequestId as string
+
+        await expect(
+            portal.connect(owner).adminRefundPendingDeposit(requestId)
+        ).to.be.revertedWithCustomError(portal, "ExpectedPause")
+
+        await expect(
+            portal.connect(user).adminRefundPendingDeposit(requestId)
+        ).to.be.revertedWithCustomError(portal, "OnlyFactoryAdmin")
+
+        await portal.connect(owner).pause()
+
+        const before = await underlying.balanceOf(user.address)
+        await expect(portal.connect(owner).adminRefundPendingDeposit(requestId))
+            .to.emit(portal, "AdminRefundedPendingDeposit")
+            .withArgs(owner.address, user.address, requestId, amount)
+            .and.to.emit(portal, "DepositRefunded")
+            .withArgs(user.address, requestId, amount)
+
+        expect(await underlying.balanceOf(user.address)).to.equal(before + amount)
+        expect(await underlying.balanceOf(await portal.getAddress())).to.equal(0n)
+
+        const escrow = await portal.depositEscrows(requestId)
+        expect(escrow.status).to.equal(3n) // DepositEscrowStatus.Refunded
+
+        await expect(
+            portal.connect(owner).adminRefundPendingDeposit(requestId)
+        ).to.be.revertedWithCustomError(portal, "DepositEscrowInvalid")
+
+        // A second, unrelated escrow whose mint already succeeded cannot be admin-refunded.
+        await portal.connect(owner).unpause()
+        await underlying.mint(user.address, amount)
+        await underlying.connect(user).approve(await portal.getAddress(), amount)
+        const tx2 = await portal.connect(user).deposit(user.address, amount, 0, 100, { value: 1000 })
+        const receipt2 = await tx2.wait()
+        const requestId2 = receipt2!.logs
+            .map((log) => {
+                try {
+                    return portal.interface.parseLog(log)
+                } catch {
+                    return null
+                }
+            })
+            .find((parsed) => parsed?.name === "DepositRequested")!.args.mintRequestId as string
+
+        await pToken.markLastMintSuccessful()
+        await portal.connect(owner).pause()
+        await expect(
+            portal.connect(owner).adminRefundPendingDeposit(requestId2)
+        ).to.be.revertedWithCustomError(portal, "DepositMintAlreadySucceeded")
+    })
+
     it("marks withdrawal Failed when the pToken transfer request fails", async function () {
         const { user, portal, pToken, amount } = await deployPortalFixture()
 
