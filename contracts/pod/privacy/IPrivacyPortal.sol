@@ -173,10 +173,16 @@ interface IPrivacyPortal {
         returns (address user, address recipient, uint256 amount, DepositEscrowStatus status);
 
     /// @notice Owner batch-burn for pTokens accumulated from completed withdrawals.
+    /// @dev Does not decrement {pendingBurnAmount} at submission; see {finalizeBatchBurn}.
     function burnAccumulatedPTokens(uint256 amount, uint256 burnCallbackFee)
         external
         payable
         returns (bytes32 burnRequestId);
+
+    /// @notice Permissionless: finalize a submitted batch burn once its request resolves.
+    /// @dev Decrements {pendingBurnAmount} only on {IPodERC20.RequestStatus.Success}; a Failed/SystemFailed
+    ///      burn only clears the in-flight reservation so the pTokens remain available to resubmit.
+    function finalizeBatchBurn(bytes32 burnRequestId) external;
 
     /// @notice Set per-portal deposit fee override; zero packed config clears override.
     /// @dev Caller must hold factory {OPERATOR_ROLE}.

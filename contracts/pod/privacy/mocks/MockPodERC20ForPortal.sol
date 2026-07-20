@@ -23,9 +23,12 @@ contract MockPodERC20ForPortal {
     uint256 public burnedAmount;
     uint256 public lastBurnValue;
     uint256 public lastBurnCallbackFee;
+    bytes32 public lastBurnRequestId;
+    uint256 public burnRequestNonce;
 
     bool public burnShouldRevert;
     IPodERC20.RequestStatus private _lastTransferStatus;
+    IPodERC20.RequestStatus private _lastBurnStatus;
 
     mapping(bytes32 => IPodERC20.RequestStatus) private _requestStatus;
 
@@ -81,6 +84,8 @@ contract MockPodERC20ForPortal {
                 status = _lastTransferStatus;
             } else if (requestId == lastMintRequestId) {
                 status = _lastMintStatus;
+            } else if (requestId == lastBurnRequestId) {
+                status = _lastBurnStatus;
             }
         }
         return IPodERC20.RequestRecord({
@@ -102,7 +107,11 @@ contract MockPodERC20ForPortal {
         burnedAmount += amount;
         lastBurnValue = msg.value;
         lastBurnCallbackFee = callbackFeeLocalWei;
-        return keccak256(abi.encodePacked("burn", amount, block.number));
+        requestId = keccak256(abi.encodePacked("burn", amount, burnRequestNonce++));
+        lastBurnRequestId = requestId;
+        _lastBurnStatus = IPodERC20.RequestStatus.Pending;
+        _requestStatus[requestId] = IPodERC20.RequestStatus.Pending;
+        return requestId;
     }
 
     function triggerLastTransferCallback() external {
@@ -156,5 +165,32 @@ contract MockPodERC20ForPortal {
 
     function setBurnShouldRevert(bool shouldRevert) external {
         burnShouldRevert = shouldRevert;
+    }
+
+    function markLastBurnSuccessful() external {
+        _lastBurnStatus = IPodERC20.RequestStatus.Success;
+        if (lastBurnRequestId != bytes32(0)) {
+            _requestStatus[lastBurnRequestId] = IPodERC20.RequestStatus.Success;
+        }
+    }
+
+    function markLastBurnFailed() external {
+        _lastBurnStatus = IPodERC20.RequestStatus.Failed;
+        if (lastBurnRequestId != bytes32(0)) {
+            _requestStatus[lastBurnRequestId] = IPodERC20.RequestStatus.Failed;
+        }
+    }
+
+    function markLastBurnSystemFailed() external {
+        _lastBurnStatus = IPodERC20.RequestStatus.SystemFailed;
+        if (lastBurnRequestId != bytes32(0)) {
+            _requestStatus[lastBurnRequestId] = IPodERC20.RequestStatus.SystemFailed;
+        }
+    }
+
+    /// @dev Mark an arbitrary (not necessarily the most recent) burn request id by status, useful when
+    ///      multiple burns are in flight at once.
+    function markBurnStatus(bytes32 requestId, IPodERC20.RequestStatus status) external {
+        _requestStatus[requestId] = status;
     }
 }
