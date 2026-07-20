@@ -94,10 +94,6 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
     error MintToZeroAddress();
     error OwnerMintNotSupported();
     error ChainIdOverflow(uint256 sourceChainId);
-    /// @notice Public-amount transfer, burn, or mint used a zero value.
-    error ZeroAmount();
-    /// @notice Transfer `from` and `to` were the same address.
-    error SelfTransfer(address account);
 
     // --- Modifiers ---
 
@@ -233,7 +229,6 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
 
     /// @inheritdoc IPodErc20CotiSide
     function transferPublic(address from, address to, uint256 value) external override onlyRegisteredPTokenMessage {
-        if (value == 0) revert ZeroAmount();
         _moveOrBurn(_activeTokenId(), from, to, MpcCore.setPublic256(value), false, true, value);
     }
 
@@ -252,7 +247,6 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
         address to,
         uint256 value
     ) external override onlyRegisteredPTokenMessage {
-        if (value == 0) revert ZeroAmount();
         _moveOrBurn(_activeTokenId(), from, to, MpcCore.setPublic256(value), false, true, value);
     }
 
@@ -275,7 +269,6 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
         address to,
         uint256 value
     ) external override onlyRegisteredPTokenMessage {
-        if (value == 0) revert ZeroAmount();
         _moveWithOptionalAllowance(
             _activeTokenId(), spender, from, to, MpcCore.setPublic256(value), true, false, true, value
         );
@@ -306,7 +299,6 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
 
     /// @inheritdoc IPodErc20CotiSide
     function burnPublic(address from, uint256 value) external override onlyRegisteredPTokenMessage {
-        if (value == 0) revert ZeroAmount();
         _moveOrBurn(_activeTokenId(), from, address(0), MpcCore.setPublic256(value), true, true, value);
     }
 
@@ -317,7 +309,6 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
 
     /// @inheritdoc IPodErc20CotiSide
     function mintPublic(address to, uint256 value) external override onlyRegisteredPTokenMessage {
-        if (value == 0) revert ZeroAmount();
         _mintInternal(_activeTokenId(), to, MpcCore.setPublic256(value), true, value);
     }
 
@@ -395,7 +386,13 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
             return;
         }
         if (!burning && from == to) {
-            revert SelfTransfer(from);
+            _sendTransferFailureToPod(id, from, to, bytes("PodErc20CotiMother: self transfer"));
+            return;
+        }
+        // Public zero amounts: raise (do not revert — mother runs under inbox execution).
+        if (amountIsPublic && publicAmount == 0) {
+            _sendTransferFailureToPod(id, from, to, bytes("PodErc20CotiMother: zero amount"));
+            return;
         }
 
         gtUint256 senderBalance = _readGarbledBalance(id, from);
@@ -525,6 +522,10 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
     ) private {
         if (to == address(0)) {
             _sendTransferFailureToPod(id, address(0), to, bytes("PodErc20CotiMother: mint zero to"));
+            return;
+        }
+        if (amountIsPublic && publicAmount == 0) {
+            _sendTransferFailureToPod(id, address(0), to, bytes("PodErc20CotiMother: zero amount"));
             return;
         }
 
