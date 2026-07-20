@@ -391,6 +391,18 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControl, Pausable 
     }
 
     /// @notice Deploy a portal and pToken clone for an underlying token and register on the COTI mother ledger.
+    /// @dev Mother registration is a **one-way, error-handler-less** inbox message (see
+    ///      {_requestMotherRegistration}): this function returns as soon as the message is *submitted*, not
+    ///      once the mother has actually registered the pToken. Until `PodErc20CotiMother.registerToken`
+    ///      lands, every mint/transfer routed through the mother for this pToken hits
+    ///      `onlyRegisteredPTokenMessage` and reverts (`TokenNotRegistered`), which — because inbox execution
+    ///      reverts are retryable — leaves each deposit's mint stuck `Pending` rather than failing cleanly
+    ///      (see PP-02/PP-14). **Operational guidance:** the caller should treat the returned `portal` as not
+    ///      yet live — leave (or immediately set) {PrivacyPortal.isDepositEnabled} to `false` right after this
+    ///      call and only flip it on once registration is externally confirmed (e.g. observing the mother's
+    ///      registration event/state on COTI); do not accept deposits on the assumption that this call alone
+    ///      means the portal is ready. Withdrawals are unaffected until a user actually holds pTokens, which
+    ///      cannot happen before a mint succeeds.
     function createPortal(
         address underlying,
         string calldata name,
