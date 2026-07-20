@@ -28,7 +28,9 @@ interface IPrivacyPortal {
         /// @notice Mint request hit an Inbox system error; collateral is eligible for refund.
         Failed,
         /// @notice Underlying was returned to the depositor after a failed mint.
-        Refunded
+        Refunded,
+        /// @notice Mint request succeeded; collateral legitimately backs minted supply. Terminal, non-refundable.
+        Completed
     }
 
     /// @notice Escrow of public collateral locked for an async pToken mint.
@@ -145,6 +147,13 @@ interface IPrivacyPortal {
     ///      Permissionless: anyone may call; underlying is always sent to the original depositor.
     /// @param requestId Mint request id returned by {deposit} / {depositNative} / {wrap}.
     function refundFailedDeposit(bytes32 requestId) external;
+
+    /// @notice Mark a deposit escrow {DepositEscrowStatus.Completed} once its mint request succeeds.
+    /// @dev Permissionless bookkeeping only: collateral was already legitimately locked backing minted supply;
+    ///      this does not move funds. Distinguishes "successfully backing supply" from "never resolved" for
+    ///      monitoring and recovery tooling.
+    /// @param requestId Mint request id returned by {deposit} / {depositNative} / {wrap}.
+    function finalizeDepositEscrow(bytes32 requestId) external;
 
     /// @notice Mark a pending withdrawal as Failed after its pToken transfer request fails.
     /// @dev Does not release underlying; user retains pTokens. Portal protocol fee is kept.

@@ -109,6 +109,48 @@ describe("PrivacyPortal failed-request recovery", function () {
         )
     })
 
+    it("finalizes a deposit escrow to Completed once the mint succeeds", async function () {
+        const { user, other, underlying, pToken, portal, amount } = await deployPortalFixture()
+
+        const tx = await portal.connect(user).deposit(user.address, amount, 0, 100, { value: 1000 })
+        const receipt = await tx.wait()
+        const depositLog = receipt!.logs
+            .map((log) => {
+                try {
+                    return portal.interface.parseLog(log)
+                } catch {
+                    return null
+                }
+            })
+            .find((parsed) => parsed?.name === "DepositRequested")
+        const requestId = depositLog!.args.mintRequestId as string
+
+        await expect(portal.connect(other).finalizeDepositEscrow(requestId)).to.be.revertedWithCustomError(
+            portal,
+            "DepositMintNotSuccessful"
+        )
+
+        await pToken.markLastMintSuccessful()
+        // Permissionless: anyone may finalize; it only updates bookkeeping, no funds move.
+        await expect(portal.connect(other).finalizeDepositEscrow(requestId))
+            .to.emit(portal, "DepositCompleted")
+            .withArgs(user.address, requestId, amount)
+
+        const escrow = await portal.depositEscrows(requestId)
+        expect(escrow.status).to.equal(4n) // DepositEscrowStatus.Completed
+        expect(escrow.amount).to.equal(amount)
+
+        await expect(portal.connect(other).finalizeDepositEscrow(requestId)).to.be.revertedWithCustomError(
+            portal,
+            "DepositEscrowInvalid"
+        )
+        await expect(portal.connect(user).refundFailedDeposit(requestId)).to.be.revertedWithCustomError(
+            portal,
+            "DepositEscrowInvalid"
+        )
+        expect(await underlying.balanceOf(await portal.getAddress())).to.equal(amount)
+    })
+
     it("marks withdrawal Failed when the pToken transfer request fails", async function () {
         const { user, portal, pToken, amount } = await deployPortalFixture()
 
