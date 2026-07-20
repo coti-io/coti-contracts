@@ -256,6 +256,64 @@ describe("PrivacyPortal access controls", function () {
             expect(await factory.blacklisted(operator.address)).to.equal(false)
         })
 
+        it("blocks deposits to a factory-blacklisted recipient even from an unlisted caller", async function () {
+            const { owner, user, portal, underlying, factory, depositAmount } =
+                await deployPortalFixture()
+            const recipient = owner.address
+
+            await factory.connect(owner).setBlacklisted(recipient, true)
+            await underlying.connect(user).approve(await portal.getAddress(), depositAmount)
+
+            await expect(
+                portal.connect(user).deposit(recipient, depositAmount, 0, 100, {
+                    value: 1000,
+                })
+            ).to.be.revertedWithCustomError(portal, "AddressBlacklisted")
+        })
+
+        it("blocks withdrawals to a factory-blacklisted recipient even from an unlisted caller", async function () {
+            const { owner, user, portal, factory, depositAmount } = await deployPortalFixture()
+            const recipient = owner.address
+
+            await factory.connect(owner).setBlacklisted(recipient, true)
+
+            await expect(
+                portal.connect(user).requestWithdrawWithPermit(
+                    recipient,
+                    depositAmount,
+                    0,
+                    1000,
+                    100,
+                    Math.floor(Date.now() / 1000) + 3600,
+                    27,
+                    hre.ethers.ZeroHash,
+                    hre.ethers.ZeroHash,
+                    { value: 1000 }
+                )
+            ).to.be.revertedWithCustomError(portal, "AddressBlacklisted")
+        })
+
+        it("blocks deposits to a portal-blacklisted recipient", async function () {
+            const { owner, user, portal, underlying, depositAmount } = await deployPortalFixture()
+            const recipient = owner.address
+
+            await portal.connect(owner).addToBlacklist(recipient)
+            await underlying.connect(user).approve(await portal.getAddress(), depositAmount)
+
+            await expect(
+                portal.connect(user).deposit(recipient, depositAmount, 0, 100, {
+                    value: 1000,
+                })
+            ).to.be.revertedWithCustomError(portal, "AddressBlacklisted")
+
+            await portal.connect(owner).removeFromBlacklist(recipient)
+            await expect(
+                portal.connect(user).deposit(recipient, depositAmount, 0, 100, {
+                    value: 1000,
+                })
+            ).to.not.be.reverted
+        })
+
         it("allows deposits again after blacklist removal", async function () {
             const { owner, user, portal, underlying, factory, depositAmount } =
                 await deployPortalFixture()
