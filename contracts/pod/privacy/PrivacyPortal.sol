@@ -196,6 +196,8 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     error CannotRescuePToken();
     /// @notice Native transfer failed.
     error EthTransferFailed();
+    /// @notice Measured underlying received was zero (fee-on-transfer/rebasing token swallowed the deposit).
+    error NoUnderlyingReceived();
 
     /// @notice Lock implementation so it cannot be initialized.
     constructor() {
@@ -339,18 +341,24 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         }
         uint256 mintFee = msg.value - portalFee;
 
+        uint256 balanceBefore = underlyingToken.balanceOf(address(this));
         underlyingToken.safeTransferFrom(msg.sender, address(this), amount);
-        requestId = pToken.mint{value: mintFee}(recipient, amount, mintCallbackFee);
+        uint256 received = underlyingToken.balanceOf(address(this)) - balanceBefore;
+        if (received == 0) {
+            revert NoUnderlyingReceived();
+        }
+
+        requestId = pToken.mint{value: mintFee}(recipient, received, mintCallbackFee);
         depositEscrows[requestId] = DepositEscrow({
             user: msg.sender,
             recipient: recipient,
-            amount: amount,
+            amount: received,
             status: DepositEscrowStatus.Pending
         });
-        emit DepositRequested(msg.sender, recipient, amount, requestId);
-        emit WrapRequested(msg.sender, recipient, amount, requestId);
+        emit DepositRequested(msg.sender, recipient, received, requestId);
+        emit WrapRequested(msg.sender, recipient, received, requestId);
         emit OperationFeesPaid(
-            msg.sender, requestId, true, false, portalFee, mintFee, mintCallbackFee, amount
+            msg.sender, requestId, true, false, portalFee, mintFee, mintCallbackFee, received
         );
     }
 
@@ -380,18 +388,24 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         }
         uint256 mintFee = msg.value - amount - portalFee;
 
+        uint256 balanceBefore = underlyingToken.balanceOf(address(this));
         IWrappedNative(address(underlyingToken)).deposit{value: amount}();
-        requestId = pToken.mint{value: mintFee}(recipient, amount, mintCallbackFee);
+        uint256 received = underlyingToken.balanceOf(address(this)) - balanceBefore;
+        if (received == 0) {
+            revert NoUnderlyingReceived();
+        }
+
+        requestId = pToken.mint{value: mintFee}(recipient, received, mintCallbackFee);
         depositEscrows[requestId] = DepositEscrow({
             user: msg.sender,
             recipient: recipient,
-            amount: amount,
+            amount: received,
             status: DepositEscrowStatus.Pending
         });
-        emit DepositRequested(msg.sender, recipient, amount, requestId);
-        emit WrapRequested(msg.sender, recipient, amount, requestId);
+        emit DepositRequested(msg.sender, recipient, received, requestId);
+        emit WrapRequested(msg.sender, recipient, received, requestId);
         emit OperationFeesPaid(
-            msg.sender, requestId, true, true, portalFee, mintFee, mintCallbackFee, amount
+            msg.sender, requestId, true, true, portalFee, mintFee, mintCallbackFee, received
         );
     }
 
