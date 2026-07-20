@@ -148,6 +148,12 @@ interface IPrivacyPortal {
     /// @param requestId Mint request id returned by {deposit} / {depositNative} / {wrap}.
     function refundFailedDeposit(bytes32 requestId) external;
 
+    /// @notice Factory-admin forced refund for a deposit escrow stuck {DepositEscrowStatus.Pending} while paused.
+    /// @dev The caller is solely responsible for independently confirming the mint request can no longer
+    ///      succeed before calling this — a late success after this refund creates unbacked pTokens.
+    /// @param requestId Mint request id returned by {deposit} / {depositNative} / {wrap}.
+    function adminRefundPendingDeposit(bytes32 requestId) external;
+
     /// @notice Mark a deposit escrow {DepositEscrowStatus.Completed} once its mint request succeeds.
     /// @dev Permissionless bookkeeping only: collateral was already legitimately locked backing minted supply;
     ///      this does not move funds. Distinguishes "successfully backing supply" from "never resolved" for
