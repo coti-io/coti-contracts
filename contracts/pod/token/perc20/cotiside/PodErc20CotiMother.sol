@@ -370,6 +370,11 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
         _moveWithOptionalAllowance(id, address(0), from, to, amount, false, burning, amountIsPublic, publicAmount);
     }
 
+    /**
+     * @dev Public amounts (`amountIsPublic`): decrypt comparisons and `raise` on insolvency (portal
+     *      withdrawals need real Failure vs Success). Encrypted amounts: `mux` effective amount to
+     *      zero when balance/allowance is insufficient and always `respond` Success (no leak).
+     */
     function _moveWithOptionalAllowance(
         bytes32 id,
         address spender,
@@ -394,25 +399,43 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
         }
 
         gtUint256 senderBalance = _readGarbledBalance(id, from);
-
-        if (!MpcCore.decrypt(MpcCore.ge(senderBalance, amount))) {
-            _sendTransferFailureToPod(id, from, to, bytes("PodErc20CotiMother: insufficient balance"));
-            return;
-        }
-
+        gtUint256 zeroAmount = MpcCore.setPublic256(0);
+        gtUint256 effectiveAmount;
         gtUint256 allowanceAfter;
-        if (spendAllowance && spender != from) {
-            gtUint256 currentAllowance = _readGarbledAllowance(id, from, spender);
-            if (!MpcCore.decrypt(MpcCore.ge(currentAllowance, amount))) {
-                _sendTransferFailureToPod(id, from, to, bytes("PodErc20CotiMother: insufficient allowance"));
+        bool checkAllowance = spendAllowance && spender != from;
+
+        if (amountIsPublic) {
+            // Public amounts: explicit Failure (portal withdrawals depend on real fail vs success).
+            if (!MpcCore.decrypt(MpcCore.ge(senderBalance, amount))) {
+                _sendTransferFailureToPod(id, from, to, bytes("PodErc20CotiMother: insufficient balance"));
                 return;
             }
-            allowanceAfter = MpcCore.sub(currentAllowance, amount);
+            if (checkAllowance) {
+                gtUint256 currentAllowance = _readGarbledAllowance(id, from, spender);
+                if (!MpcCore.decrypt(MpcCore.ge(currentAllowance, amount))) {
+                    _sendTransferFailureToPod(id, from, to, bytes("PodErc20CotiMother: insufficient allowance"));
+                    return;
+                }
+                allowanceAfter = MpcCore.sub(currentAllowance, amount);
+            }
+            effectiveAmount = amount;
+        } else {
+            // Encrypted amounts: mux to zero on insolvency; always Success (no balance/allowance leak).
+            gtBool ok = MpcCore.ge(senderBalance, amount);
+            if (checkAllowance) {
+                gtUint256 currentAllowance = _readGarbledAllowance(id, from, spender);
+                ok = MpcCore.and(ok, MpcCore.ge(currentAllowance, amount));
+                effectiveAmount = MpcCore.mux(ok, zeroAmount, amount);
+                allowanceAfter = MpcCore.sub(currentAllowance, effectiveAmount);
+            } else {
+                // MpcCore.mux(bit, a, b) selects b when bit is true (COTI precompile polarity).
+                effectiveAmount = MpcCore.mux(ok, zeroAmount, amount);
+            }
         }
 
-        gtUint256 senderAfter = MpcCore.sub(senderBalance, amount);
+        gtUint256 senderAfter = MpcCore.sub(senderBalance, effectiveAmount);
         _writeGarbledBalance(id, from, senderAfter);
-        if (spendAllowance && spender != from) {
+        if (checkAllowance) {
             _allowanceCiphertext[id][from][spender] = MpcCore.offBoard(allowanceAfter);
         }
 
@@ -423,7 +446,7 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
                 abi.encode(
                     from,
                     MpcCore.offBoardToUser(senderAfter, from),
-                    MpcCore.offBoardToUser(amount, from),
+                    MpcCore.offBoardToUser(effectiveAmount, from),
                     address(0),
                     zeroCiphertext,
                     zeroCiphertext,
@@ -436,13 +459,15 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
         }
 
         gtUint256 recipientBefore = _readGarbledBalance(id, to);
-        gtUint256 recipientAfter = MpcCore.add(recipientBefore, amount);
+        gtUint256 recipientAfter = MpcCore.add(recipientBefore, effectiveAmount);
         _writeGarbledBalance(id, to, recipientAfter);
 
         uint256 transferNonce = _tokenNonce[id];
-        inbox.respond(_encodePodTransferCallback(from, to, amount, senderAfter, recipientAfter, transferNonce));
+        inbox.respond(
+            _encodePodTransferCallback(from, to, effectiveAmount, senderAfter, recipientAfter, transferNonce)
+        );
         emit TransferCompleted(
-            id, spender, from, to, spendAllowance && spender != from, amountIsPublic, publicAmount, transferNonce
+            id, spender, from, to, checkAllowance, amountIsPublic, publicAmount, transferNonce
         );
         _tokenNonce[id] = transferNonce + 1;
     }
