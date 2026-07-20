@@ -47,7 +47,12 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     /// @notice Accumulated portal protocol fees awaiting sweep.
     uint256 public accumulatedPortalFees;
     /// @notice pToken amount held in portal custody pending owner batch burn.
+    ///         Only decremented once a submitted burn request is confirmed {IPodERC20.RequestStatus.Success}.
     uint256 public pendingBurnAmount;
+    /// @notice Sum of {burnInFlight} amounts: submitted-but-not-yet-finalized batch burns.
+    uint256 public burnInFlightTotal;
+    /// @notice Amount submitted for a given batch burn request id, cleared once {finalizeBatchBurn} resolves it.
+    mapping(bytes32 => uint256) public burnInFlight;
     /// @notice Monotonic nonce used to derive withdrawal ids.
     uint256 public withdrawalNonce;
 
@@ -121,6 +126,9 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     event PendingBurnIncreased(bytes32 indexed withdrawalId, uint256 amount, uint256 pendingBurnAmount);
     /// @notice Owner submitted a batch burn for accumulated pTokens.
     event BatchBurnSubmitted(address indexed caller, uint256 amount, bytes32 indexed burnRequestId);
+    /// @notice A submitted batch burn was finalized: `pendingBurnAmount` decreased on success, or the
+    ///         in-flight reservation was cleared (with `pendingBurnAmount` left untouched) on failure.
+    event BatchBurnFinalized(bytes32 indexed burnRequestId, uint256 amount, bool success);
     /// @notice Portal protocol fees swept to the factory fee recipient.
     event PortalFeesWithdrawn(address indexed recipient, uint256 amount);
     /// @notice Per-portal fee override updated.
@@ -181,6 +189,10 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     error DepositMintNotSuccessful(bytes32 requestId, IPodERC20.RequestStatus status);
     /// @notice Mint request already succeeded; admin refund would create unbacked pTokens.
     error DepositMintAlreadySucceeded(bytes32 requestId);
+    /// @notice Batch burn request id is unknown or already finalized.
+    error UnknownBatchBurn(bytes32 requestId);
+    /// @notice Batch burn request has not yet resolved to Success/Failed/SystemFailed.
+    error BatchBurnNotResolved(bytes32 requestId, IPodERC20.RequestStatus status);
     /// @notice Transfer request is not Failed/SystemFailed, so withdrawal cannot be cancelled.
     error WithdrawTransferNotFailed(bytes32 requestId, IPodERC20.RequestStatus status);
     /// @notice Portal underlying is not configured for native wrap deposits.
@@ -634,16 +646,48 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         if (amount == 0) {
             revert InvalidAmount();
         }
-        if (amount > pendingBurnAmount) {
-            revert PendingBurnTooLow(pendingBurnAmount, amount);
+        uint256 available = pendingBurnAmount - burnInFlightTotal;
+        if (amount > available) {
+            revert PendingBurnTooLow(available, amount);
         }
         if (msg.value == 0) {
             revert InvalidAmount();
         }
 
-        pendingBurnAmount -= amount;
+        // `pendingBurnAmount` is only decremented once {finalizeBatchBurn} confirms Success, so a Failed/
+        // SystemFailed burn never loses accounting: the pTokens stay counted and can be resubmitted.
         burnRequestId = pToken.burn{value: msg.value}(amount, burnCallbackFee);
+        burnInFlight[burnRequestId] = amount;
+        burnInFlightTotal += amount;
         emit BatchBurnSubmitted(msg.sender, amount, burnRequestId);
+    }
+
+    /// @notice Permissionless: finalize a submitted batch burn once its request resolves.
+    /// @dev On {IPodERC20.RequestStatus.Success}, decrements `pendingBurnAmount` by the submitted amount.
+    ///      On {IPodERC20.RequestStatus.Failed} / {IPodERC20.RequestStatus.SystemFailed}, only clears the
+    ///      in-flight reservation; `pendingBurnAmount` is left untouched so the pTokens (still in portal
+    ///      custody) remain available for a future {burnAccumulatedPTokens} submission.
+    function finalizeBatchBurn(bytes32 burnRequestId) external override nonReentrant {
+        uint256 amount = burnInFlight[burnRequestId];
+        if (amount == 0) {
+            revert UnknownBatchBurn(burnRequestId);
+        }
+        IPodERC20.RequestStatus status = pToken.requests(burnRequestId).status;
+
+        if (status == IPodERC20.RequestStatus.Success) {
+            delete burnInFlight[burnRequestId];
+            burnInFlightTotal -= amount;
+            pendingBurnAmount -= amount;
+            emit BatchBurnFinalized(burnRequestId, amount, true);
+        } else if (
+            status == IPodERC20.RequestStatus.Failed || status == IPodERC20.RequestStatus.SystemFailed
+        ) {
+            delete burnInFlight[burnRequestId];
+            burnInFlightTotal -= amount;
+            emit BatchBurnFinalized(burnRequestId, amount, false);
+        } else {
+            revert BatchBurnNotResolved(burnRequestId, status);
+        }
     }
 
     /// @inheritdoc IPrivacyPortal
