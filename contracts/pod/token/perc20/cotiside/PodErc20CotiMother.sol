@@ -96,6 +96,8 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
     error ChainIdOverflow(uint256 sourceChainId);
     /// @notice Public-amount transfer, burn, or mint used a zero value.
     error ZeroAmount();
+    /// @notice Transfer `from` and `to` were the same address.
+    error SelfTransfer(address account);
 
     // --- Modifiers ---
 
@@ -386,6 +388,9 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
         if (!burning && to == address(0)) {
             _sendTransferFailureToPod(id, from, to, bytes("PodErc20CotiMother: zero to"));
             return;
+        }
+        if (!burning && from == to) {
+            revert SelfTransfer(from);
         }
 
         gtUint256 senderBalance = _readGarbledBalance(id, from);
