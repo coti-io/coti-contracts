@@ -5,10 +5,20 @@ node_modules
 # Hardhat files
 /cache
 /artifacts
+/cache-mpc
+/artifacts-mpc
+/cache-sim
+/artifacts-sim
+
+# Local simCOTI staging (do not commit if regenerated)
+/contracts-mpc
+/contracts-mpc-sim
 
 # # TypeChain files
 # /typechain
 # /typechain-types
+/typechain-types-mpc
+/typechain-types-sim
 
 # solidity-coverage files
 /coverage
@@ -19,3 +29,4 @@ ignition/deployments/chain-31337
 
 /.idea
 .devcontainer
+typechain-types
