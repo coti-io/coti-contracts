@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 
 import "../IInbox.sol";
@@ -27,6 +28,8 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControl, Pausable 
 
     /// @notice Operator role for routine fee-parameter updates (mirrors Privacy Bridge).
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+    /// @notice Maximum supported token decimals; bounds `10 ** decimals` in {PrivacyPortalFeeLib}.
+    uint8 public constant MAX_DECIMALS = 18;
 
     /// @dev Primary admin for {owner()} tooling; kept in sync with {DEFAULT_ADMIN_ROLE} grants/revokes.
     address private _owner;
@@ -102,6 +105,10 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControl, Pausable 
     error OracleNotConfigured();
     /// @notice No {DEFAULT_ADMIN_ROLE} holder is configured.
     error AdminNotConfigured();
+    /// @notice Requested `decimals` did not match `IERC20Metadata(underlying).decimals()`.
+    error DecimalsMismatch(uint8 expected, uint8 provided);
+    /// @notice Requested `decimals` exceeded {MAX_DECIMALS}.
+    error DecimalsExceedsMaximum(uint8 provided, uint8 max);
 
     /// @notice Restrict a function to an allowlisted deployer.
     modifier onlyDeployer() {
@@ -396,6 +403,13 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControl, Pausable 
         }
         if (portalForUnderlying[underlying] != address(0)) {
             revert PortalAlreadyExists(underlying, portalForUnderlying[underlying]);
+        }
+        if (decimals > MAX_DECIMALS) {
+            revert DecimalsExceedsMaximum(decimals, MAX_DECIMALS);
+        }
+        uint8 underlyingDecimals = IERC20Metadata(underlying).decimals();
+        if (underlyingDecimals != decimals) {
+            revert DecimalsMismatch(underlyingDecimals, decimals);
         }
 
         portal = Clones.clone(portalImplementation);
