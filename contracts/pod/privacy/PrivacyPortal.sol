@@ -79,8 +79,6 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     );
     /// @notice Failed mint collateral was returned to the depositor.
     event DepositRefunded(address indexed user, bytes32 indexed mintRequestId, uint256 amount);
-    /// @notice Deposit escrow was marked {DepositEscrowStatus.Completed} after its mint request succeeded.
-    event DepositCompleted(address indexed user, bytes32 indexed mintRequestId, uint256 amount);
     /// @notice Factory admin force-refunded a deposit escrow stuck {DepositEscrowStatus.Pending} while paused.
     event AdminRefundedPendingDeposit(
         address indexed admin,
@@ -185,8 +183,6 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     error DepositEscrowInvalid(bytes32 requestId, DepositEscrowStatus status);
     /// @notice Mint request is not {IPodERC20.RequestStatus.SystemFailed}, so escrow cannot be refunded.
     error DepositMintNotFailed(bytes32 requestId, IPodERC20.RequestStatus status);
-    /// @notice Mint request is not {IPodERC20.RequestStatus.Success}, so escrow cannot be finalized.
-    error DepositMintNotSuccessful(bytes32 requestId, IPodERC20.RequestStatus status);
     /// @notice Mint request already succeeded; admin refund would create unbacked pTokens.
     error DepositMintAlreadySucceeded(bytes32 requestId);
     /// @notice Batch burn request id is unknown or already finalized.
@@ -565,8 +561,8 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     ///      COTI-side ledger / mother contract, not elapsed time — that this mint request can no longer
     ///      execute before calling this function.** A late mint success delivered after this refund would
     ///      mint pTokens against collateral that was already returned, creating unbacked supply. As a
-    ///      cheap on-chain guard this reverts if the pToken already reports the mint {IPodERC20.RequestStatus.Success}
-    ///      — use {finalizeDepositEscrow} in that case instead. Portal protocol fee is kept.
+    ///      cheap on-chain guard this reverts if the pToken already reports the mint {IPodERC20.RequestStatus.Success}.
+    ///      Portal protocol fee is kept.
     function adminRefundPendingDeposit(bytes32 requestId)
         external
         override
@@ -591,22 +587,6 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         underlyingToken.safeTransfer(user, amount);
         emit DepositRefunded(user, requestId, amount);
         emit AdminRefundedPendingDeposit(msg.sender, user, requestId, amount);
-    }
-
-    /// @inheritdoc IPrivacyPortal
-    function finalizeDepositEscrow(bytes32 requestId) external override nonReentrant {
-        DepositEscrow storage escrow = depositEscrows[requestId];
-        DepositEscrowStatus status = escrow.status;
-        if (status != DepositEscrowStatus.Pending) {
-            revert DepositEscrowInvalid(requestId, status);
-        }
-        IPodERC20.RequestStatus mintStatus = pToken.requests(requestId).status;
-        if (mintStatus != IPodERC20.RequestStatus.Success) {
-            revert DepositMintNotSuccessful(requestId, mintStatus);
-        }
-
-        escrow.status = DepositEscrowStatus.Completed;
-        emit DepositCompleted(escrow.user, requestId, escrow.amount);
     }
 
     /// @inheritdoc IPrivacyPortal
