@@ -330,6 +330,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         if (recipient == address(0)) {
             revert InvalidAddress();
         }
+        _checkNotBlacklistedAccount(recipient);
         if (amount == 0) {
             revert InvalidAmount();
         }
@@ -377,6 +378,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         if (recipient == address(0)) {
             revert InvalidAddress();
         }
+        _checkNotBlacklistedAccount(recipient);
         if (amount == 0) {
             revert InvalidAmount();
         }
@@ -447,6 +449,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         if (recipient == address(0)) {
             revert InvalidAddress();
         }
+        _checkNotBlacklistedAccount(recipient);
         if (amount == 0) {
             revert InvalidAmount();
         }
@@ -860,8 +863,15 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     }
 
     function _checkNotBlacklisted() private view {
-        if (blacklisted[msg.sender] || _factory().blacklisted(msg.sender)) {
-            revert AddressBlacklisted(msg.sender);
+        _checkNotBlacklistedAccount(msg.sender);
+    }
+
+    /// @dev Checks both the per-portal and factory-wide blacklist for `account`. Used for the caller and,
+    ///      separately, for the deposit/withdrawal recipient so a listed account cannot receive bridged assets
+    ///      through an unlisted intermediary.
+    function _checkNotBlacklistedAccount(address account) private view {
+        if (blacklisted[account] || _factory().blacklisted(account)) {
+            revert AddressBlacklisted(account);
         }
     }
 
