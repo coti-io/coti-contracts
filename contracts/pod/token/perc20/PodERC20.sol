@@ -14,7 +14,7 @@ import "../erc7984/PodErc7984Mixin.sol";
 /// @title PodERC20
 /// @notice PoD-side private ERC-20: ciphertext cache and inbox-mediated async moves; COTI holds authoritative garbled state via {IPodErc20CotiSide}.
 /// @dev Callbacks only from `inbox` when the remote peer matches (`cotiChainId`, `cotiSideContract`). Public-amount methods expose amounts in calldata and logs; use encrypted `itUint256` entry points for privacy-sensitive flows.
-///      {_sendPodTwoWay} is `nonReentrant` so a compromised inbox/oracle cannot re-enter before pending locks are written.
+///      {_sendPodTwoWay} is `nonReentrant` so a compromised inbox/oracle cannot re-enter before pending state is written.
 ///      Uses storage `ReentrancyGuard` (not transient) so the whole tree can compile for Paris — COTI rejects Shanghai `PUSH0`.
 ///      Owner may rotate inbox / COTI peer via {configure}.
 contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Ownable {
@@ -47,12 +47,12 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     bytes32 private constant PERMIT_DOMAIN_VERSION_HASH = keccak256("1");
     mapping(address => ctUint256) private _balances;
     mapping(address => mapping(address => IPodERC20.Allowance)) private _allowance;
-    /// @dev One in-flight transfer or burn per sender; mints lock the recipient until callback.
-    mapping(address => bytes32) private _pendingTransferRequestIds;
+    /// @notice In-flight transfer/burn/mint count for an account (from for transfer/burn; to for mint). Concurrent ops are allowed.
+    mapping(address => uint256) public pendingTransferCount;
     mapping(address => mapping(address => bytes32)) private _pendingApprovalRequestIds;
     /// @dev Optional `transferAndCall` payload keyed by inbox `sourceRequestId`, cleared after callback.
     mapping(bytes32 => bytes) private _requestCallbacks;
-    /// @dev Status plus lock metadata (for system-error clear when payload has no accounts).
+    /// @dev Status plus account metadata (for system-error clear when payload has no accounts).
     ///      See {IPodERC20.RequestRecord}.
     mapping(bytes32 => IPodERC20.RequestRecord) private _requests;
     mapping(bytes32 => bytes) public failedRequests;
@@ -80,8 +80,6 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     error ZeroAmount();
     /// @notice Transfer `from` and `to` were the same address.
     error SelfTransfer(address account);
-    /// @notice A transfer or burn lock already exists for the sender (or mint lock for the recipient).
-    error TransferAlreadyPending(address from, address to, bytes32 requestId);
     /// @notice An approval lock already exists for the owner/spender pair.
     error ApprovalAlreadyPending(address owner, address spender, bytes32 requestId);
     /// @notice Inbox caller was not the configured COTI-side peer.
@@ -145,8 +143,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
 
     /**
      * @inheritdoc IPodERC20
-     * @dev **Gotcha:** reverts if either party already has a pending transfer. **Gotcha:** `TransferRequestSubmitted` indexes
-     *      `msg.sender` as `from`, not the `from` argument of internal `_transfer` (same for direct `transfer`).
+     * @dev **Gotcha:** `TransferRequestSubmitted` indexes `msg.sender` as `from`, not the `from` argument of internal `_transfer` (same for direct `transfer`).
      */
     function transfer(address to, itUint256 calldata value, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId) {
         return _transfer(IPodErc20CotiSide.transfer.selector, msg.sender, to, value, msg.value, callbackFeeLocalWei);
@@ -172,6 +169,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     /**
      * @inheritdoc IPodERC20
      * @dev Stores `data` under the new `requestId` until {transferCallback} runs successfully and forwards it to `to`.
+     *      Concurrent transfers may complete out of order; receivers must key hooks on `requestId`, not arrival order.
      */
     function transferAndCall(
         address to,
@@ -277,7 +275,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
 
     /**
      * @inheritdoc IPodERC20
-     * @dev Does not record a “pending” flag per account for sync; only transfers/burns use the pending-transfer map.
+     * @dev Does not change {pendingTransferCount}; only transfers/burns/mints adjust that counter.
      */
     function syncBalances(address[] calldata accounts, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId) {
         IInbox.MpcMethodCall memory mpcMethodCall = MpcAbiCodec.create(IPodErc20CotiSide.syncBalances.selector, 1)
@@ -302,6 +300,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
      * @dev **Gotcha:** balance updates apply only when `nonce` exceeds {balanceNonces}; replays with old nonces are ignored.
      *      COTI {PodErc20CotiMother} starts per-token callback nonces at 1 on registration so the first update applies.
      *      **Gotcha:** `to.call(callbackData)` uses all remaining gas; failures emit {RequestCallbackFailed} only.
+     *      **Gotcha:** concurrent `transferAndCall` hooks may arrive out of order; receivers must key on `sourceRequestId`.
      */
     function transferCallback(bytes memory data) external onlyInbox {
         (uint256 remoteChainId, address remoteContract) = inbox.inboxMsgSender();
@@ -452,7 +451,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
 
     /// @inheritdoc IPodERC20
     function balanceOfWithStatus(address account) external view returns (ctUint256 memory, bool pending) {
-        return (_balances[account], _pendingTransferRequestIds[account] != bytes32(0));
+        return (_balances[account], pendingTransferCount[account] > 0);
     }
 
     /// @inheritdoc IPodERC20
@@ -562,11 +561,11 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         emit RequestStatusUpdated(requestId, status);
     }
 
-    /// @dev Lock a single account for transfer/burn (`recipientLocked=false`) or mint (`recipientLocked=true`).
-    function _lockTransferPending(bytes32 requestId, address locked, bool recipientLocked) internal {
-        _pendingTransferRequestIds[locked] = requestId;
+    /// @dev Record an in-flight transfer/burn (`recipientLocked=false`) or mint (`recipientLocked=true`); increments {pendingTransferCount}.
+    function _recordTransferPending(bytes32 requestId, address account, bool recipientLocked) internal {
+        pendingTransferCount[account] += 1;
         IPodERC20.RequestRecord storage rec = _requests[requestId];
-        rec.account = locked;
+        rec.account = account;
         rec.spender = address(0);
         rec.recipientLocked = recipientLocked;
     }
@@ -586,8 +585,9 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
                 _pendingApprovalRequestIds[rec.account][rec.spender] = bytes32(0);
             }
         } else if (rec.account != address(0)) {
-            if (_pendingTransferRequestIds[rec.account] == requestId) {
-                _pendingTransferRequestIds[rec.account] = bytes32(0);
+            uint256 count = pendingTransferCount[rec.account];
+            if (count > 0) {
+                pendingTransferCount[rec.account] = count - 1;
             }
         }
         rec.account = address(0);
@@ -667,10 +667,6 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     }
 
     function _burn(address from, itUint256 calldata value, uint256 totalValueWei, uint256 callbackFeeLocalWei) internal returns (bytes32 requestId) {
-        if (_pendingTransferRequestIds[from] != bytes32(0)) {
-            revert TransferAlreadyPending(from, address(0), _pendingTransferRequestIds[from]);
-        }
-
         IInbox.MpcMethodCall memory mpcMethodCall = MpcAbiCodec.create(IPodErc20CotiSide.burn.selector, 2)
             .addArgument(from)
             .addArgument(value)
@@ -685,12 +681,12 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         );
 
         _setRequestStatus(requestId, IPodERC20.RequestStatus.Pending);
-        _lockTransferPending(requestId, from, false);
+        _recordTransferPending(requestId, from, false);
         emit TransferRequestSubmitted(from, address(0), requestId);
     }
 
     /**
-     * @dev Transfers lock only `from`; receivers accept concurrent in-flight credits (nonce ordering on callback).
+     * @dev Concurrent transfers from the same `from` are allowed; {pendingTransferCount} tracks in-flight ops.
      */
     function _transfer(
         bytes4 remoteTransferSelector,
@@ -702,9 +698,6 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     ) internal returns (bytes32 requestId) {
         if (from == to) {
             revert SelfTransfer(from);
-        }
-        if (_pendingTransferRequestIds[from] != bytes32(0)) {
-            revert TransferAlreadyPending(from, to, _pendingTransferRequestIds[from]);
         }
 
         IInbox.MpcMethodCall memory mpcMethodCall = MpcAbiCodec.create(remoteTransferSelector, 3)
@@ -721,7 +714,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
             PodERC20.transferError.selector
         );
         _setRequestStatus(requestId, IPodERC20.RequestStatus.Pending);
-        _lockTransferPending(requestId, from, false);
+        _recordTransferPending(requestId, from, false);
         emit TransferRequestSubmitted(msg.sender, to, requestId);
     }
 
@@ -736,9 +729,6 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     ) internal returns (bytes32 requestId) {
         if (from == to) {
             revert SelfTransfer(from);
-        }
-        if (_pendingTransferRequestIds[from] != bytes32(0)) {
-            revert TransferAlreadyPending(from, to, _pendingTransferRequestIds[from]);
         }
 
         IInbox.MpcMethodCall memory mpcMethodCall = MpcAbiCodec.create(remoteTransferSelector, 4)
@@ -756,7 +746,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
             PodERC20.transferError.selector
         );
         _setRequestStatus(requestId, IPodERC20.RequestStatus.Pending);
-        _lockTransferPending(requestId, from, false);
+        _recordTransferPending(requestId, from, false);
         emit TransferRequestSubmitted(from, to, requestId);
     }
 
@@ -814,17 +804,13 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         );
     }
 
-    /// @dev Encrypted mint: sends `(to, amount)` to COTI's {IPodErc20CotiSide.mint} and locks `to`'s pending slot.
+    /// @dev Encrypted mint: sends `(to, amount)` to COTI's {IPodErc20CotiSide.mint}; increments {pendingTransferCount} for `to`.
     function _mint(
         address to,
         itUint256 calldata amount,
         uint256 totalValueWei,
         uint256 callbackFeeLocalWei
     ) internal returns (bytes32 requestId) {
-        if (_pendingTransferRequestIds[to] != bytes32(0)) {
-            revert TransferAlreadyPending(address(0), to, _pendingTransferRequestIds[to]);
-        }
-
         IInbox.MpcMethodCall memory mpcMethodCall = MpcAbiCodec.create(IPodErc20CotiSide.mint.selector, 2)
             .addArgument(to)
             .addArgument(amount)
@@ -838,7 +824,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
             PodERC20.transferError.selector
         );
         _setRequestStatus(requestId, IPodERC20.RequestStatus.Pending);
-        _lockTransferPending(requestId, to, true);
+        _recordTransferPending(requestId, to, true);
         emit TransferRequestSubmitted(address(0), to, requestId);
     }
 
@@ -857,9 +843,6 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         if (from == to) {
             revert SelfTransfer(from);
         }
-        if (_pendingTransferRequestIds[from] != bytes32(0)) {
-            revert TransferAlreadyPending(from, to, _pendingTransferRequestIds[from]);
-        }
 
         IInbox.MpcMethodCall memory mpcMethodCall = MpcAbiCodec.create(remoteSelector, 3)
             .addArgument(from)
@@ -875,7 +858,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
             PodERC20.transferError.selector
         );
         _setRequestStatus(requestId, IPodERC20.RequestStatus.Pending);
-        _lockTransferPending(requestId, from, false);
+        _recordTransferPending(requestId, from, false);
         emit TransferRequestSubmitted(msg.sender, to, requestId);
     }
 
@@ -894,9 +877,6 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         if (from == to) {
             revert SelfTransfer(from);
         }
-        if (_pendingTransferRequestIds[from] != bytes32(0)) {
-            revert TransferAlreadyPending(from, to, _pendingTransferRequestIds[from]);
-        }
 
         IInbox.MpcMethodCall memory mpcMethodCall = MpcAbiCodec.create(remoteSelector, 4)
             .addArgument(spender)
@@ -913,7 +893,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
             PodERC20.transferError.selector
         );
         _setRequestStatus(requestId, IPodERC20.RequestStatus.Pending);
-        _lockTransferPending(requestId, from, false);
+        _recordTransferPending(requestId, from, false);
         emit TransferRequestSubmitted(from, to, requestId);
     }
 
@@ -932,9 +912,6 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         if (from == to) {
             revert SelfTransfer(from);
         }
-        if (_pendingTransferRequestIds[from] != bytes32(0)) {
-            revert TransferAlreadyPending(from, to, _pendingTransferRequestIds[from]);
-        }
         _consumePublicTransferPermit(from, spender, to, amount, permit);
 
         IInbox.MpcMethodCall memory mpcMethodCall = MpcAbiCodec.create(IPodErc20CotiSide.transferFromPublic.selector, 3)
@@ -951,7 +928,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
             PodERC20.transferError.selector
         );
         _setRequestStatus(requestId, IPodERC20.RequestStatus.Pending);
-        _lockTransferPending(requestId, from, false);
+        _recordTransferPending(requestId, from, false);
         emit TransferRequestSubmitted(from, to, requestId);
     }
 
@@ -995,9 +972,6 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         if (amount == 0) {
             revert ZeroAmount();
         }
-        if (_pendingTransferRequestIds[from] != bytes32(0)) {
-            revert TransferAlreadyPending(from, address(0), _pendingTransferRequestIds[from]);
-        }
 
         IInbox.MpcMethodCall memory mpcMethodCall = MpcAbiCodec.create(IPodErc20CotiSide.burnPublic.selector, 2)
             .addArgument(from)
@@ -1012,7 +986,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
             PodERC20.transferError.selector
         );
         _setRequestStatus(requestId, IPodERC20.RequestStatus.Pending);
-        _lockTransferPending(requestId, from, false);
+        _recordTransferPending(requestId, from, false);
         emit TransferRequestSubmitted(from, address(0), requestId);
     }
 
@@ -1025,9 +999,6 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     ) internal returns (bytes32 requestId) {
         if (amount == 0) {
             revert ZeroAmount();
-        }
-        if (_pendingTransferRequestIds[to] != bytes32(0)) {
-            revert TransferAlreadyPending(address(0), to, _pendingTransferRequestIds[to]);
         }
 
         IInbox.MpcMethodCall memory mpcMethodCall = MpcAbiCodec.create(IPodErc20CotiSide.mintPublic.selector, 2)
@@ -1043,7 +1014,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
             PodERC20.transferError.selector
         );
         _setRequestStatus(requestId, IPodERC20.RequestStatus.Pending);
-        _lockTransferPending(requestId, to, true);
+        _recordTransferPending(requestId, to, true);
         emit TransferRequestSubmitted(address(0), to, requestId);
     }
 

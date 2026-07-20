@@ -20,11 +20,12 @@ interface IPodERC20 {
         SystemFailed
     }
 
-    /// @notice Status plus lock metadata for an async inbox request.
-    /// @dev Transfer/burn: `account` = locked party, `spender` = 0, `recipientLocked` = false.
-    ///      Mint: `account` = recipient, `spender` = 0, `recipientLocked` = true.
+    /// @notice Status plus metadata for an async inbox request.
+    /// @dev Transfer/burn: `account` = from (count subject), `spender` = 0, `recipientLocked` = false.
+    ///      Mint: `account` = recipient (count subject), `spender` = 0, `recipientLocked` = true.
     ///      Approval: `account` = owner, `spender` = spender, `recipientLocked` unused.
-    ///      Sync: no lock (`account`/`spender` stay 0).
+    ///      Sync: no account metadata (`account`/`spender` stay 0).
+    ///      Used for system-error cleanup/events; transfer/mint/burn no longer admit-lock on a single slot.
     struct RequestRecord {
         RequestStatus status;
         bool recipientLocked;
@@ -104,7 +105,7 @@ interface IPodERC20 {
      */
     function totalSupply() external view returns (uint256);
 
-    /// @notice Async request record (status + lock metadata) for a request submitted by this token.
+    /// @notice Async request record (status + account metadata) for a request submitted by this token.
     function requests(bytes32 requestId) external view returns (RequestRecord memory);
 
     /**
@@ -127,17 +128,20 @@ interface IPodERC20 {
     function balanceOf(address account) external view returns (ctUint256 memory);
 
     /**
-     * @notice Same as {balanceOf}, plus whether this account is locked by an in-flight outgoing transfer, burn, or mint (recipient).
-     * @dev While `pending` is true, new transfers or burns from this account (or mints to it) will revert.
+     * @notice Same as {balanceOf}, plus whether this account has any in-flight transfer, burn, or mint (`pendingTransferCount > 0`).
+     * @dev `pending` is informational only; concurrent transfer/burn/mint submissions are allowed. Approvals still use a separate per-(owner,spender) lock.
      */
     function balanceOfWithStatus(address account) external view returns (ctUint256 memory, bool pending);
+
+    /// @notice In-flight transfer/burn/mint count for `account` (from for transfer/burn; to for mint).
+    function pendingTransferCount(address account) external view returns (uint256);
 
     // --- Transfers ---
 
     /**
      * @notice Starts an encrypted transfer of `value` from the caller to `to`.
      * @return requestId Inbox request id; completion is asynchronous via {Transfer} or {TransferFailed}.
-     * @dev **Gotcha:** reverts if the sender already has a pending transfer or burn. Incoming transfers do not lock the recipient.
+     * @dev Concurrent transfers from the same sender are allowed; {pendingTransferCount} increments until each settles.
      *      **Gotcha:** concurrent approvals use a separate pending map and do not block transfers unless your deployment couples them elsewhere.
      * @param callbackFeeLocalWei Caller-estimated wei slice for the callback leg; total payment is `msg.value`.
      */
@@ -165,6 +169,7 @@ interface IPodERC20 {
     /**
      * @notice Like {transfer}, then after success attempts `to.call(data)` with no gas stipend beyond the remaining tx gas.
      * @dev **Gotcha:** callback failure does not undo the transfer; it only emits {RequestCallbackFailed}. Stored callback data is cleared on success path.
+     *      **Gotcha:** concurrent `transferAndCall` hooks may arrive out of order; receivers must key on `requestId`, not arrival order.
      */
     function transferAndCall(
         address to,
@@ -203,7 +208,7 @@ interface IPodERC20 {
 
     /**
      * @notice Plain-amount transfer variant; the remote leg receives an un-encrypted `uint256` and garbles it on COTI.
-     * @dev **Gotcha:** exposes the transfer amount in calldata and events on PoD. Same pending-slot rules as the encrypted overload.
+     * @dev **Gotcha:** exposes the transfer amount in calldata and events on PoD. Concurrent transfers are allowed (same as encrypted overload).
      */
     function transfer(address to, uint256 amount, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId);
 
@@ -255,20 +260,20 @@ interface IPodERC20 {
     /**
      * @notice Destroys `amount` (encrypted) from the caller on the COTI ledger; PoD balances update on callback.
      * @return requestId Asynchronous burn request.
-     * @dev **Gotcha:** uses the same pending-transfer slot as transfers; burns block other transfers for `msg.sender` until settled.
+     * @dev Increments {pendingTransferCount} for the caller until the burn settles; concurrent burns/transfers are allowed.
      */
     function burn(itUint256 calldata amount, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId);
 
     /**
      * @notice Plain-amount burn variant (non-encrypted input).
-     * @dev **Gotcha:** exposes burned amount in calldata; same pending-slot behavior as the encrypted variant.
+     * @dev **Gotcha:** exposes burned amount in calldata; same pending-count behavior as the encrypted variant.
      */
     function burn(uint256 amount, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId);
 
     /**
      * @notice Mints `amount` (encrypted) into `to` on the COTI ledger; PoD balance for `to` updates on callback.
      * @return requestId Asynchronous mint request.
-     * @dev **Gotcha:** uses the same pending-transfer slot as transfers for the recipient; the `from` side of the callback is `address(0)`.
+     * @dev Increments {pendingTransferCount} for the recipient until the mint settles; does not block concurrent ops. The `from` side of the callback is `address(0)`.
      */
     function mint(address to, itUint256 calldata amount, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId);
 
