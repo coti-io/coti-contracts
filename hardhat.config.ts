@@ -8,7 +8,11 @@ dotenv.config()
 /** Bump estimated gas price / EIP-1559 fees by 30% on COTI networks (see hardhat/gasPriceBump.ts). */
 import "./hardhat/gasPriceBump"
 
-const accounts = process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [];
+const accounts = process.env.PRIVATE_KEY
+  ? [process.env.PRIVATE_KEY]
+  : process.env.SIGNING_KEYS
+    ? process.env.SIGNING_KEYS.split(",").map((k) => k.trim()).filter(Boolean)
+    : [];
 
 const config: HardhatUserConfig = {
   defaultNetwork: "coti-testnet",

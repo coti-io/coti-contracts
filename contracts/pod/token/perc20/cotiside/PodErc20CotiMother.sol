@@ -330,7 +330,7 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
     // --- Private: garbled balance helpers ---
 
     function _ciphertextPlainZero() private returns (ctUint256 memory) {
-        return MpcCore.offBoard(MpcCore.setPublic256(0));
+        return MpcCore.offBoard(MpcCore.setPublic256(uint256(0)));
     }
 
     function _isEmptyCtUint256(ctUint256 memory ct) private pure returns (bool) {

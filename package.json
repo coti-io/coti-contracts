@@ -40,9 +40,9 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@coti-io/coti-ethers": "^1.0.5",
-    "@coti-io/coti-sdk-typescript": "^1.0.6",
-    "@openzeppelin/contracts": "^5.4.0",
+    "@coti-io/coti-ethers": "^1.0.6",
+    "@coti-io/coti-sdk-typescript": "^1.0.9",
+    "@openzeppelin/contracts": "5.4.0",
     "dotenv": "^16.4.5"
   }
 }
