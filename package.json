@@ -18,6 +18,11 @@
     "l2",
     "on-chain-compute"
   ],
+  "scripts": {
+    "compile": "hardhat compile",
+    "check:bytecode-size": "node scripts/check-bytecode-size.mjs",
+    "test": "hardhat test --network hardhat"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",
     "@nomicfoundation/hardhat-ethers": "^3.1.0",
