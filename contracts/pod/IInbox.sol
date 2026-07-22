@@ -64,7 +64,10 @@ interface IInbox {
         bytes4 errorSelector;
         /// @notice True when a success response is expected.
         bool isTwoWay;
-        /// @notice True after an incoming request or linked response has been processed.
+        /// @notice True after the inbox has processed this request (execution attempted) or, for an
+        ///         original outbound two-way, after a linked return/error leg was *received*.
+        /// @dev Does **not** mean the application callback committed. A return leg may still be in
+        ///      `errors` / retryable if the callback reverted. See {IncomingResponseReceived}.
         bool executed;
         /// @dev If this request is a one-way response or error delivery, links to the original two-way request ID.
         bytes32 sourceRequestId;
@@ -121,11 +124,13 @@ interface IInbox {
         uint256 callbackFeeLocalWei
     ) external payable returns (bytes32);
 
-    /// @notice Send a one-way message with an error handler only (no callback).
+    /// @notice Send a one-way message with no callback and no error handler.
+    /// @dev `errorSelector` must be zero. One-way messages do not generate raise/system-error return legs
+    ///      (no funded `callerFee`). Use {sendTwoWayMessage} when the source needs an error callback.
     /// @param targetChainId Destination chain ID.
     /// @param targetContract Contract to call on the destination chain.
     /// @param methodCall Calldata and MPC metadata.
-    /// @param errorSelector Selector invoked on error.
+    /// @param errorSelector Must be `bytes4(0)`.
     /// @return requestId The new outbound request ID.
     function sendOneWayMessage(
         uint256 targetChainId,
@@ -133,6 +138,9 @@ interface IInbox {
         MpcMethodCall calldata methodCall,
         bytes4 errorSelector
     ) external payable returns (bytes32);
+
+    /// @notice One-way sends cannot register an error callback (no funded return-leg budget).
+    error OneWayErrorSelectorNotSupported(bytes4 errorSelector);
 
     // --- External: execution (non-payable) ---
 
@@ -148,10 +156,12 @@ interface IInbox {
 
     // --- External: views ---
 
-    /// @notice Return error details for a failed outgoing request.
-    /// @param requestId Outbound request ID.
-    /// @return code Error code.
-    /// @return message Error message or revert data.
+    /// @notice Return error details for a failed outgoing / incoming request.
+    /// @param requestId Request ID (outbound or mined incoming).
+    /// @return code Error code (`1` = execution failed, `2` = encode failed).
+    /// @return message Human-readable or raw message. For execution failures the stored blob is
+    ///         `abi.encode(uint256 fullLength, bytes prefix)` (POD-02). Implementations decode
+    ///         `Error(string)` when possible; otherwise return the raw `prefix` bytes as `string`.
     function getOutboxError(bytes32 requestId) external view returns (uint256 code, string memory message);
 
     /// @notice Return stored response bytes for a completed incoming flow.
