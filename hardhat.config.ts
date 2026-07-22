@@ -7,6 +7,8 @@ dotenv.config()
 
 /** Bump estimated gas price / EIP-1559 fees by 30% on COTI networks (see hardhat/gasPriceBump.ts). */
 import "./hardhat/gasPriceBump"
+/** Prefer native solc on linux-arm64 (solcjs OOMs on large viaIR inputs). */
+import "./hardhat/nativeSolcArm64"
 
 const accounts = process.env.PRIVATE_KEY
   ? [process.env.PRIVATE_KEY]
@@ -20,17 +22,35 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.8.20",
+        version: "0.8.28",
         settings: {
+          // COTI rejects Shanghai PUSH0; keep Paris for deployability.
+          evmVersion: "paris",
           viaIR: true,
           optimizer: {
             enabled: true,
-            runs: 10000
+            // Prefer create-size headroom under the 24_576-byte Spurious Dragon limit (higher runs → larger code).
+            runs: 200,
           },
           metadata: {
             // do not include the metadata hash, since this is machine dependent
             // and we want all generated code to be deterministic
             // https://docs.soliditylang.org/en/v0.7.6/metadata.html
+            bytecodeHash: 'none',
+          },
+        }
+      },
+      {
+        // Exact-pragma legacy contracts (e.g. disperse).
+        version: "0.8.20",
+        settings: {
+          evmVersion: "paris",
+          viaIR: true,
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+          metadata: {
             bytecodeHash: 'none',
           },
         }
