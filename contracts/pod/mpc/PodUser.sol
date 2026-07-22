@@ -10,7 +10,7 @@ import "../InboxUser.sol";
 /// @notice POD base: COTI chain ID, MPC executor address, and owner-gated {configure}.
 abstract contract PodUser is InboxUser, Ownable {
     /// @notice Default MPC error callback surfaced from the outbox.
-    event ErrorRemoteCall(bytes32 requestId, uint256 code, string message);
+    event ErrorRemoteCall(bytes32 requestId, uint256 code, bytes data);
 
     /// @notice Inbox callback remote sender did not match configured COTI MPC executor.
     error OnlyMpcExecutor(uint256 remoteChainId, address remoteContract);
