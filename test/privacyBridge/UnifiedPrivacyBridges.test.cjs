@@ -37,9 +37,11 @@ function validateEnvironment() {
  * @returns {ethers.Wallet}
  */
 function makeSdkWallet() {
-    const raw = process.env.PRIVATE_KEY;
-    if (!raw) throw new Error('PRIVATE_KEY not set in .env');
-    const pk = raw.startsWith('0x') ? raw : '0x' + raw;
+    const raw =
+        process.env.PRIVATE_KEY ||
+        (process.env.SIGNING_KEYS ? process.env.SIGNING_KEYS.split(",")[0]?.trim() : null);
+    if (!raw) throw new Error("PRIVATE_KEY (or SIGNING_KEYS) not set in .env");
+    const pk = raw.startsWith("0x") ? raw : "0x" + raw;
     return new ethers.Wallet(pk, ethers.provider);
 }
 

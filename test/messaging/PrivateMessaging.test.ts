@@ -1,4 +1,4 @@
-import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
+import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
@@ -14,7 +14,7 @@ describe("PrivateMessaging", () => {
   }
 
   it("records sent and inbox pages with viewer-specific ciphertext", async () => {
-    const { contract, alice, bob, carol, ct } = await loadFixture(deployFixture);
+    const { contract, alice, bob, carol, ct } = await deployFixture();
 
     await contract.recordSyntheticMessage(
       alice.address,
@@ -48,7 +48,7 @@ describe("PrivateMessaging", () => {
   });
 
   it("stores multipart messages and returns chunked ciphertexts", async () => {
-    const { contract, alice, bob, carol, ct } = await loadFixture(deployFixture);
+    const { contract, alice, bob, carol, ct } = await deployFixture();
 
     await contract.recordSyntheticMultipartMessage(
       alice.address,
@@ -80,7 +80,7 @@ describe("PrivateMessaging", () => {
   });
 
   it("splits epoch rewards by encrypted cell usage and gives final dust to the last claimant", async () => {
-    const { contract, alice, bob, ct } = await loadFixture(deployFixture);
+    const { contract, alice, bob, ct } = await deployFixture();
 
     await contract.fundEpoch(0, { value: 11n });
 
@@ -125,7 +125,7 @@ describe("PrivateMessaging", () => {
   });
 
   it("rejects active-epoch claims, double claims, and past-epoch funding", async () => {
-    const { contract, alice, bob, ct } = await loadFixture(deployFixture);
+    const { contract, alice, bob, ct } = await deployFixture();
 
     await contract.fundEpoch(0, { value: 9n });
     await contract.recordSyntheticMessage(

@@ -60,12 +60,12 @@ const bool_a = true
 const bool_b = false
 const [a, b] = params
 describe("Precompile", function () {
-  buildTest("ArithmeticTestsContract", "addTest", "getAddResult", params, a + b)
-  buildTest("ArithmeticTestsContract", "checkedAddTest", "getAddResult", params, a + b)
-  buildTest("ArithmeticTestsContract", "subTest", "getSubResult", params, a - b)
-  buildTest("ArithmeticTestsContract", "checkedSubTest", "getSubResult", params, a - b)
-  buildTest("ArithmeticTestsContract", "mulTest", "getMulResult", params, a * b)
-  buildTest("ArithmeticTestsContract", "checkedMulTest", "getMulResult", params, a * b)
+  buildTest("ArithmeticAddTestsContract", "addTest", "getAddResult", params, a + b)
+  buildTest("ArithmeticAddTestsContract", "checkedAddTest", "getAddResult", params, a + b)
+  buildTest("ArithmeticSubTestsContract", "subTest", "getSubResult", params, a - b)
+  buildTest("ArithmeticSubTestsContract", "checkedSubTest", "getSubResult", params, a - b)
+  buildTest("ArithmeticMulTestsContract", "mulTest", "getMulResult", params, a * b)
+  buildTest("ArithmeticMulTestsContract", "checkedMulTest", "getMulResult", params, a * b)
 
   buildTest("MiscellaneousTestsContract", "divTest", "getDivResult", params, a / b)
   buildTest("MiscellaneousTestsContract", "remTest", "getRemResult", params, a % b)

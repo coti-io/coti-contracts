@@ -420,7 +420,7 @@ describe("Negative Test Cases - 8/16/32/64-bit", function () {
     it("Should handle subtraction resulting in zero", async function () {
       const [owner] = await setupAccounts()
 
-      const factory = await hre.ethers.getContractFactory("ArithmeticTestsContract", owner as any)
+      const factory = await hre.ethers.getContractFactory("ArithmeticSubTestsContract", owner as any)
       const contract = await factory.deploy({ gasLimit })
       await contract.waitForDeployment()
 
@@ -438,7 +438,7 @@ describe("Negative Test Cases - 8/16/32/64-bit", function () {
     it("Should handle max value operations for 8-bit", async function () {
       const [owner] = await setupAccounts()
 
-      const factory = await hre.ethers.getContractFactory("ArithmeticTestsContract", owner as any)
+      const factory = await hre.ethers.getContractFactory("ArithmeticAddTestsContract", owner as any)
       const contract = await factory.deploy({ gasLimit })
       await contract.waitForDeployment()
 
@@ -457,7 +457,7 @@ describe("Negative Test Cases - 8/16/32/64-bit", function () {
     it("Should handle max value operations for 16-bit", async function () {
       const [owner] = await setupAccounts()
 
-      const factory = await hre.ethers.getContractFactory("ArithmeticTestsContract", owner as any)
+      const factory = await hre.ethers.getContractFactory("ArithmeticAddTestsContract", owner as any)
       const contract = await factory.deploy({ gasLimit })
       await contract.waitForDeployment()
 

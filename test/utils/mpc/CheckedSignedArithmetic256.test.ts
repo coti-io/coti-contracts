@@ -6,12 +6,16 @@ const gasLimit = 12000000
 const MAX_INT256 = (1n << 255n) - 1n
 const MIN_INT256 = -(1n << 255n)
 
-async function deploy() {
+type Deployed = {
+  contract: any
+  owner: any
+}
+
+async function deployNamed(name: string): Promise<Deployed> {
   const [owner] = await setupAccounts()
-  const factory = await hre.ethers.getContractFactory("ArithmeticSigned256TestsContract", owner as any)
+  const factory = await hre.ethers.getContractFactory(name, owner as any)
   const contract = await factory.deploy({ gasLimit })
   await contract.waitForDeployment()
-
   return { contract, owner }
 }
 
@@ -26,101 +30,134 @@ async function expectRevert(txPromise: Promise<any>, owner: any) {
   }
 }
 
-describe("Checked Signed Arithmetic 256-bit", function () {
-  let deployment: Awaited<ReturnType<typeof deploy>>
+describe("Checked Signed Arithmetic", function () {
+  describe("narrow (8/16/32/64)", function () {
+    let deployment: Deployed
 
-  before(async function () {
-    deployment = await deploy()
+    before(async function () {
+      deployment = await deployNamed("ArithmeticSignedNarrowTestsContract")
+    })
+
+    for (const func of [
+      "basicSigned8Test",
+      "basicSigned16Test",
+      "basicSigned32Test",
+      "basicSigned64Test",
+      "minDivMinusOne8Test",
+    ]) {
+      it(`${func} should preserve signed integer semantics`, async function () {
+        const { contract } = deployment
+        const tx = await contract.getFunction(func)({ gasLimit })
+        const receipt = await tx.wait()
+        expect(receipt?.status).to.equal(1)
+      })
+    }
+
+    for (const func of [
+      "checkedAdd8OverflowTest",
+      "checkedSub8UnderflowTest",
+      "checkedMul8OverflowTest",
+    ]) {
+      it(`${func} should revert`, async function () {
+        const { contract, owner } = deployment
+        await expectRevert(contract.getFunction(func)({ gasLimit }), owner)
+      })
+    }
   })
 
-  for (const func of [
-    "basicSigned8Test",
-    "basicSigned16Test",
-    "basicSigned32Test",
-    "basicSigned64Test",
-    "basicSigned128Test",
-    "basicSigned256ArithmeticTest",
-    "basicSigned256ComparisonTest",
-    "basicSigned256MuxAndHelpersTest",
-    "minDivMinusOne8Test",
-    "minDivMinusOne128Test",
-    "minDivMinusOne256Test",
-    "plainMul128WrapTest",
-    "plainMul256WrapTest",
-  ]) {
-    it(`${func} should preserve signed integer semantics`, async function () {
+  describe("int128", function () {
+    let deployment: Deployed
+
+    before(async function () {
+      deployment = await deployNamed("ArithmeticSigned128TestsContract")
+    })
+
+    for (const func of [
+      "basicSigned128Test",
+      "minDivMinusOne128Test",
+      "plainMul128WrapTest",
+    ]) {
+      it(`${func} should preserve signed integer semantics`, async function () {
+        const { contract } = deployment
+        const tx = await contract.getFunction(func)({ gasLimit })
+        const receipt = await tx.wait()
+        expect(receipt?.status).to.equal(1)
+      })
+    }
+
+    for (const func of [
+      "checkedAdd128OverflowTest",
+      "checkedSub128UnderflowTest",
+      "checkedMul128OverflowTest",
+    ]) {
+      it(`${func} should revert`, async function () {
+        const { contract, owner } = deployment
+        await expectRevert(contract.getFunction(func)({ gasLimit }), owner)
+      })
+    }
+  })
+
+  describe("int256", function () {
+    let deployment: Deployed
+
+    before(async function () {
+      deployment = await deployNamed("ArithmeticSigned256TestsContract")
+    })
+
+    for (const func of [
+      "basicSigned256ArithmeticTest",
+      "basicSigned256ComparisonTest",
+      "basicSigned256MuxAndHelpersTest",
+      "minDivMinusOne256Test",
+      "plainMul256WrapTest",
+    ]) {
+      it(`${func} should preserve signed integer semantics`, async function () {
+        const { contract } = deployment
+        const tx = await contract.getFunction(func)({ gasLimit })
+        const receipt = await tx.wait()
+        expect(receipt?.status).to.equal(1)
+      })
+    }
+
+    it("checkedAdd should return an in-range signed result", async function () {
       const { contract } = deployment
-
-      const tx = await contract.getFunction(func)({ gasLimit })
-      const receipt = await tx.wait()
-
-      expect(receipt?.status).to.equal(1)
+      const tx = await contract.getFunction("checkedAddTest")(100n, -40n, { gasLimit })
+      await tx.wait()
+      expect(await contract.getFunction("getAddResult")()).to.equal(60n)
     })
-  }
 
-  it("checkedAdd should return an in-range signed result", async function () {
-    const { contract } = deployment
-
-    const tx = await contract.getFunction("checkedAddTest")(100n, -40n, { gasLimit })
-    await tx.wait()
-
-    expect(await contract.getFunction("getAddResult")()).to.equal(60n)
-  })
-
-  it("checkedAdd should revert on signed overflow", async function () {
-    const { contract, owner } = deployment
-
-    await expectRevert(contract.getFunction("checkedAddTest")(MAX_INT256, 1n, { gasLimit }), owner)
-  })
-
-  it("checkedSub should return an in-range signed result", async function () {
-    const { contract } = deployment
-
-    const tx = await contract.getFunction("checkedSubTest")(-100n, -40n, { gasLimit })
-    await tx.wait()
-
-    expect(await contract.getFunction("getSubResult")()).to.equal(-60n)
-  })
-
-  it("checkedSub should revert on signed underflow", async function () {
-    const { contract, owner } = deployment
-
-    await expectRevert(contract.getFunction("checkedSubTest")(MIN_INT256, 1n, { gasLimit }), owner)
-  })
-
-  it("checkedMul should return an in-range signed result", async function () {
-    const { contract } = deployment
-
-    const tx = await contract.getFunction("checkedMulTest")(-12n, 9n, { gasLimit })
-    await tx.wait()
-
-    expect(await contract.getFunction("getMulResult")()).to.equal(-108n)
-  })
-
-  it("checkedMul should revert on positive signed overflow", async function () {
-    const { contract, owner } = deployment
-
-    await expectRevert(contract.getFunction("checkedMulTest")(1n << 128n, 1n << 128n, { gasLimit }), owner)
-  })
-
-  it("checkedMul should revert on min-int negation overflow", async function () {
-    const { contract, owner } = deployment
-
-    await expectRevert(contract.getFunction("checkedMulTest")(MIN_INT256, -1n, { gasLimit }), owner)
-  })
-
-  for (const func of [
-    "checkedAdd8OverflowTest",
-    "checkedSub8UnderflowTest",
-    "checkedMul8OverflowTest",
-    "checkedAdd128OverflowTest",
-    "checkedSub128UnderflowTest",
-    "checkedMul128OverflowTest",
-  ]) {
-    it(`${func} should revert`, async function () {
+    it("checkedAdd should revert on signed overflow", async function () {
       const { contract, owner } = deployment
-
-      await expectRevert(contract.getFunction(func)({ gasLimit }), owner)
+      await expectRevert(contract.getFunction("checkedAddTest")(MAX_INT256, 1n, { gasLimit }), owner)
     })
-  }
+
+    it("checkedSub should return an in-range signed result", async function () {
+      const { contract } = deployment
+      const tx = await contract.getFunction("checkedSubTest")(-100n, -40n, { gasLimit })
+      await tx.wait()
+      expect(await contract.getFunction("getSubResult")()).to.equal(-60n)
+    })
+
+    it("checkedSub should revert on signed underflow", async function () {
+      const { contract, owner } = deployment
+      await expectRevert(contract.getFunction("checkedSubTest")(MIN_INT256, 1n, { gasLimit }), owner)
+    })
+
+    it("checkedMul should return an in-range signed result", async function () {
+      const { contract } = deployment
+      const tx = await contract.getFunction("checkedMulTest")(-12n, 9n, { gasLimit })
+      await tx.wait()
+      expect(await contract.getFunction("getMulResult")()).to.equal(-108n)
+    })
+
+    it("checkedMul should revert on positive signed overflow", async function () {
+      const { contract, owner } = deployment
+      await expectRevert(contract.getFunction("checkedMulTest")(1n << 128n, 1n << 128n, { gasLimit }), owner)
+    })
+
+    it("checkedMul should revert on min-int negation overflow", async function () {
+      const { contract, owner } = deployment
+      await expectRevert(contract.getFunction("checkedMulTest")(MIN_INT256, -1n, { gasLimit }), owner)
+    })
+  })
 })
