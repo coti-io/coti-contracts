@@ -22,7 +22,7 @@ jobs:
         with:
           node-version: 24
       - run: npm ci
-      - run: npx hardhat compile
+      - run: npm run compile
       - run: npm run check:bytecode-size
 
   update-version-and-publish:
