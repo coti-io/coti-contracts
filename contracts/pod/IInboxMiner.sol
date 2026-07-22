@@ -9,6 +9,8 @@ interface IInboxMiner {
     error RetryFailedRequestNotAFailedRequest();
     error RequestIdRequired();
     error RetryFailedRequestExecutionFailed(bytes returnData);
+    /// @notice Encode failed during retry; original execution error is preserved for a later retry.
+    error RetryFailedRequestEncodeFailed(bytes encodeError);
     /// @notice The `sourceChainId` passed to {batchProcessRequests} is this chain's own id.
     error SourceChainIsThisChain(uint256 chainId);
     /// @notice A mined request's encoded source chain does not match the batch `sourceChainId`.
