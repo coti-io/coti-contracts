@@ -61,7 +61,8 @@ interface IPrivacyPortal {
     /// @param underlyingToken Public ERC20 locked and released by this portal (WETH/WAVAX when native-wrapped).
     /// @param pToken PoD pToken minted and burned for the underlying token.
     /// @param decimals Token decimals exposed for UI compatibility.
-    /// @param nativeWrappedUnderlying When true, {depositNative} accepts native coin (wraps in-contract); withdraw releases wrapped underlying ERC20.
+    /// @param nativeWrappedUnderlying When true, {depositNative} accepts native coin (wraps in-contract);
+    ///        withdrawals unwrap and send native coin to the recipient.
     /// @param factory PrivacyPortalFactory (admin, fees, pause, blacklist, rescue, operators).
     function initialize(
         address underlyingToken,
@@ -74,7 +75,7 @@ interface IPrivacyPortal {
     /// @notice Factory that created / binds this portal.
     function factory() external view returns (address);
 
-    /// @notice Whether this portal accepts native coin on deposit via {depositNative}.
+    /// @notice Whether this portal accepts native coin on deposit via {depositNative} and unwraps on withdraw.
     function nativeWrappedUnderlying() external view returns (bool);
 
     /// @notice Accumulated portal protocol fees awaiting sweep.
@@ -110,7 +111,7 @@ interface IPrivacyPortal {
 
     /// @notice Request withdrawal by permitting and transferring pTokens into portal custody, then releasing after async success.
     /// @dev `msg.value` must equal `transferFee + portalFee`. pTokens are batch-burned separately by the portal owner.
-    /// @param recipient Public underlying recipient (wrapped ERC20 for native portals).
+    /// @param recipient Public underlying recipient (native coin for native-wrapped portals; ERC20 otherwise).
     /// @param amount Public amount to withdraw.
     /// @param portalFee Portal protocol fee collected by this portal.
     /// @param transferFee Native fee paid for the pToken transfer request.
