@@ -396,7 +396,7 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
         }
 
         gtUint256 senderBalance = _readGarbledBalance(id, from);
-        gtUint256 zeroAmount = MpcCore.setPublic256(0);
+        gtUint256 zeroAmount = MpcCore.setPublic256(uint256(0));
         gtUint256 effectiveAmount;
         gtUint256 allowanceAfter;
         bool checkAllowance = spendAllowance && spender != from;

@@ -32,7 +32,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     address public factory;
     /// @notice Token decimals mirrored from the underlying/pToken pair.
     uint8 public decimals;
-    /// @notice When true, {depositNative} wraps native coin; withdrawals release wrapped underlying ERC20.
+    /// @notice When true, {depositNative} wraps native coin; withdrawals unwrap and send native coin.
     bool public nativeWrappedUnderlying;
 
     /// @notice Soft deposit switch (factory operator); independent of pause / factory pause.
@@ -810,9 +810,17 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
             revert PTokenTransferNotSuccessful(withdrawal.transferRequestId, requestStatus);
         }
 
-        withdrawal.status = WithdrawalStatus.Released;
-        underlyingToken.safeTransfer(withdrawal.recipient, withdrawal.amount);
         pendingBurnAmount += withdrawal.amount;
+        withdrawal.status = WithdrawalStatus.Released;
+        if (nativeWrappedUnderlying) {
+            IWrappedNative(address(underlyingToken)).withdraw(withdrawal.amount);
+            (bool ok,) = payable(withdrawal.recipient).call{value: withdrawal.amount}("");
+            if (!ok) {
+                revert EthTransferFailed();
+            }
+        } else {
+            underlyingToken.safeTransfer(withdrawal.recipient, withdrawal.amount);
+        }
 
         emit WithdrawalReleased(withdrawalId, withdrawal.recipient, withdrawal.amount);
         emit PendingBurnIncreased(withdrawalId, withdrawal.amount, pendingBurnAmount);
