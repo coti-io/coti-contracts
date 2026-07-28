@@ -5,9 +5,10 @@ pragma solidity ^0.8.20;
 /// @notice Deployment constants used by chain-specific PoD dapp helper contracts.
 library PodNetworkConstants {
     /// @notice Deterministic inbox address shared by every chain (CreateX CREATE3 deploy).
-    /// @dev Same value on Sepolia, COTI testnet, and Avalanche Fuji because the CREATE3 address
-    /// depends only on the deployer EOA and salt (see scripts/createx.ts).
-    address internal constant INBOX = 0xAb625bE229F603f6BBF964474AFf6d5487e364De;
+    /// @dev Salt label `pod.inbox.v2.2` — keep in sync with
+    /// `pod-ecosystem-integration/deployConfig.json` (`chains.*.inbox`).
+    /// Same value on Sepolia, COTI testnet, and Avalanche Fuji (CREATE3 = deployer EOA + salt).
+    address internal constant INBOX = 0x3b8B70819f27e0438cBcE7f31894f799da52648F;
 
     /// @notice Source-chain inbox used by PoD dapps on Sepolia.
     address internal constant SEPOLIA_INBOX = INBOX;
@@ -22,8 +23,8 @@ library PodNetworkConstants {
     uint256 internal constant COTI_TESTNET_CHAIN_ID = 7082400;
 
     /// @notice COTI-side MPC executor paired with source-chain PoD dapps.
-    /// @dev Redeploy and update this after the deterministic inbox redeploy on COTI.
-    address internal constant COTI_TESTNET_MPC_EXECUTOR = 0xC76aaE4F3810fBBd5d96b92DEFeBE0034405Ad9c;
+    /// @dev From deployConfig `chains.7082400.cotiExecutor` (pod.inbox.v2.2 era).
+    address internal constant COTI_TESTNET_MPC_EXECUTOR = 0x6804961167C3C8Ef2bf6839DDcf51Ec1FBE800c3;
 
     /// @notice COTI testnet inbox used by COTI-side dapps.
     address internal constant COTI_TESTNET_INBOX = INBOX;
