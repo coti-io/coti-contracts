@@ -21,6 +21,7 @@
   "scripts": {
     "compile": "hardhat compile",
     "check:bytecode-size": "node scripts/check-bytecode-size.mjs",
+    "check:sot-drift": "node scripts/check-sot-drift.mjs",
     "test": "hardhat test --network hardhat"
   },
   "devDependencies": {
