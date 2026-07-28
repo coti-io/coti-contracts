@@ -4,14 +4,17 @@ pragma solidity ^0.8.20;
 import "./PodERC20.sol";
 
 /// @title PodErc20Mintable
-/// @notice {PodERC20} variant that permits `mint` calls from a single immutable `minter` address.
-/// @dev The minter is set at construction and cannot change. To rotate minters, deploy a new token or subclass with
-///      a mutable `minter` plus access control. All other behavior (transfers, approvals, burns, syncing) is inherited
-///      verbatim from {PodERC20}.
+/// @notice {PodERC20} variant that permits `mint` calls from a single `minter` address.
+/// @dev The minter is set at construction/initialize and may later be rotated by the Ownable owner via {setMinter}
+///      (typically the {PrivacyPortalFactory} when remapping an existing pToken to a new portal). All other behavior
+///      (transfers, approvals, burns, syncing) is inherited verbatim from {PodERC20}.
 contract PodErc20Mintable is PodERC20 {
     /// @notice Sole address allowed to call {PodERC20.mint} (encrypted or plain variant).
     address public minter;
     bool private _mintableInitialized;
+
+    /// @notice Emitted when the authorized minter is rotated.
+    event MinterUpdated(address indexed previousMinter, address indexed newMinter);
 
     /// @notice Thrown when a non-minter tries to mint; carries the caller for debugging.
     error OnlyMinter(address caller);
@@ -73,7 +76,7 @@ contract PodErc20Mintable is PodERC20 {
         _initializeMintableMinter(_minter);
     }
 
-    /// @notice Initialize the immutable-style minter slot for constructors and clones.
+    /// @notice Initialize the minter slot for constructors and clones.
     /// @param _minter Address authorized to mint; must not be zero.
     function _initializeMintableMinter(address _minter) internal {
         if (_mintableInitialized) {
@@ -84,5 +87,16 @@ contract PodErc20Mintable is PodERC20 {
         }
         _mintableInitialized = true;
         minter = _minter;
+    }
+
+    /// @notice Rotate the authorized minter (factory Ownable owner).
+    /// @param newMinter Address authorized to mint; must not be zero.
+    function setMinter(address newMinter) external onlyOwner {
+        if (newMinter == address(0)) {
+            revert PodErc20MintableInvalidMinter();
+        }
+        address previous = minter;
+        minter = newMinter;
+        emit MinterUpdated(previous, newMinter);
     }
 }

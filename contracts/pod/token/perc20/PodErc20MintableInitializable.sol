@@ -15,8 +15,8 @@ contract PodErc20MintableInitializable is PodErc20Mintable, Initializable {
     }
 
     /// @notice Initialize a mintable source-chain pToken clone.
-    /// @param _minter Address allowed to mint (the paired {PrivacyPortal}).
-    /// @param _owner Ownable admin allowed to {configure} inbox / COTI peer; factory passes `address(this)`.
+    /// @param _minter Address allowed to mint (the paired {PrivacyPortal}; rotatable later via {setMinter}).
+    /// @param _owner Ownable admin allowed to {configure} inbox / COTI peer and {setMinter}; factory passes `address(this)`.
     /// @param _cotiChainId COTI chain id for remote MPC execution.
     /// @param _inbox Source-chain inbox.
     /// @param _cotiSideContract COTI-side pToken ledger.

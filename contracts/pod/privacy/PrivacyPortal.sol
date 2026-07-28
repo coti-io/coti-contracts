@@ -19,7 +19,8 @@ import "./PrivacyPortalFeeLib.sol";
 /// @notice Locks a public ERC20 and mints/burns its PoD private pToken counterpart.
 /// @dev The portal never reads private balances. It only reacts to successful pToken callbacks and records public bridge obligations.
 ///      Split deploy-then-initialize is unsafe on clones; use {PrivacyPortalFactory.createPortal} or an equivalent atomic path.
-///      Admin and operator privileges live on {factory} only — portals have no local Ownable.
+///      Admin/operator auth is resolved via {bindingFactory} (survives remount). Live deposit/withdraw entrypoints also require
+///      a non-zero active {factory} binding (cleared on remount detach).
 contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, ReentrancyGuard, Initializable {
     using SafeERC20 for IERC20;
     using PrivacyPortalFeeLib for bytes32;
@@ -29,7 +30,10 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     /// @notice Private pToken minted and burned against the underlying collateral.
     IPodERC20 public pToken;
     /// @notice Factory that created this portal (fees, pause, blacklist, rescue, operators).
+    /// @dev Cleared by {retireDepositsForUpgrade} on remount; deposit enablement requires a non-zero value.
     address public factory;
+    /// @notice Factory retained after remount detach for admin/rescue auth (set once at initialize).
+    address public bindingFactory;
     /// @notice Token decimals mirrored from the underlying/pToken pair.
     uint8 public decimals;
     /// @notice When true, {depositNative} wraps native coin; withdrawals unwrap and send native coin.
@@ -213,6 +217,8 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     error OnlyFactoryOperator(address caller);
     /// @notice Caller is not a factory {DEFAULT_ADMIN_ROLE} holder.
     error OnlyFactoryAdmin(address caller);
+    /// @notice Caller is not this portal's {factory} contract.
+    error OnlyPortalFactory(address caller);
     /// @notice Cannot rescue the paired pToken.
     error CannotRescuePToken();
     /// @notice Native transfer failed.
@@ -248,6 +254,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         minDepositAmount = 1;
         minWithdrawAmount = 1;
         factory = factory_;
+        bindingFactory = factory_;
         emit FactorySet(factory_);
     }
 
@@ -257,14 +264,49 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     }
 
     /// @notice Factory-admin unpause for this portal instance.
+    /// @dev Detached portals ({factory} == 0 after remount) cannot be reopened for user traffic.
     function unpause() external onlyFactoryAdmin {
+        if (factory == address(0)) {
+            revert FactoryNotConfigured();
+        }
         _unpause();
     }
 
     /// @notice Soft deposit enable/disable (factory operator); does not enable rescue.
+    /// @dev Reverts after {retireDepositsForUpgrade} clears {factory} — a detached portal cannot re-enable deposits.
     function setIsDepositEnabled(bool enabled) external onlyFactoryOperator {
+        if (factory == address(0)) {
+            revert FactoryNotConfigured();
+        }
         isDepositEnabled = enabled;
         emit DepositEnabledUpdated(enabled);
+    }
+
+    /// @notice Factory-only: disable deposits and detach this portal from the active factory binding.
+    /// @dev Clears {factory} so {setIsDepositEnabled} can never re-enable deposits. Admin/rescue auth continues
+    ///      via {bindingFactory}. Remount also requires this portal to be {paused}.
+    function retireDepositsForUpgrade() external override {
+        if (msg.sender != address(factory)) {
+            revert OnlyPortalFactory(msg.sender);
+        }
+        isDepositEnabled = false;
+        factory = address(0);
+        emit DepositEnabledUpdated(false);
+        emit FactorySet(address(0));
+    }
+
+    /// @notice Factory-only: pause this portal instance.
+    /// @dev Used after remount so the new clone stays closed until admin migrates collateral and unpauses.
+    function pauseByFactory() external override {
+        if (msg.sender != address(bindingFactory)) {
+            revert OnlyPortalFactory(msg.sender);
+        }
+        _pause();
+    }
+
+    /// @inheritdoc IPrivacyPortal
+    function paused() public view override(Pausable, IPrivacyPortal) returns (bool) {
+        return Pausable.paused();
     }
 
     /// @notice Add an address to this portal's blacklist.
@@ -679,7 +721,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
             revert InsufficientAccumulatedFees(accumulatedPortalFees, amount);
         }
 
-        IPrivacyPortalFactory portalFactory = _factory();
+        IPrivacyPortalFactory portalFactory = _controllerFactory();
         address recipient = portalFactory.feeRecipient();
         if (recipient == address(0)) {
             revert InvalidAddress();
@@ -696,7 +738,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         if (amount == 0) {
             revert InvalidAmount();
         }
-        address recipient = _factory().rescueRecipient();
+        address recipient = _controllerFactory().rescueRecipient();
         if (recipient == address(0)) {
             revert InvalidAddress();
         }
@@ -720,7 +762,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         if (token == address(pToken)) {
             revert CannotRescuePToken();
         }
-        address recipient = _factory().rescueRecipient();
+        address recipient = _controllerFactory().rescueRecipient();
         if (recipient == address(0)) {
             revert InvalidAddress();
         }
@@ -850,7 +892,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         returns (uint256 floor, uint128 maxFee)
     {
         bytes32 packed = _effectiveFeePacked(isDeposit);
-        IPrivacyPortalFactory portalFactory = _factory();
+        IPrivacyPortalFactory portalFactory = _controllerFactory();
         (uint96 fixedFee, uint32 bps, uint128 max) = PrivacyPortalFeeLib.unpackFeeConfig(packed);
         maxFee = max;
         if (address(portalFactory.priceOracle()) == address(0) || bps == 0) {
@@ -875,7 +917,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         view
         returns (uint256 fee, bool usedDynamicPricing)
     {
-        IPrivacyPortalFactory portalFactory = _factory();
+        IPrivacyPortalFactory portalFactory = _controllerFactory();
         if (isDeposit) {
             if (PrivacyPortalFeeLib.isOverrideSet(depositFeeOverridePacked)) {
                 return _estimateWithOverride(depositFeeOverridePacked, amount, portalFactory);
@@ -916,11 +958,12 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         if (PrivacyPortalFeeLib.isOverrideSet(overridePacked)) {
             return overridePacked;
         }
-        IPrivacyPortalFactory portalFactory = _factory();
+        IPrivacyPortalFactory portalFactory = _controllerFactory();
         return isDeposit ? portalFactory.defaultDepositFeePacked() : portalFactory.defaultWithdrawFeePacked();
     }
 
-    function _factory() private view returns (IPrivacyPortalFactory) {
+    /// @dev Active factory binding used for fees / factory-wide pause / blacklist on live entrypoints. Cleared on remount detach.
+    function _activeFactory() private view returns (IPrivacyPortalFactory) {
         address factory_ = factory;
         if (factory_ == address(0)) {
             revert FactoryNotConfigured();
@@ -928,29 +971,38 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         return IPrivacyPortalFactory(factory_);
     }
 
+    /// @dev Auth factory: {bindingFactory} survives remount detach so admin can still pause/rescue/migrate.
+    function _controllerFactory() private view returns (IPrivacyPortalFactory) {
+        address factory_ = bindingFactory;
+        if (factory_ == address(0)) {
+            revert FactoryNotConfigured();
+        }
+        return IPrivacyPortalFactory(factory_);
+    }
+
     modifier onlyFactoryOperator() {
-        if (!_factory().isOperator(msg.sender)) {
+        if (!_controllerFactory().isOperator(msg.sender)) {
             revert OnlyFactoryOperator(msg.sender);
         }
         _;
     }
 
     modifier onlyFactoryAdmin() {
-        if (!_factory().isAdmin(msg.sender)) {
+        if (!_controllerFactory().isAdmin(msg.sender)) {
             revert OnlyFactoryAdmin(msg.sender);
         }
         _;
     }
 
     function _checkWithdrawalsNotPaused() private view {
-        // Local instance pause first, then factory-wide pause.
-        if (paused() || _factory().withdrawalsPaused()) {
+        // Local instance pause first, then factory-wide pause (requires active factory binding).
+        if (paused() || _activeFactory().withdrawalsPaused()) {
             revert WithdrawalsPaused();
         }
     }
 
     function _checkDepositsNotPaused() private view {
-        if (paused() || _factory().depositsPaused()) {
+        if (paused() || _activeFactory().depositsPaused()) {
             revert DepositsPaused();
         }
         if (!isDepositEnabled) {
@@ -966,7 +1018,7 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     ///      separately, for the deposit/withdrawal recipient so a listed account cannot receive bridged assets
     ///      through an unlisted intermediary.
     function _checkNotBlacklistedAccount(address account) private view {
-        if (blacklisted[account] || _factory().blacklisted(account)) {
+        if (blacklisted[account] || _activeFactory().blacklisted(account)) {
             revert AddressBlacklisted(account);
         }
     }

@@ -9,10 +9,12 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 
 import "../IInbox.sol";
 import "../token/perc20/IPodERC20.sol";
+import "../token/perc20/PodErc20Mintable.sol";
 import "../token/perc20/PodErc20MintableInitializable.sol";
 import "../token/perc20/cotiside/PodErc20CotiMother.sol";
 import "./IPrivacyPortal.sol";
 import "./IPrivacyPortalFactory.sol";
+import "./IPrivacyPortalFactoryAdmin.sol";
 import "./IPodPriceOracle.sol";
 import "./PrivacyPortalFeeLib.sol";
 
@@ -23,7 +25,8 @@ import "./PrivacyPortalFeeLib.sol";
 ///      {grantRole} and {revokeRole}. Portals have no local operator role — they call {isOperator}.
 ///      Admin {pause}/{unpause} pauses deposits and withdrawals on every portal from this factory.
 ///      Uses plain {AccessControl} (not Enumerable) so bytecode stays Paris-compatible for COTI.
-contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControl, Pausable {
+///      Portal clones use {IPrivacyPortalFactory}; ops/tooling should use {IPrivacyPortalFactoryAdmin}.
+contract PrivacyPortalFactory is IPrivacyPortalFactory, IPrivacyPortalFactoryAdmin, AccessControl, Pausable {
     using PrivacyPortalFeeLib for bytes32;
 
     /// @notice Operator role for routine fee-parameter updates (mirrors Privacy Bridge).
@@ -40,9 +43,9 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControl, Pausable 
     /// @notice Unified COTI-side pToken ledger all clones talk to.
     address public cotiMotherContract;
     /// @notice Clone implementation for source-chain pTokens.
-    address public immutable podTokenImplementation;
+    address public podTokenImplementation;
     /// @notice Clone implementation for portals.
-    address public immutable portalImplementation;
+    address public portalImplementation;
     /// @notice Recipient of swept portal protocol fees from all portals created here (fixed at deploy; no setter).
     address public immutable feeRecipient;
     /// @notice Catastrophe rescue destination for all portals created here (pause + owner rescue).
@@ -92,6 +95,14 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControl, Pausable 
     event RoutingUpdated(address indexed inbox, uint256 cotiChainId, address indexed cotiMotherContract);
     /// @notice Rescue recipient updated for paused portal rescue paths.
     event RescueRecipientUpdated(address indexed previousRecipient, address indexed newRecipient);
+    /// @notice Portal clone implementation rotated for future clones / remounts.
+    event PortalImplementationUpdated(address indexed previousImplementation, address indexed newImplementation);
+    /// @notice pToken clone implementation rotated for future {createPortal} pairs.
+    event PodTokenImplementationUpdated(address indexed previousImplementation, address indexed newImplementation);
+    /// @notice An existing pToken was remounted onto a new portal clone on this factory.
+    event PortalReplaced(
+        address indexed underlying, address indexed oldPortal, address indexed newPortal, address pToken
+    );
 
     /// @notice Caller is not an allowlisted deployer.
     error OnlyDeployer(address caller);
@@ -101,6 +112,18 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControl, Pausable 
     error PortalAlreadyExists(address underlying, address portal);
     /// @notice pToken is not registered to a portal created by this factory.
     error UnknownPToken(address pToken);
+    /// @notice Caller/factory does not own the pToken Ownable slot required for admin attach.
+    error PTokenNotOwnedByFactory(address pToken, address owner);
+    /// @notice pToken is already paired to a portal on this factory (wrong underlying for remount).
+    error PTokenAlreadyPaired(address pToken, address portal);
+    /// @notice Remount requested for an underlying that is paired to a different pToken.
+    error UnderlyingPTokenMismatch(address underlying, address expectedPToken, address providedPToken);
+    /// @notice Remount requested while the old portal is not paused (deposits/withdrawals still live).
+    error OldPortalNotPaused(address portal);
+    /// @notice Remount of a native-wrapped portal must keep {nativeWrappedUnderlying} true (no ERC20-WETH mode).
+    error NativePortalRequiresNative(address oldPortal);
+    /// @notice Remount changed native-wrap mode relative to the old portal.
+    error NativeWrapMismatch(address oldPortal, bool oldNative, bool newNative);
     /// @notice Oracle is not configured.
     error OracleNotConfigured();
     /// @notice No {DEFAULT_ADMIN_ROLE} holder is configured.
@@ -246,6 +269,33 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControl, Pausable 
         }
         deployers[deployer] = allowed;
         emit DeployerUpdated(deployer, allowed);
+    }
+
+    /// @notice Admin: rotate the portal clone implementation used by {createPortal} / remounts.
+    function setPortalImplementation(address portalImplementation_)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        if (portalImplementation_ == address(0)) {
+            revert InvalidAddress();
+        }
+        address previous = portalImplementation;
+        portalImplementation = portalImplementation_;
+        emit PortalImplementationUpdated(previous, portalImplementation_);
+    }
+
+    /// @notice Admin: rotate the pToken clone implementation used by future {createPortal} pairs.
+    /// @dev Does not remount existing pTokens; a new pToken always requires a new portal via {createPortal}.
+    function setPodTokenImplementation(address podTokenImplementation_)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        if (podTokenImplementation_ == address(0)) {
+            revert InvalidAddress();
+        }
+        address previous = podTokenImplementation;
+        podTokenImplementation = podTokenImplementation_;
+        emit PodTokenImplementationUpdated(previous, podTokenImplementation_);
     }
 
     /// @notice Admin: rotate inbox, COTI chain id, and mother ledger used for new portals / registration.
@@ -451,6 +501,91 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, AccessControl, Pausable 
 
         emit PortalCreated(underlying, portal, pToken, cotiMotherContract, decimals);
         emit TokenRegistrationRequested(pToken, requestId);
+    }
+
+    /// @notice Admin: deploy a portal clone paired to an existing factory-owned pToken (no mother re-registration).
+    /// @dev Create when unmapped; remount when the same pToken is already paired.
+    ///      Remount requires the old portal to be {IPrivacyPortal.paused} (no deposits/withdrawals). Soft ops model:
+    ///      admin then migrates underlying from old → new (e.g. rescue while paused) and only then unpauses the new portal.
+    ///      Does not clone a new pToken and does not call {_requestMotherRegistration}.
+    /// @param underlying Public ERC20 collateral for the new portal.
+    /// @param existingPToken Source-chain pToken clone already registered on the COTI mother.
+    /// @param nativeWrappedUnderlying Whether the portal wraps/unwraps native coin via WETH/WAVAX.
+    /// @return portal Address of the newly cloned portal (created paused; admin unpauses after migration).
+    function createPortalWithExistingPToken(
+        address underlying,
+        address existingPToken,
+        bool nativeWrappedUnderlying
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) returns (address portal) {
+        if (underlying == address(0) || existingPToken == address(0)) {
+            revert InvalidAddress();
+        }
+
+        address pTokenOwner = Ownable(existingPToken).owner();
+        if (pTokenOwner != address(this)) {
+            revert PTokenNotOwnedByFactory(existingPToken, pTokenOwner);
+        }
+
+        address existingPortalForUnderlying = portalForUnderlying[underlying];
+        address existingPortalForPToken = portalForPToken[existingPToken];
+        address mappedPToken = pTokenForUnderlying[underlying];
+
+        if (existingPortalForUnderlying != address(0) || existingPortalForPToken != address(0)) {
+            if (mappedPToken != existingPToken) {
+                revert UnderlyingPTokenMismatch(underlying, mappedPToken, existingPToken);
+            }
+            if (existingPortalForPToken == address(0) || existingPortalForUnderlying == address(0)) {
+                revert PTokenAlreadyPaired(existingPToken, existingPortalForPToken);
+            }
+            if (existingPortalForPToken != existingPortalForUnderlying) {
+                revert PTokenAlreadyPaired(existingPToken, existingPortalForPToken);
+            }
+        } else if (mappedPToken != address(0) && mappedPToken != existingPToken) {
+            revert UnderlyingPTokenMismatch(underlying, mappedPToken, existingPToken);
+        }
+
+        uint8 decimals = IERC20Metadata(existingPToken).decimals();
+        if (decimals > MAX_DECIMALS) {
+            revert DecimalsExceedsMaximum(decimals, MAX_DECIMALS);
+        }
+        uint8 underlyingDecimals = IERC20Metadata(underlying).decimals();
+        if (underlyingDecimals != decimals) {
+            revert DecimalsMismatch(underlyingDecimals, decimals);
+        }
+
+        address oldPortal = existingPortalForPToken;
+        if (oldPortal != address(0)) {
+            if (!IPrivacyPortal(oldPortal).paused()) {
+                revert OldPortalNotPaused(oldPortal);
+            }
+            bool oldNative = IPrivacyPortal(oldPortal).nativeWrappedUnderlying();
+            // Native portals must stay native-coin wrap/unwrap — remounting as plain WETH/WAVAX ERC20 is not allowed.
+            // Non-native portals must not flip into native wrap mode on remount either.
+            if (oldNative != nativeWrappedUnderlying) {
+                if (oldNative) {
+                    revert NativePortalRequiresNative(oldPortal);
+                }
+                revert NativeWrapMismatch(oldPortal, oldNative, nativeWrappedUnderlying);
+            }
+            IPrivacyPortal(oldPortal).retireDepositsForUpgrade();
+        }
+
+        portal = Clones.clone(portalImplementation);
+        IPrivacyPortal(portal).initialize(
+            underlying, existingPToken, decimals, nativeWrappedUnderlying, address(this)
+        );
+        // Soft close: new clone stays paused until admin migrates funds and unpauses.
+        IPrivacyPortal(portal).pauseByFactory();
+        PodErc20Mintable(payable(existingPToken)).setMinter(portal);
+
+        portalForUnderlying[underlying] = portal;
+        pTokenForUnderlying[underlying] = existingPToken;
+        portalForPToken[existingPToken] = portal;
+
+        emit PortalCreated(underlying, portal, existingPToken, cotiMotherContract, decimals);
+        if (oldPortal != address(0)) {
+            emit PortalReplaced(underlying, oldPortal, portal, existingPToken);
+        }
     }
 
     function _estimatePortalFee(

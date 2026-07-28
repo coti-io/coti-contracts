@@ -72,8 +72,20 @@ interface IPrivacyPortal {
         address factory
     ) external;
 
-    /// @notice Factory that created / binds this portal.
+    /// @notice Factory-only: disable deposits when remounting onto a new portal clone.
+    function retireDepositsForUpgrade() external;
+
+    /// @notice Factory-only: pause this portal (used to leave a remounted clone closed until admin migrates).
+    function pauseByFactory() external;
+
+    /// @notice Whether this portal instance is paused (blocks deposits and withdrawals).
+    function paused() external view returns (bool);
+
+    /// @notice Factory that created / binds this portal (cleared on remount detach).
     function factory() external view returns (address);
+
+    /// @notice Factory retained for admin/rescue auth after remount detach (set at initialize, never cleared).
+    function bindingFactory() external view returns (address);
 
     /// @notice Whether this portal accepts native coin on deposit via {depositNative} and unwraps on withdraw.
     function nativeWrappedUnderlying() external view returns (bool);
