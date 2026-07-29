@@ -3,6 +3,8 @@ node_modules
 .DS_Store
 
 # Hardhat files
+# Local-only arm64 solc shim (optional; do not commit)
+/hardhat/nativeSolcArm64.ts
 /cache
 /artifacts
 /cache-mpc

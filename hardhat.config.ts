@@ -7,8 +7,6 @@ dotenv.config()
 
 /** Bump estimated gas price / EIP-1559 fees by 30% on COTI networks (see hardhat/gasPriceBump.ts). */
 import "./hardhat/gasPriceBump"
-/** Prefer native solc on linux-arm64 (solcjs OOMs on large viaIR inputs). */
-import "./hardhat/nativeSolcArm64"
 
 const accounts = process.env.PRIVATE_KEY
   ? [process.env.PRIVATE_KEY]
