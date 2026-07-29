@@ -9,7 +9,7 @@ on:
   release:
     types: [ created ]
   pull_request:
-    types: [ review_requested ]
+    types: [ opened, synchronize, reopened, review_requested ]
 
 jobs:
   build:
