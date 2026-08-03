@@ -13,6 +13,7 @@
     "InboxUser.sol",
     "InboxUserCotiTestnet.sol",
     "mpc/coti-side/IPodExecutorOps.sol",
+    "mpc/coti-side/MpcExecutor.sol",
     "mpc/PodLib.sol",
     "mpc/PodLib128.sol",
     "mpc/PodLib256.sol",
@@ -46,6 +47,7 @@
   ],
   "notes": [
     "MpcCore.sol and MpcInterface.sol live at contracts/utils/mpc/ in coti-contracts.",
+    "MpcExecutor.sol lives under mpc/coti-side/ (production COTI-side compute worker).",
     "OpenZeppelin imports are unchanged (@openzeppelin/contracts).",
     "Indexers/relayers: use getRequest(requestId) for full inbox payloads (compact MessageSent logs)."
   ]
