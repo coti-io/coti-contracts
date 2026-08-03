@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title IPodPriceOracle
 /// @notice Live USD price reads keyed by ERC-20 token address (18-decimal USD per whole token).
-/// @dev Must stay in sync with coti-pod-inbox-contracts/contracts/fee/IPodPriceOracle.sol
+/// @dev Canonical SoT for PoD live-price reads. Inbox fee adapters and Privacy Portal import this file.
 ///
 /// Implemented by {PoDPriceOracle} (portal + inbox), {BandLiveOracle}, and {ChainlinkLiveOracle}.
 /// Feed adapters never revert; return `0` when a feed is unset, stale, or failed.

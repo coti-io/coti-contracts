@@ -8,6 +8,11 @@
     "url": "https://github.com/coti-io/coti-contracts.git"
   },
   "homepage": "https://docs.coti.io/coti-v2-documentation/build-on-coti/tools/contracts-library",
+  "files": [
+    "contracts/**/*.sol",
+    "LICENSE",
+    "README.md"
+  ],
   "keywords": [
     "coti",
     "privacy",
