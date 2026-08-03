@@ -1,26 +1,27 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/**
- * @title IStdReference
- * @notice Band Protocol Standard Reference interface for querying price data.
- */
+/// @title IStdReference
+/// @notice Minimal Band Protocol StdReference interface (no npm dependency).
+/// @dev Canonical SoT for Band lookups used by PoD inbox fee adapters and COTI oracle helpers.
+///      Implementations are trusted for rate correctness; callers validate staleness and non-zero rates.
 interface IStdReference {
+    /// @notice Band reference quote: `rate` is base/quote scaled by 1e18.
     struct ReferenceData {
-        uint256 rate;            // base/quote exchange rate, scaled by 1e18
-        uint256 lastUpdatedBase; // UNIX epoch when the base price was last updated
-        uint256 lastUpdatedQuote; // UNIX epoch when the quote price was last updated
+        uint256 rate;
+        uint256 lastUpdatedBase;
+        uint256 lastUpdatedQuote;
     }
 
-    /// @notice Returns the price data for a single base/quote pair.
-    function getReferenceData(
-        string memory _base,
-        string memory _quote
-    ) external view returns (ReferenceData memory);
+    /// @notice Single base/quote pair lookup.
+    function getReferenceData(string memory base, string memory quote)
+        external
+        view
+        returns (ReferenceData memory);
 
-    /// @notice Returns the price data for multiple base/quote pairs.
-    function getReferenceDataBulk(
-        string[] memory _bases,
-        string[] memory _quotes
-    ) external view returns (ReferenceData[] memory);
+    /// @notice Parallel lookup for multiple pairs (same-length arrays).
+    function getReferenceDataBulk(string[] memory bases, string[] memory quotes)
+        external
+        view
+        returns (ReferenceData[] memory);
 }
