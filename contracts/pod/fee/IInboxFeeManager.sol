@@ -4,13 +4,26 @@ pragma solidity ^0.8.20;
 /// @title IInboxFeeManager
 /// @notice Read-only fee estimation surface exposed by inbox contracts for PoD dapps.
 interface IInboxFeeManager {
-    /// @notice Template for minimum fees in gas units.
+    /// @notice Template for minimum fees in gas units plus hard admission caps.
+    /// @dev Packed as seven `uint32`s + two `uint16`s (one storage slot). Values fit well below
+    ///      type maxima. `maxMethodCallBytes` / `maxExecutionGas` are always required (including when
+    ///      `constantFee > 0`). `gasPriceMul` / `gasPriceDiv` skew wei→gas (default 1/1; both non-zero).
+    ///      Size caps use **payload weight** = `data.length + datatypes.length*32 + datalens.length*32`
+    ///      (not `abi.encode(methodCall).length`).
     struct FeeConfig {
-        uint256 constantFee;
-        uint256 gasPerByte;
-        uint256 callbackExecutionGas;
-        uint256 errorLength;
-        uint256 bufferRatioX10000;
+        uint32 constantFee;
+        uint32 gasPerByte;
+        uint32 callbackExecutionGas;
+        uint32 errorLength;
+        uint32 bufferRatioX10000;
+        /// @notice Max method-call payload weight (bytes) for create/ingest admission.
+        uint32 maxMethodCallBytes;
+        /// @notice Max gas-unit budget allowed on `targetFee` / `callerFee` fields.
+        uint32 maxExecutionGas;
+        /// @notice Numerator for gas-price skew vs peer chain (H-02). Default 1.
+        uint16 gasPriceMul;
+        /// @notice Denominator for gas-price skew vs peer chain (H-02). Default 1; must be non-zero.
+        uint16 gasPriceDiv;
     }
 
     /// @notice Oracle used to convert gas budgets between local and remote fee tokens.

@@ -33,9 +33,9 @@ interface IInbox {
         bytes4 selector;
         /// @notice ABI-encoded arguments or raw calldata.
         bytes data;
-        /// @notice MPC datatype descriptors used by {MpcAbiCodec}.
+        /// @notice MPC datatype descriptors used by {MpcAbiCodec} (builders) and Inbox {MpcAbiReEncode}.
         bytes8[] datatypes;
-        /// @notice MPC ciphertext length descriptors used by {MpcAbiCodec}.
+        /// @notice MPC ciphertext length descriptors used by {MpcAbiCodec} (builders) and Inbox {MpcAbiReEncode}.
         bytes32[] datalens;
     }
 
