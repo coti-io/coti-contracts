@@ -24,6 +24,9 @@ interface IInboxMiner {
     event RetryFailedRequestSuccess(bytes32 indexed requestId);
     /// @notice Emitted when the owner toggles the message-processing circuit breaker.
     event MessageProcessingPausedUpdated(bool paused);
+    /// @notice Miner rejected an inbound nonce in-batch (no fat payload stored).
+    /// @dev `rejectionCode` / `rejectionReason` come from the special reject {IInbox.MpcMethodCall}.
+    event RequestRejected(bytes32 indexed requestId, uint8 rejectionCode, bytes32 rejectionReason);
 
     /// @notice Mined inbound request. `targetFee` and `callerFee` are gas unit budgets (see {IInbox.Request}).
     struct MinedRequest {
@@ -52,4 +55,34 @@ interface IInboxMiner {
 
     /// @notice Re-execute a mined incoming request whose target call failed (e.g. OOG). Open to any payer for gas.
     function retryFailedRequest(bytes32 requestId) external;
+
+    /// @notice Build the special {IInbox.MpcMethodCall} that marks an in-batch miner reject (no fat payload).
+    /// @dev Pass as {MinedRequest.methodCall} with the real header fields unchanged.
+    function buildMinerRejectMethodCall(uint8 rejectionCode, bytes32 rejectionReason)
+        external
+        pure
+        returns (IInbox.MpcMethodCall memory methodCall);
+
+    /// @notice Whether `methodCall` is the special in-batch reject encoding.
+    function isMinerRejectMethodCall(IInbox.MpcMethodCall memory methodCall)
+        external
+        pure
+        returns (bool isReject, uint8 rejectionCode, bytes32 rejectionReason);
+
+    /// @notice Always-revert estimate of user execution gas and reply outbound sizes.
+    /// @dev Intended for `eth_call`. Public. Nested call uses `maxUserGas` (and prepaid targetFee budget).
+    ///      Reverts with {ExecutionGasEstimate}. `responseDataSize > 0` means `respond()` ran;
+    ///      `errorDataSize > 0` means `raise()` / system-error outbound.
+    error ExecutionGasEstimate(uint256 gasUsed, uint256 responseDataSize, uint256 errorDataSize);
+    /// @notice Estimate called while another estimate or active execution context is live.
+    error EstimateBusy();
+    /// @notice Reject-sentinel methodCall cannot be estimated (nothing to execute).
+    error EstimateRejectNotExecutable();
+
+    /// @notice Simulate execute for `mined` under `maxUserGas`. Always reverts with {ExecutionGasEstimate}.
+    function estimateExecutionGasForMiner(
+        uint256 sourceChainId,
+        MinedRequest calldata mined,
+        uint256 maxUserGas
+    ) external;
 }

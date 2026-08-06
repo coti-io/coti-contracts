@@ -33,9 +33,9 @@ interface IInbox {
         bytes4 selector;
         /// @notice ABI-encoded arguments or raw calldata.
         bytes data;
-        /// @notice MPC datatype descriptors used by {MpcAbiCodec}.
+        /// @notice MPC datatype descriptors used by {MpcAbiCodec} (builders) and Inbox {MpcAbiReEncode}.
         bytes8[] datatypes;
-        /// @notice MPC ciphertext length descriptors used by {MpcAbiCodec}.
+        /// @notice MPC ciphertext length descriptors used by {MpcAbiCodec} (builders) and Inbox {MpcAbiReEncode}.
         bytes32[] datalens;
     }
 
@@ -160,7 +160,7 @@ interface IInbox {
     /// @param requestId Request ID (outbound or mined incoming).
     /// @return code Error code (`1` = execution failed, `2` = encode failed).
     /// @return data Stored error bytes. For execution failures this is the first ≤256 bytes of
-    ///         returndata (POD-02); decode `Error(string)` / custom errors in the client.
+    ///         returndata; decode `Error(string)` / custom errors in the client.
     function getOutboxError(bytes32 requestId) external view returns (uint256 code, bytes memory data);
 
     /// @notice Return stored response bytes for a completed incoming flow.
