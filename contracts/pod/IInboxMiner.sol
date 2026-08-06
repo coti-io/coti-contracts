@@ -69,7 +69,7 @@ interface IInboxMiner {
         pure
         returns (bool isReject, uint8 rejectionCode, bytes32 rejectionReason);
 
-    /// @notice Always-revert estimate of user execution gas and reply outbound sizes (C-04).
+    /// @notice Always-revert estimate of user execution gas and reply outbound sizes.
     /// @dev Intended for `eth_call`. Public. Nested call uses `maxUserGas` (and prepaid targetFee budget).
     ///      Reverts with {ExecutionGasEstimate}. `responseDataSize > 0` means `respond()` ran;
     ///      `errorDataSize > 0` means `raise()` / system-error outbound.

@@ -20,9 +20,9 @@ interface IInboxFeeManager {
         uint32 maxMethodCallBytes;
         /// @notice Max gas-unit budget allowed on `targetFee` / `callerFee` fields.
         uint32 maxExecutionGas;
-        /// @notice Numerator for gas-price skew vs peer chain (H-02). Default 1.
+        /// @notice Numerator for gas-price skew vs peer chain. Default 1.
         uint16 gasPriceMul;
-        /// @notice Denominator for gas-price skew vs peer chain (H-02). Default 1; must be non-zero.
+        /// @notice Denominator for gas-price skew vs peer chain. Default 1; must be non-zero.
         uint16 gasPriceDiv;
     }
 
