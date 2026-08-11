@@ -1,0 +1,31 @@
+# Notify pod-integration-tests when this repo's main advances.
+# Requires repo secret PIT_DISPATCH_PAT with access to create repository_dispatch
+# on cotitech-io/pod-integration-tests (classic: repo; fine-grained: Actions write).
+name: notify-pit
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: repository_dispatch → pod-integration-tests
+        env:
+          PAT: ${{ secrets.PIT_DISPATCH_PAT }}
+          SHA: ${{ github.sha }}
+        run: |
+          if [[ -z "${PAT:-}" ]]; then
+            echo "::error::Secret PIT_DISPATCH_PAT is missing. Add a PAT that can dispatch workflows on cotitech-io/pod-integration-tests."
+            exit 1
+          fi
+          payload="$(printf '{"event_type":"pod-contracts-main","client_payload":{"source_repo":"coti-contracts","sha":"%s","ref":"main"}}' "$SHA")"
+          curl -fsS -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${PAT}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/cotitech-io/pod-integration-tests/dispatches \
+            -d "$payload"
+          echo "Dispatched pod-contracts-main for coti-contracts@$SHA"

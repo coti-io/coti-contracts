@@ -61,6 +61,9 @@ const config: HardhatUserConfig = {
     hardhat: {
       // Keep false so local deploys match EIP-170 (24_576). See `npm run check:bytecode-size`.
       allowUnlimitedContractSize: false,
+      // Coverage instrumentation inflates gas estimates for portal / pERC20.
+      blockGasLimit: 60_000_000,
+      gas: 60_000_000,
     },
     "coti-testnet": {
       url: "https://testnet.coti.io/rpc",
