@@ -8044,8 +8044,9 @@ library MpcCore {
     }
 
     function transferWithAllowance(gtUint128 a, gtUint8 b, gtUint8 amount, gtUint32 allowance) internal returns (gtUint128, gtUint128, gtBool, gtUint128){
+        // M-32: allowance tag must be SUINT32_T to match gtUint32.unwrap(allowance).
         (uint256 new_a, uint256 new_b, uint256 res, uint256 new_allowance) = ExtendedOperations(address(MPC_PRECOMPILE)).
-            TransferWithAllowance(combineEnumsToBytes5(MPC_TYPE.SUINT128_T, MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, ARGS.BOTH_SECRET), gtUint128.unwrap(a), gtUint8.unwrap(b), gtUint8.unwrap(amount), gtUint32.unwrap(allowance));
+            TransferWithAllowance(combineEnumsToBytes5(MPC_TYPE.SUINT128_T, MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT8_T, MPC_TYPE.SUINT32_T, ARGS.BOTH_SECRET), gtUint128.unwrap(a), gtUint8.unwrap(b), gtUint8.unwrap(amount), gtUint32.unwrap(allowance));
         return (gtUint128.wrap(new_a), gtUint128.wrap(new_b), gtBool.wrap(res), gtUint128.wrap(new_allowance));
     }
 
