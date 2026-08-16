@@ -607,11 +607,14 @@ describe("PrivacyPortal access controls", function () {
         })
 
         it("updates price oracle as admin", async function () {
-            const { owner, operator, factory } = await deployFactoryFixture()
+            const { owner, factory } = await deployFactoryFixture()
+            const PortalImpl = await hre.ethers.getContractFactory("PrivacyPortal")
+            const oracle = await PortalImpl.deploy()
+            await oracle.waitForDeployment()
 
-            await expect(factory.connect(owner).setPriceOracle(operator.address))
+            await expect(factory.connect(owner).setPriceOracle(await oracle.getAddress()))
                 .to.emit(factory, "PriceOracleUpdated")
-            expect(await factory.priceOracle()).to.equal(operator.address)
+            expect(await factory.priceOracle()).to.equal(await oracle.getAddress())
         })
 
         it("exposes isOperator for factory OPERATOR_ROLE", async function () {
@@ -723,8 +726,10 @@ describe("PrivacyPortal access controls", function () {
             expect(await portalA.minDepositAmount()).to.equal(1)
             expect(await portalB.minDepositAmount()).to.equal(2)
 
-            // Grant + revoke DEFAULT_ADMIN_ROLE on the factory — both portals follow immediately.
+            // Grant + transfer DEFAULT_ADMIN_ROLE on the factory — both portals follow immediately.
+            // Primary owner must transfer ownership pointer before their admin role can be revoked.
             await factory.connect(owner).grantRole(adminRole, newAdmin.address)
+            await factory.connect(owner).transferPrimaryOwner(newAdmin.address)
             await factory.connect(owner).revokeRole(adminRole, owner.address)
             expect(await factory.isAdmin(owner.address)).to.equal(false)
             expect(await factory.isAdmin(newAdmin.address)).to.equal(true)

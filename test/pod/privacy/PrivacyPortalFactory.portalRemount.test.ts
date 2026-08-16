@@ -349,8 +349,8 @@ describe("PrivacyPortalFactory same-factory portal remount", function () {
         await expect(
             nativeFactory.createPortalWithExistingPToken(await wavax.getAddress(), pTokenAddr, false)
         )
-            .to.be.revertedWithCustomError(nativeFactory, "NativePortalRequiresNative")
-            .withArgs(oldPortalAddr)
+            .to.be.revertedWithCustomError(nativeFactory, "NativeUnderlyingMismatch")
+            .withArgs(await wavax.getAddress(), await wavax.getAddress(), false)
 
         await expect(
             nativeFactory.createPortalWithExistingPToken(await wavax.getAddress(), pTokenAddr, true)
@@ -362,7 +362,7 @@ describe("PrivacyPortalFactory same-factory portal remount", function () {
     it("rejects remount flipping non-native portal into native wrap mode", async function () {
         const fixture = await deployFixture()
         const { factory, underlying, PortalImpl } = fixture
-        const { portal: oldPortal, pTokenAddr, portalAddr: oldPortalAddr } =
+        const { portal: oldPortal, pTokenAddr } =
             await createCleanPair(fixture)
 
         await oldPortal.pause()
@@ -370,11 +370,14 @@ describe("PrivacyPortalFactory same-factory portal remount", function () {
         await portalImplV2.waitForDeployment()
         await factory.setPortalImplementation(await portalImplV2.getAddress())
 
+        // nativeWrapped=true with non-native underlying fails the global nativeToken consistency
+        // check before remount-specific NativeWrapMismatch can fire.
+        const nativeToken = await factory.nativeToken()
         await expect(
             factory.createPortalWithExistingPToken(await underlying.getAddress(), pTokenAddr, true)
         )
-            .to.be.revertedWithCustomError(factory, "NativeWrapMismatch")
-            .withArgs(oldPortalAddr, false, true)
+            .to.be.revertedWithCustomError(factory, "NativeUnderlyingMismatch")
+            .withArgs(await underlying.getAddress(), nativeToken, true)
     })
 
     it("completes in-flight TransferPending withdraw on old portal after remount", async function () {
