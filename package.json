@@ -24,7 +24,7 @@
     "on-chain-compute"
   ],
   "scripts": {
-    "compile": "hardhat compile",
+    "compile": "hardhat compile --quiet",
     "check:bytecode-size": "node scripts/check-bytecode-size.mjs",
     "test": "hardhat test --network hardhat"
   },
