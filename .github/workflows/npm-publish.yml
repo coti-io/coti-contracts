@@ -9,7 +9,7 @@ on:
   release:
     types: [ created ]
   pull_request:
-    types: [ review_requested ]
+    types: [ opened, synchronize, reopened, review_requested ]
 
 jobs:
   build:
@@ -20,7 +20,8 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
-          node-version: 24
+          # Hardhat 2.22 + Node 24 hits HH306 (quiet task param) during solc download.
+          node-version: 20
       - run: npm ci
       - run: npm run compile
       - run: npm run check:bytecode-size
@@ -52,7 +53,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
       - uses: actions/setup-node@v5
         with:
-          node-version: '24'
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           scope: '@coti-io'
       - run: npm ci
