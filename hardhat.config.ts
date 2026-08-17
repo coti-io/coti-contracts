@@ -16,6 +16,8 @@ const accounts = process.env.PRIVATE_KEY
     ? process.env.SIGNING_KEYS.split(",").map((k) => k.trim()).filter(Boolean)
     : [];
 
+const coverageRun = process.argv.includes("coverage");
+
 const config: HardhatUserConfig = {
   defaultNetwork: "coti-testnet",
   // Pinned compiler versions for reproducible bytecode; bump only alongside contract pragma / CI review.
@@ -59,8 +61,10 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      // Keep false so local deploys match EIP-170 (24_576). See `npm run check:bytecode-size`.
-      allowUnlimitedContractSize: false,
+      // Coverage instrumentation inflates PrivacyPortal / PodERC20 past EIP-170
+      // (24_576) and EIP-3860 initcode (49_152). Production size is gated by
+      // `npm run check:bytecode-size`, not Hardhat deploy.
+      allowUnlimitedContractSize: coverageRun,
       // Coverage instrumentation inflates gas estimates for portal / pERC20.
       blockGasLimit: 60_000_000,
     },
