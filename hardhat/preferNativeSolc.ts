@@ -11,9 +11,12 @@ import { TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD } from "hardhat/builtin-tasks/task
 
 const CACHE = path.join(os.homedir(), ".cache/hardhat-nodejs/compilers-v2");
 
-subtask(TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD).setAction(async ({ solcVersion }, _hre, runSuper) => {
+subtask(TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD).setAction(async (taskArgs, _hre, runSuper) => {
+  const { solcVersion } = taskArgs as { solcVersion: string };
+
   if (process.arch !== "arm64" || process.platform !== "linux") {
-    return runSuper({ solcVersion });
+    // Pass full taskArgs (includes required `quiet`) — stripping it causes HH306 on solc download.
+    return runSuper(taskArgs);
   }
 
   if (solcVersion === "0.8.28") {
@@ -48,5 +51,5 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD).setAction(async ({ solcVersion }, 
     }
   }
 
-  return runSuper({ solcVersion });
+  return runSuper(taskArgs);
 });
