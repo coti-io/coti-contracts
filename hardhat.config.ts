@@ -63,7 +63,6 @@ const config: HardhatUserConfig = {
       allowUnlimitedContractSize: false,
       // Coverage instrumentation inflates gas estimates for portal / pERC20.
       blockGasLimit: 60_000_000,
-      gas: 60_000_000,
     },
     "coti-testnet": {
       url: "https://testnet.coti.io/rpc",
