@@ -74,6 +74,12 @@ abstract contract DataPrivacyFramework {
         _;
     }
 
+    /// @dev Permission mutators must be gated; the constructor seeds the deployer with "admin".
+    modifier onlyAdmin() {
+        require(this.isOperationAllowed(msg.sender, "admin"), "DPF: ADMIN_ONLY");
+        _;
+    }
+
     /**
      * @param addressDefaultPermission_ default address permission
      * @param operationDefaultPermission_  default operation permission
@@ -85,12 +91,13 @@ abstract contract DataPrivacyFramework {
         // set admin permissions
         allowedOperations["admin"] = true;
 
-        setPermission(InputData(msg.sender, "admin", true, 0, 0, false, false, 0, address(0), ""));
+        // Bootstrap via internal setter (public mutators are onlyAdmin).
+        _setPermission(InputData(msg.sender, "admin", true, 0, 0, false, false, 0, address(0), ""));
 
         // by default we allow all users and all operations
         allowedOperations[STRING_ALL] = true;
 
-        setPermission(InputData(ADDRESS_ALL, STRING_ALL, true, 0, 0, false, false, 0, address(0), ""));
+        _setPermission(InputData(ADDRESS_ALL, STRING_ALL, true, 0, 0, false, false, 0, address(0), ""));
     }
 
     /**
@@ -241,7 +248,7 @@ abstract contract DataPrivacyFramework {
      * @param defaultPermission new value of the default address permission
      * @return _ boolean indicating if the update succeeded
      */
-    function setAddressDefaultPermission(bool defaultPermission) external returns (bool) {
+    function setAddressDefaultPermission(bool defaultPermission) external virtual onlyAdmin returns (bool) {
         require(addressDefaultPermission != defaultPermission, "DPF: INVALID_PERMISSION_CHANGE");
 
         addressDefaultPermission = defaultPermission;
@@ -254,7 +261,7 @@ abstract contract DataPrivacyFramework {
      * @param defaultPermission new value of the default operation permission
      * @return _ boolean indicating if the update succeeded
      */
-    function setOperationDefaultPermission(bool defaultPermission) external returns (bool) {
+    function setOperationDefaultPermission(bool defaultPermission) external virtual onlyAdmin returns (bool) {
         require(operationDefaultPermission != defaultPermission, "DPF: INVALID_PERMISSION_CHANGE");
 
         operationDefaultPermission = defaultPermission;
@@ -267,7 +274,7 @@ abstract contract DataPrivacyFramework {
      * @param operation the operation to allow
      * @return _ boolean indicating if the update succeeded
      */
-    function addAllowedOperation(string memory operation) public returns (bool) {
+    function addAllowedOperation(string memory operation) public virtual onlyAdmin returns (bool) {
         require(!allowedOperations[operation], "DPF: OPERATION_ALREADY_ALLOWED");
 
         allowedOperations[operation] = true;
@@ -280,7 +287,7 @@ abstract contract DataPrivacyFramework {
      * @param operation the operation to remove
      * @return _ boolean indicating if the update succeeded
      */
-    function removeAllowedOperation(string calldata operation) external returns (bool) {
+    function removeAllowedOperation(string calldata operation) external virtual onlyAdmin returns (bool) {
         require(allowedOperations[operation], "DPF: OPERATION_NOT_ALLOWED");
 
         allowedOperations[operation] = false;
@@ -293,7 +300,7 @@ abstract contract DataPrivacyFramework {
      * @param operation the operation to restrict
      * @return _ boolean indicating if the update succeeded
      */
-    function addRestrictedOperation(string memory operation) public returns (bool) {
+    function addRestrictedOperation(string memory operation) public virtual onlyAdmin returns (bool) {
         require(!restrictedOperations[operation], "DPF: OPERATION_ALREADY_RESTRICTED");
 
         restrictedOperations[operation] = true;
@@ -306,7 +313,7 @@ abstract contract DataPrivacyFramework {
      * @param operation the operation to remove
      * @return _ boolean indicating if the update succeeded
      */
-    function removeRestrictedOperation(string calldata operation) external returns (bool) {
+    function removeRestrictedOperation(string calldata operation) external virtual onlyAdmin returns (bool) {
         require(restrictedOperations[operation], "DPF: OPERATION_NOT_RESTRICTED");
 
         restrictedOperations[operation] = false;
@@ -319,7 +326,11 @@ abstract contract DataPrivacyFramework {
      * @param inputData struct containing the parameters of the new permission
      * @return _ boolean indicating if the update succeeded
      */
-    function setPermission(InputData memory inputData) public returns (bool) {
+    function setPermission(InputData memory inputData) public virtual onlyAdmin returns (bool) {
+        return _setPermission(inputData);
+    }
+
+    function _setPermission(InputData memory inputData) internal returns (bool) {
         if (permissions[inputData.caller][inputData.operation] == 0) {
             permissions[inputData.caller][inputData.operation] = _conditionsCount;
 
