@@ -52,8 +52,14 @@ interface IInboxMiner {
     /// @notice Pause or unpause inbound message processing (owner-only circuit breaker).
     function setMessageProcessingPaused(bool paused) external;
 
-    /// @notice Re-execute a mined incoming request whose target call failed (e.g. OOG). Open to any payer for gas.
-    /// @dev If owner-configured message lifetime has elapsed since dest ingest, terminalizes instead
+    /// @notice Miner `batchProcessRequests` cannot forward the prepaid execution budget.
+    /// @dev `gasForCall` is the stipend the inbox would forward; `targetGasBudget` is
+    ///      `_localRequestExecutionBudget(targetFee)`. First mine only — estimate/retry do not throw this.
+    error InsufficientMinerGas(bytes32 requestId, uint256 gasForCall, uint256 targetGasBudget);
+
+    /// @notice Re-execute a mined incoming request whose target call failed after the miner delivered the prepaid budget.
+    /// @dev Starved first mines revert {InsufficientMinerGas} and do not ingest — they are not retryable here.
+    ///      If owner-configured message lifetime has elapsed since dest ingest, terminalizes instead
     ///      (error code `4`) and may emit a system-error return leg; further retries then revert.
     function retryFailedRequest(bytes32 requestId) external;
 
