@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./PodERC20.sol";
+import "./extensions/PodERC20Burnable.sol";
 
 /// @title PodErc20Mintable
-/// @notice {PodERC20} variant that permits `mint` calls from a single `minter` address.
+/// @notice {PodERC20Burnable} variant that permits `mint` calls from a single `minter` address.
 /// @dev The minter is set at construction/initialize and may later be rotated by the Ownable owner via {setMinter}
 ///      (typically the {PrivacyPortalFactory} when remapping an existing pToken to a new portal). All other behavior
-///      (transfers, approvals, burns, syncing) is inherited verbatim from {PodERC20}.
-contract PodErc20Mintable is PodERC20 {
+///      (transfers, approvals, burns, syncing) is inherited verbatim from {PodERC20Burnable}.
+///      Does not inherit {PodERC20Pausable} — Privacy Portal pTokens stay unpausable at the token layer.
+contract PodErc20Mintable is PodERC20Burnable {
     /// @notice Sole address allowed to call {PodERC20.mint} (encrypted or plain variant).
     address public minter;
     bool private _mintableInitialized;

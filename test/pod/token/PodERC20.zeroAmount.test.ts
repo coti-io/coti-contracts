@@ -4,8 +4,8 @@ import { expect } from "chai";
 describe("PodERC20 PP-05 zero public amounts", function () {
   async function deployPToken() {
     const [owner, other] = await hre.ethers.getSigners();
-    const PToken = await hre.ethers.getContractFactory("PodERC20");
-    const pToken = await PToken.deploy(7082400, other.address, other.address, "Private USD", "pUSD");
+    const PToken = await hre.ethers.getContractFactory("PodErc20Mintable");
+    const pToken = await PToken.deploy(owner.address, 7082400, other.address, other.address, "Private USD", "pUSD");
     await pToken.waitForDeployment();
     await owner.sendTransaction({ to: await pToken.getAddress(), value: hre.ethers.parseEther("0.01") });
     return { pToken, owner, other };

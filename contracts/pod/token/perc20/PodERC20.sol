@@ -12,12 +12,13 @@ import "./cotiside/IPodErc20CotiSide.sol";
 import "../erc7984/PodErc7984Mixin.sol";
 
 /// @title PodERC20
-/// @notice PoD-side private ERC-20: ciphertext cache and inbox-mediated async moves; COTI holds authoritative garbled state via {IPodErc20CotiSide}.
-/// @dev Callbacks only from `inbox` when the remote peer matches (`cotiChainId`, `cotiSideContract`). Public-amount methods expose amounts in calldata and logs; use encrypted `itUint256` entry points for privacy-sensitive flows.
+/// @notice Bare PoD-side private ERC-20: ciphertext cache and inbox-mediated async moves; COTI holds authoritative garbled state via {IPodErc20CotiSide}.
+/// @dev Base token without public {burn}; use {PodERC20Burnable} for burn entry points (see {PodErc20Mintable} for Privacy Portal pTokens).
+///      Callbacks only from `inbox` when the remote peer matches (`cotiChainId`, `cotiSideContract`). Public-amount methods expose amounts in calldata and logs; use encrypted `itUint256` entry points for privacy-sensitive flows.
 ///      {_sendPodTwoWay} is `nonReentrant` so a compromised inbox/oracle cannot re-enter before pending state is written.
 ///      Uses storage `ReentrancyGuard` (not transient) so the whole tree can compile for Paris — COTI rejects Shanghai `PUSH0`.
 ///      Owner may rotate inbox / COTI peer via {configure}.
-contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Ownable {
+contract PodERC20 is InboxUser, PodErc7984Mixin, ReentrancyGuard, Ownable {
     using MpcAbiCodec for MpcAbiCodec.MpcMethodCallContext;
 
     /// @notice Maximum accounts per {syncBalances} batch (reply-size / gas bound).
@@ -66,7 +67,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     /// @notice Minimum age (seconds) before {killStaleRequest} may terminalize a Pending request (`0` = no wait).
     uint64 public requestKillMinAge = 1 days;
 
-    // --- Events (PoD-specific; {Transfer}, {Approval}, etc. are declared on {IPodERC20}) ---
+    // --- Events (PoD-specific) ---
 
     /// @notice Async transfer request was submitted to COTI.
     event TransferRequestSubmitted(address indexed from, address indexed to, bytes32 requestId);
@@ -168,32 +169,32 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     // --- External: mutating (user / admin) ---
 
     /**
-     * @inheritdoc IPodERC20
+     * @dev See {IPodERC20}.
      * @dev **Gotcha:** `TransferRequestSubmitted` indexes `msg.sender` as `from`, not the `from` argument of internal `_transfer` (same for direct `transfer`).
      */
     function transfer(address to, itUint256 calldata value, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId) {
         return _transfer(IPodErc20CotiSide.transfer.selector, msg.sender, to, value, msg.value, callbackFeeLocalWei);
     }
 
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     function transfer(address to, itUint256 calldata value) external payable returns (bytes32 requestId) {
         (, uint256 callbackFeeLocalWei) = _estimateTwoWayFeeInLocalToken();
         return _transfer(IPodErc20CotiSide.transfer.selector, msg.sender, to, value, msg.value, callbackFeeLocalWei);
     }
 
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     function transferFrom(address from, address to, itUint256 calldata value, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId) {
         return _transferFrom(IPodErc20CotiSide.transferFromAsSpender.selector, msg.sender, from, to, value, msg.value, callbackFeeLocalWei);
     }
 
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     function transferFrom(address from, address to, itUint256 calldata value) external payable returns (bytes32 requestId) {
         (, uint256 callbackFeeLocalWei) = _estimateTwoWayFeeInLocalToken();
         return _transferFrom(IPodErc20CotiSide.transferFromAsSpender.selector, msg.sender, from, to, value, msg.value, callbackFeeLocalWei);
     }
 
     /**
-     * @inheritdoc IPodERC20
+     * @dev See {IPodERC20}.
      * @dev Stores `data` under the new `requestId` until {transferCallback} runs successfully and forwards it to `to`.
      *      Concurrent transfers may complete out of order; receivers must key hooks on `requestId`, not arrival order.
      */
@@ -208,7 +209,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         return requestId;
     }
 
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     function transferFromAndCall(
         address from,
         address to,
@@ -228,12 +229,12 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         _requestCallbacks[requestId] = data;
     }
 
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     function transferFromAndCallWithPermit(
         address from,
         address to,
         uint256 amount,
-        PublicPermit calldata permit,
+        IPodERC20.PublicPermit calldata permit,
         bytes calldata data,
         uint256 callbackFeeLocalWei
     ) external payable returns (bytes32 requestId) {
@@ -249,23 +250,18 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         _requestCallbacks[requestId] = data;
     }
 
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     function approve(address spender, itUint256 calldata value, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId) {
         return _approve(msg.sender, spender, value, msg.value, callbackFeeLocalWei);
     }
 
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     function approve(address spender, itUint256 calldata value) external payable returns (bytes32 requestId) {
         (, uint256 callbackFeeLocalWei) = _estimateTwoWayFeeInLocalToken();
         return _approve(msg.sender, spender, value, msg.value, callbackFeeLocalWei);
     }
 
-    /// @inheritdoc IPodERC20
-    function burn(itUint256 calldata value, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId) {
-        return _burn(msg.sender, value, msg.value, callbackFeeLocalWei);
-    }
-
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     function mint(address to, itUint256 calldata amount, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId) {
         _checkMinter();
         return _mint(to, amount, msg.value, callbackFeeLocalWei);
@@ -273,34 +269,29 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
 
     // --- External: mutating (plain uint256 variants) ---
 
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     function transfer(address to, uint256 amount, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId) {
         return _transferPublic(IPodErc20CotiSide.transferPublic.selector, msg.sender, to, amount, msg.value, callbackFeeLocalWei);
     }
 
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     function transferFrom(address from, address to, uint256 amount, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId) {
         return _transferPublicFrom(IPodErc20CotiSide.transferFromPublicAsSpender.selector, msg.sender, from, to, amount, msg.value, callbackFeeLocalWei);
     }
 
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     function approve(address spender, uint256 amount, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId) {
         return _approvePublic(msg.sender, spender, amount, msg.value, callbackFeeLocalWei);
     }
 
-    /// @inheritdoc IPodERC20
-    function burn(uint256 amount, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId) {
-        return _burnPublic(msg.sender, amount, msg.value, callbackFeeLocalWei);
-    }
-
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     function mint(address to, uint256 amount, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId) {
         _checkMinter();
         return _mintPublic(to, amount, msg.value, callbackFeeLocalWei);
     }
 
     /**
-     * @inheritdoc IPodERC20
+     * @dev See {IPodERC20}.
      * @dev Does not change {pendingTransferCount}; only transfers/burns/mints adjust that counter.
      */
     function syncBalances(address[] calldata accounts, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId) {
@@ -349,7 +340,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
                 _balances[from] = newBalanceFrom;
                 balanceNonces[from] = nonce;
             } else {
-                emit BalanceSyncSkipped(from, nonce, balanceNonces[from]);
+                emit IPodERC20.BalanceSyncSkipped(from, nonce, balanceNonces[from]);
             }
         }
         if (to != address(0)) {
@@ -357,18 +348,18 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
                 _balances[to] = newBalanceTo;
                 balanceNonces[to] = nonce;
             } else {
-                emit BalanceSyncSkipped(to, nonce, balanceNonces[to]);
+                emit IPodERC20.BalanceSyncSkipped(to, nonce, balanceNonces[to]);
             }
         }
         bytes memory callbackData = _requestCallbacks[sourceRequestId];
-        emit Transfer(from, to, senderValue, receiverValue);
+        emit IPodERC20.Transfer(from, to, senderValue, receiverValue);
         _emitConfidentialTransfer(from, to, senderValue, receiverValue);
         if (callbackData.length != 0) {
             (bool success, ) = address(to).call(callbackData);
             if (success) {
                 delete _requestCallbacks[sourceRequestId];
             } else {
-                emit RequestCallbackFailed(from, to, sourceRequestId, callbackData);
+                emit IPodERC20.RequestCallbackFailed(from, to, sourceRequestId, callbackData);
             }
         }
     }
@@ -385,8 +376,8 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
             (address, ctUint256, address, ctUint256)
         );
         _clearPendingByRequestId(sourceRequestId);
-        _allowance[owner][spender] = Allowance({spenderCiphertext: spenderAmount, ownerCiphertext: ownerAmount});
-        emit Approval(owner, spender, ownerAmount, spenderAmount);
+        _allowance[owner][spender] = IPodERC20.Allowance({spenderCiphertext: spenderAmount, ownerCiphertext: ownerAmount});
+        emit IPodERC20.Approval(owner, spender, ownerAmount, spenderAmount);
     }
 
     /**
@@ -411,9 +402,9 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
             if (balanceNonces[addresses[i]] < nonce) {
                 _balances[addresses[i]] = amounts[i];
                 balanceNonces[addresses[i]] = nonce;
-                emit BalanceSynced(addresses[i], amounts[i]);
+                emit IPodERC20.BalanceSynced(addresses[i], amounts[i]);
             } else {
-                emit BalanceSyncSkipped(addresses[i], nonce, balanceNonces[addresses[i]]);
+                emit IPodERC20.BalanceSyncSkipped(addresses[i], nonce, balanceNonces[addresses[i]]);
             }
         }
     }
@@ -437,7 +428,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         _setRequestStatus(sourceRequestId, IPodERC20.RequestStatus.Failed);
         failedRequests[sourceRequestId] = errorMsg;
         _clearPendingByRequestId(sourceRequestId);
-        emit TransferFailed(from, to, errorMsg);
+        emit IPodERC20.TransferFailed(from, to, errorMsg);
     }
 
     /// @notice Clears pending approval state after COTI failure.
@@ -468,31 +459,31 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
 
     // --- External: views ---
 
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     function requests(bytes32 requestId) external view returns (IPodERC20.RequestRecord memory) {
         return _requests[requestId];
     }
 
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     function balanceOf(address account) external view returns (ctUint256 memory) {
         return _balances[account];
     }
 
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     function balanceOfWithStatus(address account) external view returns (ctUint256 memory, bool pending) {
         return (_balances[account], pendingTransferCount[account] > 0);
     }
 
-    /// @inheritdoc IPodERC20
-    function allowance(address owner, address spender) external view returns (Allowance memory) {
+    /// @dev See {IPodERC20}.
+    function allowance(address owner, address spender) external view returns (IPodERC20.Allowance memory) {
         return _allowance[owner][spender];
     }
 
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     function allowanceWithStatus(
         address owner,
         address spender
-    ) external view returns (Allowance memory, bool pending) {
+    ) external view returns (IPodERC20.Allowance memory, bool pending) {
         return (_allowance[owner][spender], _pendingApprovalRequestIds[owner][spender] != bytes32(0));
     }
 
@@ -579,13 +570,13 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         _clearPendingByRequestId(requestId);
     }
 
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     /// @dev Factory-deployed tokens: call via {IPrivacyPortalFactoryAdmin.setPTokenRequestKillMinAge}.
     function setRequestKillMinAge(uint64 seconds_) external onlyOwner {
         requestKillMinAge = seconds_;
     }
 
-    /// @inheritdoc IPodERC20
+    /// @dev See {IPodERC20}.
     /// @dev Factory-deployed tokens: call via {IPrivacyPortalFactoryAdmin.killPTokenStaleRequest}.
     function killStaleRequest(bytes32 requestId) external onlyOwner {
         IPodERC20.RequestRecord storage rec = _requests[requestId];
@@ -601,7 +592,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         address spender = rec.spender;
         _setRequestStatus(requestId, IPodERC20.RequestStatus.Failed);
         _clearPendingByRequestId(requestId);
-        emit StaleRequestKilled(requestId, account, spender);
+        emit IPodERC20.StaleRequestKilled(requestId, account, spender);
     }
 
     /// @param totalValueWei Total native payment (e.g. `msg.value`); `callbackFeeLocalWei` is the caller-supplied callback slice.
@@ -611,7 +602,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         IInbox.MpcMethodCall memory mpcMethodCall,
         bytes4 callbackSelector_,
         bytes4 errorSelector_
-    ) internal nonReentrant returns (bytes32) {
+    ) internal virtual nonReentrant returns (bytes32) {
         require(callbackFeeLocalWei >= 1, "PodERC20: callback fee min");
         require(callbackFeeLocalWei <= totalValueWei, "PodERC20: callback exceeds total");
         require(address(this).balance >= totalValueWei, "PodERC20: inbox fee");
@@ -639,7 +630,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         if (status == IPodERC20.RequestStatus.Pending) {
             requestCreatedAt[requestId] = uint64(block.timestamp);
         }
-        emit RequestStatusUpdated(requestId, status);
+        emit IPodERC20.RequestStatusUpdated(requestId, status);
     }
 
     /// @dev Record an in-flight transfer/burn (`recipientLocked=false`) or mint (`recipientLocked=true`); increments {pendingTransferCount}.
@@ -690,7 +681,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         if (spender != address(0)) {
             emit ApprovalFailed(account, spender, errorMessage);
         } else if (account != address(0) || recipientLocked) {
-            emit TransferFailed(
+            emit IPodERC20.TransferFailed(
                 recipientLocked ? address(0) : account,
                 recipientLocked ? account : address(0),
                 errorMessage
@@ -855,7 +846,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         address spender,
         address to,
         uint256 amount,
-        PublicPermit calldata permit
+        IPodERC20.PublicPermit calldata permit
     ) internal {
         if (block.timestamp > permit.deadline) {
             revert PermitExpired(permit.deadline);
@@ -983,7 +974,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         address from,
         address to,
         uint256 amount,
-        PublicPermit calldata permit,
+        IPodERC20.PublicPermit calldata permit,
         uint256 totalValueWei,
         uint256 callbackFeeLocalWei
     ) internal returns (bytes32 requestId) {
