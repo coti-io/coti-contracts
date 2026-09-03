@@ -26,6 +26,11 @@ interface IInboxMiner {
     /// @notice Miner rejected an inbound nonce in-batch (no fat payload stored).
     /// @dev `rejectionCode` / `rejectionReason` come from the special reject {IInbox.MpcMethodCall}.
     event RequestRejected(bytes32 indexed requestId, uint8 rejectionCode, bytes32 rejectionReason);
+    /// @notice Owner set the batch verifier (CMS key). `address(0)` disables mining.
+    event VerifierUpdated(address indexed verifier);
+
+    error VerifierNotSet();
+    error InvalidVerifierSignature();
 
     /// @notice Mined inbound request. `targetFee` and `callerFee` are gas unit budgets (see {IInbox.Request}).
     struct MinedRequest {
@@ -43,8 +48,19 @@ interface IInboxMiner {
 
     /// @notice Validate and execute a batch of mined requests from `sourceChainId`.
     /// @param sourceChainId Chain that produced the mined data.
-    /// @param mined Ordered requests to apply.
-    function batchProcessRequests(uint256 sourceChainId, MinedRequest[] memory mined) external;
+    /// @param mined Ordered requests to apply (bind trailer already injected when the call has it* args).
+    /// @param verifierSignature 65-byte ECDSA over {hashBatch} from the configured verifier (not the miner).
+    function batchProcessRequests(
+        uint256 sourceChainId,
+        MinedRequest[] memory mined,
+        bytes calldata verifierSignature
+    ) external;
+
+    /// @notice Digest the verifier must sign: `keccak256(abi.encode(block.chainid, inbox, sourceChainId, keccak256(abi.encode(mined))))`.
+    function hashBatch(uint256 sourceChainId, MinedRequest[] calldata mined) external view returns (bytes32);
+
+    /// @notice Owner: set the batch verifier.
+    function setVerifier(address verifier_) external;
 
     /// @notice Withdraw accumulated native token fees to `to` (owner-only in concrete implementations).
     function collectFees(address payable to) external;

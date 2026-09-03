@@ -32,6 +32,7 @@ interface IInbox {
         /// @notice Function selector to re-encode with MPC GTs; zero means `data` is raw calldata.
         bytes4 selector;
         /// @notice ABI-encoded arguments or raw calldata.
+        /// @dev `it*` calls: builders append `abi.encode(boundUser, r, s)` after the args (not in `datalens`).
         bytes data;
         /// @notice MPC datatype descriptors used by {MpcAbiCodec} (builders) and Inbox {MpcAbiReEncode}.
         bytes8[] datatypes;

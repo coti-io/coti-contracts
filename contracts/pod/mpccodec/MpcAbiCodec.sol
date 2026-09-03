@@ -8,6 +8,7 @@ import "../IInbox.sol";
 /// @title MpcAbiCodec
 /// @notice dApp-facing builders for {IInbox.MpcMethodCall} payloads (source chains).
 /// @dev Inbox must not use this for execution encode — see coti-pod-inbox-contracts {MpcAbiReEncode}.
+///      Do not append a user-bind trailer. CMS injects `abi.encode(user, r, s)` at dest mine time.
 library MpcAbiCodec {
     enum MpcDataType {
         UINT256,
@@ -53,93 +54,146 @@ library MpcAbiCodec {
     }
 
     function addArgument(MpcMethodCallContext memory methodCall, uint256 arg)
-        internal pure returns (MpcMethodCallContext memory)
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
     {
         return _appendArgument(methodCall, abi.encode(arg), MpcDataType.UINT256);
     }
 
     function addArgument(MpcMethodCallContext memory methodCall, address arg)
-    internal pure returns (MpcMethodCallContext memory) {
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
         return _appendArgument(methodCall, abi.encode(arg), MpcDataType.ADDRESS);
     }
 
-    function addArgument(MpcMethodCallContext memory methodCall, itUint64 memory arg)
-    internal pure returns (MpcMethodCallContext memory) {
-        return _appendArgument(methodCall, abi.encode(arg), MpcDataType.IT_UINT64);
-    }
-
-    function addArgument(MpcMethodCallContext memory methodCall, itBool memory arg)
-    internal pure returns (MpcMethodCallContext memory) {
-        return _appendArgument(methodCall, abi.encode(arg), MpcDataType.IT_BOOL);
-    }
-
-    function addArgument(MpcMethodCallContext memory methodCall, itUint8 memory arg)
-    internal pure returns (MpcMethodCallContext memory) {
-        return _appendArgument(methodCall, abi.encode(arg), MpcDataType.IT_UINT8);
-    }
-
-    function addArgument(MpcMethodCallContext memory methodCall, itUint16 memory arg)
-    internal pure returns (MpcMethodCallContext memory) {
-        return _appendArgument(methodCall, abi.encode(arg), MpcDataType.IT_UINT16);
-    }
-
-    function addArgument(MpcMethodCallContext memory methodCall, itUint32 memory arg)
-    internal pure returns (MpcMethodCallContext memory) {
-        return _appendArgument(methodCall, abi.encode(arg), MpcDataType.IT_UINT32);
-    }
-
-    function addArgument(MpcMethodCallContext memory methodCall, itUint128 memory arg)
-    internal pure returns (MpcMethodCallContext memory) {
-        return _appendArgument(methodCall, abi.encode(arg), MpcDataType.IT_UINT128);
-    }
-
-    function addArgument(MpcMethodCallContext memory methodCall, itUint256 memory arg)
-    internal pure returns (MpcMethodCallContext memory) {
-        return _appendArgument(methodCall, abi.encode(arg), MpcDataType.IT_UINT256);
-    }
-
-    function addArgument(MpcMethodCallContext memory methodCall, itString memory arg)
-    internal pure returns (MpcMethodCallContext memory) {
-        return _appendArgument(methodCall, abi.encode(arg), MpcDataType.IT_STRING);
-    }
-
     function addArgument(MpcMethodCallContext memory methodCall, bytes32 arg)
-    internal pure returns (MpcMethodCallContext memory) {
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
         return _appendArgument(methodCall, abi.encode(arg), MpcDataType.BYTES32);
     }
 
     function addArgument(MpcMethodCallContext memory methodCall, string memory arg)
-    internal pure returns (MpcMethodCallContext memory) {
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
         return _appendArgument(methodCall, abi.encode(arg), MpcDataType.STRING);
     }
 
     function addArgument(MpcMethodCallContext memory methodCall, bytes memory arg)
-    internal pure returns (MpcMethodCallContext memory) {
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
         return _appendArgument(methodCall, abi.encode(arg), MpcDataType.BYTES);
     }
 
     function addArgument(MpcMethodCallContext memory methodCall, uint256[] memory arg)
-    internal pure returns (MpcMethodCallContext memory) {
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
         return _appendArgument(methodCall, abi.encode(arg), MpcDataType.UINT256_ARRAY);
     }
 
     function addArgument(MpcMethodCallContext memory methodCall, address[] memory arg)
-    internal pure returns (MpcMethodCallContext memory) {
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
         return _appendArgument(methodCall, abi.encode(arg), MpcDataType.ADDRESS_ARRAY);
     }
 
     function addArgument(MpcMethodCallContext memory methodCall, bytes32[] memory arg)
-    internal pure returns (MpcMethodCallContext memory) {
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
         return _appendArgument(methodCall, abi.encode(arg), MpcDataType.BYTES32_ARRAY);
     }
 
+    function addArgument(MpcMethodCallContext memory methodCall, itBool memory arg)
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
+        return _appendArgument(methodCall, abi.encode(arg), MpcDataType.IT_BOOL);
+    }
+
+    function addArgument(MpcMethodCallContext memory methodCall, itUint8 memory arg)
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
+        return _appendArgument(methodCall, abi.encode(arg), MpcDataType.IT_UINT8);
+    }
+
+    function addArgument(MpcMethodCallContext memory methodCall, itUint16 memory arg)
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
+        return _appendArgument(methodCall, abi.encode(arg), MpcDataType.IT_UINT16);
+    }
+
+    function addArgument(MpcMethodCallContext memory methodCall, itUint32 memory arg)
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
+        return _appendArgument(methodCall, abi.encode(arg), MpcDataType.IT_UINT32);
+    }
+
+    function addArgument(MpcMethodCallContext memory methodCall, itUint64 memory arg)
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
+        return _appendArgument(methodCall, abi.encode(arg), MpcDataType.IT_UINT64);
+    }
+
+    function addArgument(MpcMethodCallContext memory methodCall, itUint128 memory arg)
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
+        return _appendArgument(methodCall, abi.encode(arg), MpcDataType.IT_UINT128);
+    }
+
+    function addArgument(MpcMethodCallContext memory methodCall, itUint256 memory arg)
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
+        return _appendArgument(methodCall, abi.encode(arg), MpcDataType.IT_UINT256);
+    }
+
+    function addArgument(MpcMethodCallContext memory methodCall, itString memory arg)
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
+        return _appendArgument(methodCall, abi.encode(arg), MpcDataType.IT_STRING);
+    }
+
     function addArgument(MpcMethodCallContext memory methodCall, string[] memory arg)
-    internal pure returns (MpcMethodCallContext memory) {
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
         return _appendArgument(methodCall, abi.encode(arg), MpcDataType.STRING_ARRAY);
     }
 
     function addArgument(MpcMethodCallContext memory methodCall, bytes[] memory arg)
-    internal pure returns (MpcMethodCallContext memory) {
+        internal
+        pure
+        returns (MpcMethodCallContext memory)
+    {
         return _appendArgument(methodCall, abi.encode(arg), MpcDataType.BYTES_ARRAY);
     }
 
@@ -154,7 +208,6 @@ library MpcAbiCodec {
             }
             cursor += chunk.length;
         }
-
         methodCall.mpcMethodCall.data = resized;
         return methodCall.mpcMethodCall;
     }
