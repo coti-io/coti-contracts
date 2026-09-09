@@ -304,6 +304,9 @@ interface IPodERC20 {
      */
     function killStaleRequest(bytes32 requestId) external;
 
+    /// @notice Failure payload for a request that failed with far-side evidence (empty after local kill/invalidate).
+    function failedRequests(bytes32 requestId) external view returns (bytes memory);
+
     /// @notice Minimum age (seconds) before {killStaleRequest} may terminalize a Pending request.
     function requestKillMinAge() external view returns (uint64);
 
