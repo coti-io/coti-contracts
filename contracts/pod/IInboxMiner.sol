@@ -6,11 +6,10 @@ import "./IInbox.sol";
 /// @title IInboxMiner
 /// @notice Miner API: apply mined cross-chain payloads to this chain's inbox and withdraw fees.
 interface IInboxMiner {
-    error RetryFailedRequestNotAFailedRequest();
-    error RequestIdRequired();
-    error RetryFailedRequestExecutionFailed(bytes returnData);
-    /// @notice Encode failed during retry; original execution error is preserved for a later retry.
-    error RetryFailedRequestEncodeFailed(bytes encodeError);
+    /// @notice First mine cannot forward the prepaid `targetFee` stipend after post-call reserve.
+    /// @dev Batch reverts; request is not ingested. CMS remine with a higher `gasLimit`.
+    ///      If a singleton still cannot be delivered, CMS rewrites it as a miner-reject.
+    error InsufficientMinerGas(bytes32 requestId, uint256 gasForCall, uint256 targetGasBudget);
     /// @notice The `sourceChainId` passed to {batchProcessRequests} is this chain's own id.
     error SourceChainIsThisChain(uint256 chainId);
     /// @notice A mined request's encoded source chain does not match the batch `sourceChainId`.
@@ -19,8 +18,6 @@ interface IInboxMiner {
     error RequestTargetChainMismatch(bytes32 requestId, uint256 expectedTargetChainId, uint256 actualTargetChainId);
     /// @dev Circuit breaker also blocks outbound sends; see inbox `MessageProcessingPaused`.
 
-    /// @notice Emitted when {retryFailedRequest} successfully re-executes a previously failed incoming request.
-    event RetryFailedRequestSuccess(bytes32 indexed requestId);
     /// @notice Emitted when the owner toggles the message-processing circuit breaker.
     event MessageProcessingPausedUpdated(bool paused);
     /// @notice Miner rejected an inbound nonce in-batch (no fat payload stored).
@@ -67,11 +64,6 @@ interface IInboxMiner {
 
     /// @notice Pause or unpause inbound message processing (owner-only circuit breaker).
     function setMessageProcessingPaused(bool paused) external;
-
-    /// @notice Re-execute a mined incoming request whose target call failed (e.g. OOG). Open to any payer for gas.
-    /// @dev If owner-configured message lifetime has elapsed since dest ingest, terminalizes instead
-    ///      (error code `4`) and may emit a system-error return leg; further retries then revert.
-    function retryFailedRequest(bytes32 requestId) external;
 
     /// @notice Always-revert estimate of user execution gas and reply outbound sizes.
     /// @dev Intended for `eth_call`. Public. Nested call uses `maxUserGas` (and prepaid targetFee budget).

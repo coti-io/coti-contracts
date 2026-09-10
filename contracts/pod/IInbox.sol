@@ -21,7 +21,8 @@ interface IInbox {
 
     /// @notice Minimal payload for Inbox system-error callbacks (`errorSelector(bytes data)`).
     /// @dev App `raise` payloads are dApp-defined; decode them only when {inboxErrorType()} is {Exception}.
-    ///      System encode failure uses `errorCode = 2`. Expired TTL uses `errorCode = 4`. Attribution is via {SYSTEM_SENDER} on the return leg.
+    ///      Execution failure uses `errorCode = 1`. Encode failure uses `errorCode = 2`.
+    ///      Miner reject uses `errorCode = 3`. Attribution is via {SYSTEM_SENDER} on the return leg.
     struct ErrorData {
         uint64 errorCode;
         bytes message;
@@ -60,8 +61,7 @@ interface IInbox {
         bytes4 callbackSelector;
         /// @notice Error selector invoked with `errorSelector(bytes data)` for app `raise` **or** Inbox system errors.
         /// @dev Same delivery path. Distinguish with {inboxErrorType()}: {SystemError} ({ErrorData} payload,
-        ///      {SYSTEM_SENDER}) vs {Exception} (dApp-defined `raise` bytes). System errors are not eligible for
-        ///      `retryFailedRequest`. Auth: {InboxUser.onlyInboxReturnLeg} (or equivalent:
+        ///      {SYSTEM_SENDER}) vs {Exception} (dApp-defined `raise` bytes). Auth: {InboxUser.onlyInboxReturnLeg} (or equivalent:
         ///      `onlyInbox` + non-zero {inboxSourceRequestId}). Do not require peer equality on
         ///      system-error legs ({SYSTEM_SENDER}).
         bytes4 errorSelector;
@@ -70,11 +70,9 @@ interface IInbox {
         /// @notice True after the inbox has processed this request (execution attempted) or, for an
         ///         original outbound two-way, after a linked return/error leg was *received*.
         /// @dev Does **not** mean the application callback committed. A return leg may still be in
-        ///      `errors` / retryable if the callback reverted. `IncomingResponseReceived` means the
+        ///      `errors` if the callback reverted. `IncomingResponseReceived` means the
         ///      return leg was ingested; listen for `ReturnLegCallbackSucceeded` when you need the
-        ///      callback/error-handler subcall to have completed without recording an error on the
-        ///      *initial* mine. That event is not emitted on a later successful `retryFailedRequest`
-        ///      (watch `RetryFailedRequestSuccess` / empty `errors` for recovery).
+        ///      callback/error-handler subcall to have completed without recording an error.
         bool executed;
         /// @dev If this request is a one-way response or error delivery, links to the original two-way request ID.
         bytes32 sourceRequestId;
