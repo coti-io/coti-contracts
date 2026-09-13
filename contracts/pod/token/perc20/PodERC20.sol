@@ -64,7 +64,8 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     /// @notice Timestamp when a request last entered Pending (for {killStaleRequest}).
     mapping(bytes32 => uint64) public requestCreatedAt;
     /// @notice Minimum age (seconds) before {killStaleRequest} may terminalize a Pending request (`0` = no wait).
-    uint64 public requestKillMinAge = 1 days;
+    /// @dev Default is 3 days so kill cannot race the typical 48h inbox message-life refund path.
+    uint64 public requestKillMinAge = 3 days;
 
     // --- Events (PoD-specific; {Transfer}, {Approval}, etc. are declared on {IPodERC20}) ---
 
@@ -84,6 +85,9 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     event PeerConfigured(address indexed inbox, address indexed cotiSideContract);
 
     // --- Errors ---
+
+    /// @notice {setRequestKillMinAge} used a positive age below the 3-day floor.
+    error RequestKillMinAgeTooShort(uint64 seconds_);
 
     /// @notice Public-amount transfer, burn, or mint used a zero value.
     error ZeroAmount();
@@ -552,7 +556,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         decimals = _decimals;
         totalSupply = 0;
         // Inline default — clones do not run the constructor storage initializer.
-        requestKillMinAge = 1 days;
+        requestKillMinAge = 3 days;
     }
 
     /**
@@ -581,7 +585,11 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
 
     /// @inheritdoc IPodERC20
     /// @dev Factory-deployed tokens: call via {IPrivacyPortalFactoryAdmin.setPTokenRequestKillMinAge}.
+    ///      `0` disables the age gate; any positive value must be at least 3 days.
     function setRequestKillMinAge(uint64 seconds_) external onlyOwner {
+        if (seconds_ != 0 && seconds_ < 3 days) {
+            revert RequestKillMinAgeTooShort(seconds_);
+        }
         requestKillMinAge = seconds_;
     }
 

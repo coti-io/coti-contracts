@@ -311,7 +311,8 @@ interface IPodERC20 {
     function requestKillMinAge() external view returns (uint64);
 
     /// @notice Owner: set {requestKillMinAge} (`0` disables age gating — kill allowed immediately).
-    /// @dev Factory-deployed tokens: call via {IPrivacyPortalFactoryAdmin.setPTokenRequestKillMinAge}.
+    /// @dev Positive values must be at least 3 days. Factory-deployed tokens: call via
+    ///      {IPrivacyPortalFactoryAdmin.setPTokenRequestKillMinAge}.
     function setRequestKillMinAge(uint64 seconds_) external;
 
     /// @dev Reserved: burn garbled amount; not supported in reference flows.
