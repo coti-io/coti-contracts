@@ -574,13 +574,20 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     /// @notice Minter-only: mark a Pending request Failed and clear pending locks.
     /// @dev Blocks a later Success callback from settling (monotonic status). Used when portal admin
     ///      refunds deposit collateral while a mint is still Pending.
+    ///      Auth via {_checkInvalidatePendingAuth} (mintable tokens also admit {previousMinter}).
     function invalidatePendingRequest(bytes32 requestId) external {
-        _checkMinter();
+        _checkInvalidatePendingAuth();
         if (_requests[requestId].status != IPodERC20.RequestStatus.Pending) {
             revert RequestNotPending(requestId, _requests[requestId].status);
         }
         _setRequestStatus(requestId, IPodERC20.RequestStatus.Failed);
         _clearPendingByRequestId(requestId);
+    }
+
+    /// @dev Auth for {invalidatePendingRequest}. Base uses {_checkMinter}; mintable overrides to
+    ///      also allow {PodErc20Mintable.previousMinter}.
+    function _checkInvalidatePendingAuth() internal view virtual {
+        _checkMinter();
     }
 
     /// @inheritdoc IPodERC20
