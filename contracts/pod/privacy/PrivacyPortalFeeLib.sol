@@ -19,6 +19,8 @@ library PrivacyPortalFeeLib {
     error FeeOverflow();
     /// @notice Invalid fee configuration.
     error InvalidFeeConfiguration();
+    /// @notice Percentage fee requested but a USD rate is zero (fail closed).
+    error ZeroUsdRate();
 
     /// @notice Pack fee config into one storage slot: uint96 fixed | uint32 bps | uint128 max.
     function packFeeConfig(uint256 fixedFee, uint256 percentageBps, uint256 maxFee)
@@ -75,7 +77,8 @@ library PrivacyPortalFeeLib {
     }
 
     /// @notice Resolve portal fee from packed config and live USD rates.
-    /// @dev Falls back to `fixedFee` (no dynamic pricing) when `percentageBps == 0` or either rate is zero.
+    /// @dev When `percentageBps == 0`, returns `fixedFee` only. When `percentageBps != 0`, both USD
+    ///      rates must be non-zero or the call reverts {ZeroUsdRate} (fail closed on a dead feed).
     function resolvePortalFee(
         bytes32 packedFeeConfig,
         uint256 amount,
@@ -85,8 +88,11 @@ library PrivacyPortalFeeLib {
     ) internal pure returns (uint256 fee, bool usedDynamicPricing) {
         (uint96 fixedFee, uint32 percentageBps, uint128 maxFee) = unpackFeeConfig(packedFeeConfig);
 
-        if (percentageBps == 0 || collateralUsdRate == 0 || nativeUsdRate == 0) {
+        if (percentageBps == 0) {
             return (fixedFee, false);
+        }
+        if (collateralUsdRate == 0 || nativeUsdRate == 0) {
+            revert ZeroUsdRate();
         }
 
         uint256 txValueUsd = Math.mulDiv(amount, collateralUsdRate, 10 ** uint256(decimals));
