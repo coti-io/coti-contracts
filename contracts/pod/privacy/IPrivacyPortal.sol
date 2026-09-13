@@ -165,8 +165,10 @@ interface IPrivacyPortal {
     /// @param requestId Mint request id returned by {deposit} / {depositNative} / {wrap}.
     function adminRefundPendingDeposit(bytes32 requestId) external;
 
-    /// @notice Mark a pending withdrawal as Failed after its pToken transfer request fails.
-    /// @dev Does not release underlying; user retains pTokens. Portal protocol fee is kept.
+    /// @notice Mark a pending withdrawal as Failed after its pToken transfer fails with far-side evidence.
+    /// @dev Allows {IPodERC20.RequestStatus.SystemFailed}, or Failed with non-empty {IPodERC20.failedRequests}.
+    ///      Local kill/invalidate (Failed, empty evidence) cannot cancel. Does not release underlying; user retains
+    ///      pTokens. Portal protocol fee is kept.
     /// @param withdrawalId Portal withdrawal id from {requestWithdrawWithPermit}.
     function cancelFailedWithdrawal(bytes32 withdrawalId) external;
 

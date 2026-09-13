@@ -280,6 +280,44 @@ describe("PrivacyPortal failed-request recovery", function () {
         expect(withdrawal.status).to.equal(3n) // WithdrawalStatus.Failed
     })
 
+    it("rejects cancel when transfer is Failed without far-side evidence", async function () {
+        const { user, portal, pToken, amount } = await deployPortalFixture()
+
+        const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600)
+        const tx = await portal.connect(user).requestWithdrawWithPermit(
+            user.address,
+            amount,
+            0,
+            1000,
+            100,
+            deadline,
+            27,
+            hre.ethers.ZeroHash,
+            hre.ethers.ZeroHash,
+            { value: 1000 }
+        )
+        const receipt = await tx.wait()
+        const withdrawLog = receipt!.logs
+            .map((log) => {
+                try {
+                    return portal.interface.parseLog(log)
+                } catch {
+                    return null
+                }
+            })
+            .find((parsed) => parsed?.name === "WithdrawalRequested")
+        const withdrawalId = withdrawLog!.args.withdrawalId as string
+        const transferRequestId = withdrawLog!.args.transferRequestId as string
+
+        await pToken.markLastTransferFailedWithoutEvidence()
+        await expect(portal.cancelFailedWithdrawal(withdrawalId))
+            .to.be.revertedWithCustomError(portal, "WithdrawTransferMissingFailureEvidence")
+            .withArgs(transferRequestId)
+
+        const withdrawal = await portal.withdrawals(withdrawalId)
+        expect(withdrawal.status).to.equal(1n) // WithdrawalStatus.TransferPending
+    })
+
     it("rescues native and ERC20 to the factory rescue recipient while paused", async function () {
         const { owner, other, factory, underlying, portal, pToken } = await deployPortalFixture()
         const rescueTo = other.address

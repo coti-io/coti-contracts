@@ -11,6 +11,8 @@ import "./PodERC20.sol";
 contract PodErc20Mintable is PodERC20 {
     /// @notice Sole address allowed to call {PodERC20.mint} (encrypted or plain variant).
     address public minter;
+    /// @notice Prior minter retained so a retired portal can still {invalidatePendingRequest}.
+    address public previousMinter;
     bool private _mintableInitialized;
 
     /// @notice Emitted when the authorized minter is rotated.
@@ -46,6 +48,14 @@ contract PodErc20Mintable is PodERC20 {
     /// @dev Allows the call only when `msg.sender == minter`; reverts with {OnlyMinter} otherwise.
     function _checkMinter() internal view override {
         if (msg.sender != minter) {
+            revert OnlyMinter(msg.sender);
+        }
+    }
+
+    /// @inheritdoc PodERC20
+    /// @dev Current or previous minter may invalidate (remount leaves pending escrows on the old portal).
+    function _checkInvalidatePendingAuth() internal view override {
+        if (msg.sender != minter && msg.sender != previousMinter) {
             revert OnlyMinter(msg.sender);
         }
     }
@@ -98,6 +108,7 @@ contract PodErc20Mintable is PodERC20 {
             revert PodErc20MintableInvalidMinter();
         }
         address previous = minter;
+        previousMinter = previous;
         minter = newMinter;
         emit MinterUpdated(previous, newMinter);
     }

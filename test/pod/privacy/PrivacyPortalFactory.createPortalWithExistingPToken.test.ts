@@ -236,6 +236,27 @@ describe("PodErc20Mintable.setMinter", function () {
             .to.emit(token, "MinterUpdated")
             .withArgs(minter.address, newMinter.address)
         expect(await token.minter()).to.equal(newMinter.address)
+        expect(await token.previousMinter()).to.equal(minter.address)
+    })
+
+    it("lets previousMinter invalidate after rotation; stranger cannot", async function () {
+        const { minter, newMinter, stranger, token } = await deployMintable()
+        await token.setMinter(newMinter.address)
+
+        const fakeId = hre.ethers.ZeroHash
+        // Auth passes for previous minter; no Pending record → RequestNotPending.
+        await expect(token.connect(minter).invalidatePendingRequest(fakeId)).to.be.revertedWithCustomError(
+            token,
+            "RequestNotPending"
+        )
+        await expect(token.connect(newMinter).invalidatePendingRequest(fakeId)).to.be.revertedWithCustomError(
+            token,
+            "RequestNotPending"
+        )
+        await expect(token.connect(stranger).invalidatePendingRequest(fakeId)).to.be.revertedWithCustomError(
+            token,
+            "OnlyMinter"
+        )
     })
 
     it("reverts setMinter for non-owner", async function () {

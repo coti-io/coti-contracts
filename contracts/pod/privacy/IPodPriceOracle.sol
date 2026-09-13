@@ -7,7 +7,8 @@ pragma solidity ^0.8.20;
 ///
 /// Implemented by {PoDPriceOracle} (portal + inbox), {BandLiveOracle}, and {ChainlinkLiveOracle}.
 /// Feed adapters never revert; return `0` when a feed is unset, stale, or failed.
-/// Zero rates make {PrivacyPortalFeeLib.resolvePortalFee} skip dynamic pricing (fixed fee only).
+/// Zero rates make {PrivacyPortalFeeLib.resolvePortalFee} revert {ZeroUsdRate} when a percentage
+/// fee is configured (`percentageBps != 0`); fixed-only fees still succeed.
 interface IPodPriceOracle {
     /// @notice Live USD price for `token`.
     function getLivePrice(address token) external view returns (uint256 priceUsd);

@@ -64,7 +64,8 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     /// @notice Timestamp when a request last entered Pending (for {killStaleRequest}).
     mapping(bytes32 => uint64) public requestCreatedAt;
     /// @notice Minimum age (seconds) before {killStaleRequest} may terminalize a Pending request (`0` = no wait).
-    uint64 public requestKillMinAge = 1 days;
+    /// @dev Default is 3 days so kill cannot race the typical 48h inbox message-life refund path.
+    uint64 public requestKillMinAge = 3 days;
 
     // --- Events (PoD-specific; {Transfer}, {Approval}, etc. are declared on {IPodERC20}) ---
 
@@ -84,6 +85,9 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     event PeerConfigured(address indexed inbox, address indexed cotiSideContract);
 
     // --- Errors ---
+
+    /// @notice {setRequestKillMinAge} used a positive age below the 3-day floor.
+    error RequestKillMinAgeTooShort(uint64 seconds_);
 
     /// @notice Public-amount transfer, burn, or mint used a zero value.
     error ZeroAmount();
@@ -552,7 +556,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         decimals = _decimals;
         totalSupply = 0;
         // Inline default — clones do not run the constructor storage initializer.
-        requestKillMinAge = 1 days;
+        requestKillMinAge = 3 days;
     }
 
     /**
@@ -570,8 +574,9 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     /// @notice Minter-only: mark a Pending request Failed and clear pending locks.
     /// @dev Blocks a later Success callback from settling (monotonic status). Used when portal admin
     ///      refunds deposit collateral while a mint is still Pending.
+    ///      Auth via {_checkInvalidatePendingAuth} (mintable tokens also admit {previousMinter}).
     function invalidatePendingRequest(bytes32 requestId) external {
-        _checkMinter();
+        _checkInvalidatePendingAuth();
         if (_requests[requestId].status != IPodERC20.RequestStatus.Pending) {
             revert RequestNotPending(requestId, _requests[requestId].status);
         }
@@ -579,9 +584,19 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         _clearPendingByRequestId(requestId);
     }
 
+    /// @dev Auth for {invalidatePendingRequest}. Base uses {_checkMinter}; mintable overrides to
+    ///      also allow {PodErc20Mintable.previousMinter}.
+    function _checkInvalidatePendingAuth() internal view virtual {
+        _checkMinter();
+    }
+
     /// @inheritdoc IPodERC20
     /// @dev Factory-deployed tokens: call via {IPrivacyPortalFactoryAdmin.setPTokenRequestKillMinAge}.
+    ///      `0` disables the age gate; any positive value must be at least 3 days.
     function setRequestKillMinAge(uint64 seconds_) external onlyOwner {
+        if (seconds_ != 0 && seconds_ < 3 days) {
+            revert RequestKillMinAgeTooShort(seconds_);
+        }
         requestKillMinAge = seconds_;
     }
 

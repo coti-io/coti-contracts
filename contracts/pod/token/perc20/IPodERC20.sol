@@ -304,11 +304,15 @@ interface IPodERC20 {
      */
     function killStaleRequest(bytes32 requestId) external;
 
+    /// @notice Failure payload for a request that failed with far-side evidence (empty after local kill/invalidate).
+    function failedRequests(bytes32 requestId) external view returns (bytes memory);
+
     /// @notice Minimum age (seconds) before {killStaleRequest} may terminalize a Pending request.
     function requestKillMinAge() external view returns (uint64);
 
     /// @notice Owner: set {requestKillMinAge} (`0` disables age gating — kill allowed immediately).
-    /// @dev Factory-deployed tokens: call via {IPrivacyPortalFactoryAdmin.setPTokenRequestKillMinAge}.
+    /// @dev Positive values must be at least 3 days. Factory-deployed tokens: call via
+    ///      {IPrivacyPortalFactoryAdmin.setPTokenRequestKillMinAge}.
     function setRequestKillMinAge(uint64 seconds_) external;
 
     /// @dev Reserved: burn garbled amount; not supported in reference flows.

@@ -199,6 +199,8 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     error BatchBurnNotResolved(bytes32 requestId, IPodERC20.RequestStatus status);
     /// @notice Transfer request is not Failed/SystemFailed, so withdrawal cannot be cancelled.
     error WithdrawTransferNotFailed(bytes32 requestId, IPodERC20.RequestStatus status);
+    /// @notice Transfer is Failed but has no far-side failure evidence (e.g. local kill/invalidate).
+    error WithdrawTransferMissingFailureEvidence(bytes32 requestId);
     /// @notice Portal underlying is not configured for native wrap deposits.
     error NativeWrapDisabled();
     /// @notice Factory pause controller is not configured.
@@ -643,6 +645,8 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     }
 
     /// @inheritdoc IPrivacyPortal
+    /// @dev Cancel only when the pToken shows SystemFailed, or Failed with non-empty {IPodERC20.failedRequests}
+    ///      (far-side raise / mother failure). Local kill or invalidate leaves Failed with empty evidence and must not cancel.
     function cancelFailedWithdrawal(bytes32 withdrawalId) external override nonReentrant {
         Withdrawal storage withdrawal = withdrawals[withdrawalId];
         if (withdrawal.user == address(0)) {
@@ -651,16 +655,20 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         if (withdrawal.status != WithdrawalStatus.TransferPending) {
             revert WithdrawalNotPending(withdrawalId, withdrawal.status);
         }
-        IPodERC20.RequestStatus requestStatus = pToken.requests(withdrawal.transferRequestId).status;
-        if (
-            requestStatus != IPodERC20.RequestStatus.Failed
-                && requestStatus != IPodERC20.RequestStatus.SystemFailed
-        ) {
-            revert WithdrawTransferNotFailed(withdrawal.transferRequestId, requestStatus);
+        bytes32 transferRequestId = withdrawal.transferRequestId;
+        IPodERC20.RequestStatus requestStatus = pToken.requests(transferRequestId).status;
+        if (requestStatus == IPodERC20.RequestStatus.SystemFailed) {
+            // SystemFailed is sufficient far-side evidence on its own.
+        } else if (requestStatus == IPodERC20.RequestStatus.Failed) {
+            if (pToken.failedRequests(transferRequestId).length == 0) {
+                revert WithdrawTransferMissingFailureEvidence(transferRequestId);
+            }
+        } else {
+            revert WithdrawTransferNotFailed(transferRequestId, requestStatus);
         }
 
         withdrawal.status = WithdrawalStatus.Failed;
-        emit WithdrawalFailed(withdrawalId, withdrawal.transferRequestId);
+        emit WithdrawalFailed(withdrawalId, transferRequestId);
     }
 
     /// @inheritdoc IPrivacyPortal

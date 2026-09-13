@@ -67,13 +67,16 @@ describe("PrivacyPortalFactory pToken admin forwarders", function () {
 
     it("admin can setPTokenRequestKillMinAge; non-admin and unknown pToken revert", async function () {
         const { factory, stranger, pToken, pTokenAddr } = await deployFactoryFixture()
-        expect(await pToken.requestKillMinAge()).to.equal(86400n)
+        expect(await pToken.requestKillMinAge()).to.equal(259200n) // 3 days
 
         await factory.setPTokenRequestKillMinAge(pTokenAddr, 0)
         expect(await pToken.requestKillMinAge()).to.equal(0n)
 
-        await expect(factory.connect(stranger).setPTokenRequestKillMinAge(pTokenAddr, 1)).to.be.reverted
-        await expect(factory.setPTokenRequestKillMinAge(ZeroAddress, 1))
+        await expect(factory.setPTokenRequestKillMinAge(pTokenAddr, 1))
+            .to.be.revertedWithCustomError(pToken, "RequestKillMinAgeTooShort")
+
+        await expect(factory.connect(stranger).setPTokenRequestKillMinAge(pTokenAddr, 259200)).to.be.reverted
+        await expect(factory.setPTokenRequestKillMinAge(ZeroAddress, 259200))
             .to.be.revertedWithCustomError(factory, "UnknownPToken")
             .withArgs(ZeroAddress)
     })
@@ -119,7 +122,7 @@ describe("PrivacyPortalFactory pToken admin forwarders", function () {
 
     it("honors requestKillMinAge before factory kill", async function () {
         const { owner, factory, pToken, pTokenAddr } = await deployFactoryFixture()
-        // Default min age is 1 day.
+        // Default min age is 3 days.
         await owner.sendTransaction({ to: pTokenAddr, value: 1000n })
         const syncTx = await pToken.syncBalances([owner.address], 100n, { value: 1000n })
         const syncReceipt = await syncTx.wait()
@@ -139,7 +142,7 @@ describe("PrivacyPortalFactory pToken admin forwarders", function () {
             "RequestNotAged"
         )
 
-        await hre.network.provider.send("evm_increaseTime", [86400])
+        await hre.network.provider.send("evm_increaseTime", [259200])
         await hre.network.provider.send("evm_mine")
 
         await expect(factory.killPTokenStaleRequest(pTokenAddr, requestId)).to.emit(

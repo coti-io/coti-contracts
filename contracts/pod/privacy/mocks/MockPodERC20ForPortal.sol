@@ -31,6 +31,7 @@ contract MockPodERC20ForPortal {
     IPodERC20.RequestStatus private _lastBurnStatus;
 
     mapping(bytes32 => IPodERC20.RequestStatus) private _requestStatus;
+    mapping(bytes32 => bytes) public failedRequests;
 
     function estimateFee()
         external
@@ -131,6 +132,17 @@ contract MockPodERC20ForPortal {
         _lastTransferStatus = IPodERC20.RequestStatus.Failed;
         if (lastTransferRequestId != bytes32(0)) {
             _requestStatus[lastTransferRequestId] = IPodERC20.RequestStatus.Failed;
+            // Far-side raise / mother failure populates evidence (same shape as real PodERC20).
+            failedRequests[lastTransferRequestId] = hex"01";
+        }
+    }
+
+    /// @dev Local kill/invalidate shape: Failed with empty failedRequests.
+    function markLastTransferFailedWithoutEvidence() external {
+        _lastTransferStatus = IPodERC20.RequestStatus.Failed;
+        if (lastTransferRequestId != bytes32(0)) {
+            _requestStatus[lastTransferRequestId] = IPodERC20.RequestStatus.Failed;
+            delete failedRequests[lastTransferRequestId];
         }
     }
 
