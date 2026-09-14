@@ -113,7 +113,8 @@ contract MockPodErc20MintableForPortal is Initializable, Ownable {
             status: status,
             recipientLocked: false,
             account: address(0),
-            spender: address(0)
+            spender: address(0),
+            inboxFailure: false
         });
     }
 

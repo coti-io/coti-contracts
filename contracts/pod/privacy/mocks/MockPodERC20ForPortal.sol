@@ -31,6 +31,8 @@ contract MockPodERC20ForPortal {
     IPodERC20.RequestStatus private _lastBurnStatus;
 
     mapping(bytes32 => IPodERC20.RequestStatus) private _requestStatus;
+    mapping(bytes32 => bytes) public failedRequests;
+    mapping(bytes32 => bool) private _inboxFailure;
 
     function estimateFee()
         external
@@ -92,7 +94,8 @@ contract MockPodERC20ForPortal {
             status: status,
             recipientLocked: false,
             account: address(0),
-            spender: address(0)
+            spender: address(0),
+            inboxFailure: _inboxFailure[requestId]
         });
     }
 
@@ -127,10 +130,33 @@ contract MockPodERC20ForPortal {
         }
     }
 
+    /// @dev Mother `raise`: Failed + Inbox error payload (cancel-eligible).
     function markLastTransferFailed() external {
         _lastTransferStatus = IPodERC20.RequestStatus.Failed;
         if (lastTransferRequestId != bytes32(0)) {
             _requestStatus[lastTransferRequestId] = IPodERC20.RequestStatus.Failed;
+            failedRequests[lastTransferRequestId] = bytes("mother raise");
+            _inboxFailure[lastTransferRequestId] = true;
+        }
+    }
+
+    /// @dev Mother `raise` with empty reason: Failed + inboxFailure, empty {failedRequests}.
+    function markLastTransferFailedEmpty() external {
+        _lastTransferStatus = IPodERC20.RequestStatus.Failed;
+        if (lastTransferRequestId != bytes32(0)) {
+            _requestStatus[lastTransferRequestId] = IPodERC20.RequestStatus.Failed;
+            delete failedRequests[lastTransferRequestId];
+            _inboxFailure[lastTransferRequestId] = true;
+        }
+    }
+
+    /// @dev Local kill/invalidate: Failed with inboxFailure false (cancel must reject).
+    function markLastTransferKilled() external {
+        _lastTransferStatus = IPodERC20.RequestStatus.Failed;
+        if (lastTransferRequestId != bytes32(0)) {
+            _requestStatus[lastTransferRequestId] = IPodERC20.RequestStatus.Failed;
+            delete failedRequests[lastTransferRequestId];
+            _inboxFailure[lastTransferRequestId] = false;
         }
     }
 
@@ -138,6 +164,7 @@ contract MockPodERC20ForPortal {
         _lastTransferStatus = IPodERC20.RequestStatus.SystemFailed;
         if (lastTransferRequestId != bytes32(0)) {
             _requestStatus[lastTransferRequestId] = IPodERC20.RequestStatus.SystemFailed;
+            _inboxFailure[lastTransferRequestId] = true;
         }
     }
 

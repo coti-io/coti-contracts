@@ -435,7 +435,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         }
         (address from, address to, bytes memory errorMsg) = abi.decode(data, (address, address, bytes));
         _setRequestStatus(sourceRequestId, IPodERC20.RequestStatus.Failed);
-        failedRequests[sourceRequestId] = errorMsg;
+        _recordInboxFailure(sourceRequestId, errorMsg);
         _clearPendingByRequestId(sourceRequestId);
         emit TransferFailed(from, to, errorMsg);
     }
@@ -449,7 +449,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         }
         (address owner, address spender, bytes memory errorMsg) = abi.decode(data, (address, address, bytes));
         _setRequestStatus(sourceRequestId, IPodERC20.RequestStatus.Failed);
-        failedRequests[sourceRequestId] = errorMsg;
+        _recordInboxFailure(sourceRequestId, errorMsg);
         _clearPendingByRequestId(sourceRequestId);
         emit ApprovalFailed(owner, spender, errorMsg);
     }
@@ -462,7 +462,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
             return;
         }
         _setRequestStatus(sourceRequestId, IPodERC20.RequestStatus.Failed);
-        failedRequests[sourceRequestId] = data;
+        _recordInboxFailure(sourceRequestId, data);
         emit SyncBalancesFailed(sourceRequestId, data);
     }
 
@@ -570,6 +570,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     /// @notice Minter-only: mark a Pending request Failed and clear pending locks.
     /// @dev Blocks a later Success callback from settling (monotonic status). Used when portal admin
     ///      refunds deposit collateral while a mint is still Pending.
+    ///      Does not write {failedRequests} or {RequestRecord.inboxFailure}.
     function invalidatePendingRequest(bytes32 requestId) external {
         _checkMinter();
         if (_requests[requestId].status != IPodERC20.RequestStatus.Pending) {
@@ -587,6 +588,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
 
     /// @inheritdoc IPodERC20
     /// @dev Factory-deployed tokens: call via {IPrivacyPortalFactoryAdmin.killPTokenStaleRequest}.
+    ///      Does not write {failedRequests} or {RequestRecord.inboxFailure}; portal cancel treats that as unproven far-side failure.
     function killStaleRequest(bytes32 requestId) external onlyOwner {
         IPodERC20.RequestRecord storage rec = _requests[requestId];
         if (rec.status != IPodERC20.RequestStatus.Pending) {
@@ -638,8 +640,15 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         _requests[requestId].status = status;
         if (status == IPodERC20.RequestStatus.Pending) {
             requestCreatedAt[requestId] = uint64(block.timestamp);
+            _requests[requestId].inboxFailure = false;
         }
         emit RequestStatusUpdated(requestId, status);
+    }
+
+    /// @dev Store Inbox error payload and set {RequestRecord.inboxFailure}. Empty payload still counts.
+    function _recordInboxFailure(bytes32 requestId, bytes memory payload) internal {
+        failedRequests[requestId] = payload;
+        _requests[requestId].inboxFailure = true;
     }
 
     /// @dev Record an in-flight transfer/burn (`recipientLocked=false`) or mint (`recipientLocked=true`); increments {pendingTransferCount}.
@@ -684,7 +693,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         address spender = rec.spender;
         bool recipientLocked = rec.recipientLocked;
         _setRequestStatus(sourceRequestId, IPodERC20.RequestStatus.SystemFailed);
-        failedRequests[sourceRequestId] = data;
+        _recordInboxFailure(sourceRequestId, data);
         _clearPendingByRequestId(sourceRequestId);
         emit SystemRequestFailed(sourceRequestId, errorCode, errorMessage);
         if (spender != address(0)) {

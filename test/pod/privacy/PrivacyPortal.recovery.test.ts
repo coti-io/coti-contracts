@@ -280,6 +280,83 @@ describe("PrivacyPortal failed-request recovery", function () {
         expect(withdrawal.status).to.equal(3n) // WithdrawalStatus.Failed
     })
 
+    it("rejects cancel when Failed has no Inbox error evidence", async function () {
+        const { user, portal, pToken, amount } = await deployPortalFixture()
+
+        const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600)
+        const tx = await portal.connect(user).requestWithdrawWithPermit(
+            user.address,
+            amount,
+            0,
+            1000,
+            100,
+            deadline,
+            27,
+            hre.ethers.ZeroHash,
+            hre.ethers.ZeroHash,
+            { value: 1000 }
+        )
+        const receipt = await tx.wait()
+        const withdrawLog = receipt!.logs
+            .map((log) => {
+                try {
+                    return portal.interface.parseLog(log)
+                } catch {
+                    return null
+                }
+            })
+            .find((parsed) => parsed?.name === "WithdrawalRequested")
+        const withdrawalId = withdrawLog!.args.withdrawalId as string
+        const transferRequestId = withdrawLog!.args.transferRequestId as string
+
+        await pToken.markLastTransferKilled()
+        await expect(portal.cancelFailedWithdrawal(withdrawalId))
+            .to.be.revertedWithCustomError(portal, "WithdrawTransferFailureUnproven")
+            .withArgs(transferRequestId, 3n) // IPodERC20.RequestStatus.Failed
+
+        const withdrawal = await portal.withdrawals(withdrawalId)
+        expect(withdrawal.status).to.equal(1n) // WithdrawalStatus.TransferPending
+    })
+
+    it("cancels withdrawal after Failed with empty Inbox error payload", async function () {
+        const { user, portal, pToken, amount } = await deployPortalFixture()
+
+        const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600)
+        const tx = await portal.connect(user).requestWithdrawWithPermit(
+            user.address,
+            amount,
+            0,
+            1000,
+            100,
+            deadline,
+            27,
+            hre.ethers.ZeroHash,
+            hre.ethers.ZeroHash,
+            { value: 1000 }
+        )
+        const receipt = await tx.wait()
+        const withdrawLog = receipt!.logs
+            .map((log) => {
+                try {
+                    return portal.interface.parseLog(log)
+                } catch {
+                    return null
+                }
+            })
+            .find((parsed) => parsed?.name === "WithdrawalRequested")
+        const withdrawalId = withdrawLog!.args.withdrawalId as string
+        const transferRequestId = withdrawLog!.args.transferRequestId as string
+
+        await pToken.markLastTransferFailedEmpty()
+        expect(await pToken.failedRequests(transferRequestId)).to.equal("0x")
+        await expect(portal.cancelFailedWithdrawal(withdrawalId))
+            .to.emit(portal, "WithdrawalFailed")
+            .withArgs(withdrawalId, transferRequestId)
+
+        const withdrawal = await portal.withdrawals(withdrawalId)
+        expect(withdrawal.status).to.equal(3n) // WithdrawalStatus.Failed
+    })
+
     it("rescues native and ERC20 to the factory rescue recipient while paused", async function () {
         const { owner, other, factory, underlying, portal, pToken } = await deployPortalFixture()
         const rescueTo = other.address

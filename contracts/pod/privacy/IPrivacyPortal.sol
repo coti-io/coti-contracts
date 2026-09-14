@@ -165,8 +165,11 @@ interface IPrivacyPortal {
     /// @param requestId Mint request id returned by {deposit} / {depositNative} / {wrap}.
     function adminRefundPendingDeposit(bytes32 requestId) external;
 
-    /// @notice Mark a pending withdrawal as Failed after its pToken transfer request fails.
+    /// @notice Mark a pending withdrawal as Failed after its pToken transfer fails on COTI.
     /// @dev Does not release underlying; user retains pTokens. Portal protocol fee is kept.
+    ///      Accepts {IPodERC20.RequestStatus.SystemFailed} or {IPodERC20.RequestStatus.Failed} when
+    ///      {IPodERC20.RequestRecord.inboxFailure} is set. Local kill/invalidate (Failed, flag false)
+    ///      is rejected so a lost ack after a COTI debit cannot close the withdrawal.
     /// @param withdrawalId Portal withdrawal id from {requestWithdrawWithPermit}.
     function cancelFailedWithdrawal(bytes32 withdrawalId) external;
 

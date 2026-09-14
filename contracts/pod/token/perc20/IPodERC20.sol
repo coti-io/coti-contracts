@@ -31,6 +31,9 @@ interface IPodERC20 {
         bool recipientLocked;
         address account;
         address spender;
+        /// @notice True iff an Inbox error callback wrote Failed/SystemFailed (including empty raise payload).
+        ///         Local {killStaleRequest} / {invalidatePendingRequest} leave this false.
+        bool inboxFailure;
     }
 
     /// @notice Allowance represented twice: re-encrypted for the owner and for the spender so each party can decrypt their view.
@@ -113,6 +116,11 @@ interface IPodERC20 {
 
     /// @notice Async request record (status + account metadata) for a request submitted by this token.
     function requests(bytes32 requestId) external view returns (RequestRecord memory);
+
+    /// @notice Inbox error payload for a Failed or SystemFailed request (may be empty).
+    /// @dev Proof of Inbox delivery is {RequestRecord.inboxFailure}, not payload length. Empty when
+    ///      the request was terminalized locally, or when the mother raised with an empty reason.
+    function failedRequests(bytes32 requestId) external view returns (bytes memory);
 
     /**
      * @notice Estimate the native fee split used by auto-fee two-way token methods.
@@ -292,13 +300,15 @@ interface IPodERC20 {
     /**
      * @notice Minter-only: mark a Pending request Failed and clear pending locks so a late Success cannot settle.
      * @dev Used by Privacy Portal admin deposit refunds to prevent unbacked pToken mint after collateral return.
+     *      Does not write {failedRequests} or {RequestRecord.inboxFailure}; portal cancel treats that
+     *      as unproven far-side failure.
      */
     function invalidatePendingRequest(bytes32 requestId) external;
 
     /**
      * @notice Owner: terminalize a Pending request that has aged past {requestKillMinAge}.
      * @dev Clears approval/transfer pending locks. Late Success is rejected by Pending-only status transitions.
-     *      Does not release Privacy Portal escrow — pair with portal admin refund / ops recovery when needed.
+     *      Does not write {failedRequests} or {RequestRecord.inboxFailure}; does not release Privacy Portal escrow.
      *      Factory-deployed tokens (Ownable owner = factory): call via
      *      {IPrivacyPortalFactoryAdmin.killPTokenStaleRequest}.
      */

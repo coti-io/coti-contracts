@@ -199,6 +199,8 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     error BatchBurnNotResolved(bytes32 requestId, IPodERC20.RequestStatus status);
     /// @notice Transfer request is not Failed/SystemFailed, so withdrawal cannot be cancelled.
     error WithdrawTransferNotFailed(bytes32 requestId, IPodERC20.RequestStatus status);
+    /// @notice Transfer is Failed/SystemFailed but {IPodERC20.RequestRecord.inboxFailure} is false (local kill/invalidate).
+    error WithdrawTransferFailureUnproven(bytes32 requestId, IPodERC20.RequestStatus status);
     /// @notice Portal underlying is not configured for native wrap deposits.
     error NativeWrapDisabled();
     /// @notice Factory pause controller is not configured.
@@ -643,6 +645,9 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     }
 
     /// @inheritdoc IPrivacyPortal
+    /// @dev Inbox-backed failure only. {IPodERC20.RequestRecord.inboxFailure} is set solely by Inbox
+    ///      error callbacks (including empty mother `raise`). Local {killStaleRequest} /
+    ///      {invalidatePendingRequest} write Failed with the flag false.
     function cancelFailedWithdrawal(bytes32 withdrawalId) external override nonReentrant {
         Withdrawal storage withdrawal = withdrawals[withdrawalId];
         if (withdrawal.user == address(0)) {
@@ -651,16 +656,21 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
         if (withdrawal.status != WithdrawalStatus.TransferPending) {
             revert WithdrawalNotPending(withdrawalId, withdrawal.status);
         }
-        IPodERC20.RequestStatus requestStatus = pToken.requests(withdrawal.transferRequestId).status;
+        bytes32 transferRequestId = withdrawal.transferRequestId;
+        IPodERC20.RequestRecord memory rec = pToken.requests(transferRequestId);
+        IPodERC20.RequestStatus requestStatus = rec.status;
         if (
             requestStatus != IPodERC20.RequestStatus.Failed
                 && requestStatus != IPodERC20.RequestStatus.SystemFailed
         ) {
-            revert WithdrawTransferNotFailed(withdrawal.transferRequestId, requestStatus);
+            revert WithdrawTransferNotFailed(transferRequestId, requestStatus);
+        }
+        if (!rec.inboxFailure) {
+            revert WithdrawTransferFailureUnproven(transferRequestId, requestStatus);
         }
 
         withdrawal.status = WithdrawalStatus.Failed;
-        emit WithdrawalFailed(withdrawalId, withdrawal.transferRequestId);
+        emit WithdrawalFailed(withdrawalId, transferRequestId);
     }
 
     /// @inheritdoc IPrivacyPortal
