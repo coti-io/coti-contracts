@@ -65,6 +65,8 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     mapping(bytes32 => uint64) public requestCreatedAt;
     /// @notice Minimum age (seconds) before {killStaleRequest} may terminalize a Pending request (`0` = no wait).
     uint64 public requestKillMinAge = 1 days;
+    /// @notice Submitter allowed to {invalidatePendingRequest} after minter rotation (minting/burning portal).
+    mapping(bytes32 => address) public requestInvalidator;
 
     // --- Events (PoD-specific; {Transfer}, {Approval}, etc. are declared on {IPodERC20}) ---
 
@@ -117,6 +119,8 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     error PermitExpired(uint256 deadline);
     /// @notice Public transfer permit signer did not match the owner.
     error InvalidPermitSigner(address signer, address owner);
+    /// @notice Native rescue transfer failed.
+    error RescueNativeFailed();
 
     // --- Constructor ---
 
@@ -140,8 +144,19 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     }
 
     /// @notice Accept native funds used to pay inbox fees for async pToken operations.
-    /// @dev `_sendPodTwoWay` may spend existing contract balance, so operational tooling can pre-fund this token for auto-fee flows.
+    /// @dev Forwards only `msg.value`. Does not spend a pre-funded balance. Stranded native: {rescueNative}.
     receive() external payable {}
+
+    /// @notice Owner: recover native sent to this token (no auto-fee pre-fund path exists).
+    function rescueNative(address to, uint256 amount) external onlyOwner {
+        if (to == address(0) || amount == 0) {
+            revert PodERC20InvalidInitialization();
+        }
+        (bool ok,) = to.call{value: amount}("");
+        if (!ok) {
+            revert RescueNativeFailed();
+        }
+    }
 
     /// @notice Ownership cannot be renounced (admin must remain reachable).
     /// @dev Factory-owned clones must use {IPrivacyPortalFactoryAdmin.transferPTokenOwnership} for handoff.
@@ -567,12 +582,14 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         }
     }
 
-    /// @notice Minter-only: mark a Pending request Failed and clear pending locks.
-    /// @dev Blocks a later Success callback from settling (monotonic status). Used when portal admin
-    ///      refunds deposit collateral while a mint is still Pending.
-    ///      Does not write {failedRequests} or {RequestRecord.inboxFailure}.
+    /// @notice Mark a Pending request Failed and clear pending locks.
+    /// @dev Current minter, or the submitter recorded at mint/burn ({requestInvalidator}), so a remounted
+    ///      portal can still invalidate its in-flight mints. Does not write {failedRequests} or
+    ///      {RequestRecord.inboxFailure}.
     function invalidatePendingRequest(bytes32 requestId) external {
-        _checkMinter();
+        if (msg.sender != requestInvalidator[requestId]) {
+            _checkMinter();
+        }
         if (_requests[requestId].status != IPodERC20.RequestStatus.Pending) {
             revert RequestNotPending(requestId, _requests[requestId].status);
         }
@@ -616,7 +633,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     ) internal nonReentrant returns (bytes32) {
         require(callbackFeeLocalWei >= 1, "PodERC20: callback fee min");
         require(callbackFeeLocalWei <= totalValueWei, "PodERC20: callback exceeds total");
-        require(address(this).balance >= totalValueWei, "PodERC20: inbox fee");
+        require(msg.value == totalValueWei, "PodERC20: inbox fee");
         return IInbox(inbox).sendTwoWayMessage{value: totalValueWei}(
             cotiChainId,
             cotiSideContract,
@@ -772,6 +789,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
 
         _setRequestStatus(requestId, IPodERC20.RequestStatus.Pending);
         _recordTransferPending(requestId, from, false);
+        requestInvalidator[requestId] = msg.sender;
         emit TransferRequestSubmitted(from, address(0), requestId);
     }
 
@@ -915,6 +933,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         );
         _setRequestStatus(requestId, IPodERC20.RequestStatus.Pending);
         _recordTransferPending(requestId, to, true);
+        requestInvalidator[requestId] = msg.sender;
         emit TransferRequestSubmitted(address(0), to, requestId);
     }
 
@@ -1077,6 +1096,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         );
         _setRequestStatus(requestId, IPodERC20.RequestStatus.Pending);
         _recordTransferPending(requestId, from, false);
+        requestInvalidator[requestId] = msg.sender;
         emit TransferRequestSubmitted(from, address(0), requestId);
     }
 
@@ -1105,6 +1125,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         );
         _setRequestStatus(requestId, IPodERC20.RequestStatus.Pending);
         _recordTransferPending(requestId, to, true);
+        requestInvalidator[requestId] = msg.sender;
         emit TransferRequestSubmitted(address(0), to, requestId);
     }
 

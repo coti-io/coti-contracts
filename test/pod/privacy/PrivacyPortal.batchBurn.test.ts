@@ -164,4 +164,69 @@ describe("PrivacyPortal batch burn accounting (PP-07)", function () {
             "UnknownBatchBurn"
         )
     })
+
+    it("admin can resolve a still-Pending burn after pause; remoteSucceeded decrements pending", async function () {
+        const { owner, pToken, portal, amount } = await releasedPendingBurnFixture()
+        const pendingBefore = await portal.pendingBurnAmount()
+        const tx = await portal.connect(owner).burnAccumulatedPTokens(amount, 100, { value: 1000 })
+        const receipt = await tx.wait()
+        const burnLog = receipt!.logs
+            .map((log) => {
+                try {
+                    return portal.interface.parseLog(log)
+                } catch {
+                    return null
+                }
+            })
+            .find((parsed) => parsed?.name === "BatchBurnSubmitted")
+        const burnRequestId = burnLog!.args.burnRequestId as string
+
+        await expect(
+            portal.connect(owner).adminResolveStuckBatchBurn(burnRequestId, true)
+        ).to.be.revertedWithCustomError(portal, "ExpectedPause")
+
+        await portal.connect(owner).pause()
+        await expect(portal.connect(owner).adminResolveStuckBatchBurn(burnRequestId, true))
+            .to.emit(portal, "AdminBatchBurnResolved")
+            .withArgs(burnRequestId, amount, true)
+
+        expect(await portal.pendingBurnAmount()).to.equal(pendingBefore - amount)
+        expect(await portal.burnInFlightTotal()).to.equal(0n)
+        expect(await portal.burnInFlight(burnRequestId)).to.equal(0n)
+    })
+
+    it("admin resolve remoteSucceeded=false keeps pendingBurnAmount and invalidates", async function () {
+        const { owner, pToken, portal, amount } = await releasedPendingBurnFixture()
+        const pendingBefore = await portal.pendingBurnAmount()
+        const tx = await portal.connect(owner).burnAccumulatedPTokens(amount, 100, { value: 1000 })
+        const receipt = await tx.wait()
+        const burnLog = receipt!.logs
+            .map((log) => {
+                try {
+                    return portal.interface.parseLog(log)
+                } catch {
+                    return null
+                }
+            })
+            .find((parsed) => parsed?.name === "BatchBurnSubmitted")
+        const burnRequestId = burnLog!.args.burnRequestId as string
+
+        await portal.connect(owner).pause()
+        await portal.connect(owner).adminResolveStuckBatchBurn(burnRequestId, false)
+        expect(await portal.pendingBurnAmount()).to.equal(pendingBefore)
+        expect(await portal.burnInFlightTotal()).to.equal(0n)
+        expect((await pToken.requests(burnRequestId)).status).to.equal(3n) // Failed
+    })
+
+    it("adminCreditPendingBurn increases the burn cap while paused", async function () {
+        const { owner, portal, amount } = await releasedPendingBurnFixture()
+        const pendingBefore = await portal.pendingBurnAmount()
+        await expect(portal.connect(owner).adminCreditPendingBurn(1)).to.be.revertedWithCustomError(
+            portal,
+            "ExpectedPause"
+        )
+        await portal.connect(owner).pause()
+        await portal.connect(owner).adminCreditPendingBurn(amount)
+        expect(await portal.pendingBurnAmount()).to.equal(pendingBefore + amount)
+    })
 })

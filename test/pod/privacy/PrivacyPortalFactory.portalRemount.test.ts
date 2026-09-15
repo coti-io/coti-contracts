@@ -112,6 +112,26 @@ describe("PrivacyPortalFactory same-factory portal remount", function () {
             .withArgs(oldPortalAddr)
     })
 
+    it("copies limits, fee overrides, and depositEnabled onto the new portal", async function () {
+        const fixture = await deployFixture()
+        const { factory, owner } = fixture
+        const { portal: oldPortal, pTokenAddr } = await createCleanPair(fixture)
+
+        await oldPortal.connect(owner).setLimits(10, 1000, 20, 2000)
+        await oldPortal.connect(owner).setDepositFee(1, 0, 1)
+        await oldPortal.connect(owner).setWithdrawFee(2, 0, 2)
+        await oldPortal.connect(owner).setIsDepositEnabled(false)
+
+        const { newPortal } = await remountPaused(fixture, oldPortal, pTokenAddr)
+        expect(await newPortal.minDepositAmount()).to.equal(10n)
+        expect(await newPortal.maxDepositAmount()).to.equal(1000n)
+        expect(await newPortal.minWithdrawAmount()).to.equal(20n)
+        expect(await newPortal.maxWithdrawAmount()).to.equal(2000n)
+        expect(await newPortal.isDepositEnabled()).to.equal(false)
+        expect(await newPortal.depositFeeOverridePacked()).to.equal(await oldPortal.depositFeeOverridePacked())
+        expect(await newPortal.withdrawFeeOverridePacked()).to.equal(await oldPortal.withdrawFeeOverridePacked())
+    })
+
     it("remounts only when paused: new starts paused; after migrate+unpause holders withdraw on new", async function () {
         const fixture = await deployFixture()
         const { factory, underlying, user, amount, owner } = fixture
@@ -206,8 +226,8 @@ describe("PrivacyPortalFactory same-factory portal remount", function () {
         await expect(
             factory.createPortalWithExistingPToken(await underlying2.getAddress(), pTokenAddr, false)
         )
-            .to.be.revertedWithCustomError(factory, "UnderlyingPTokenMismatch")
-            .withArgs(await underlying2.getAddress(), ZeroAddress, pTokenAddr)
+            .to.be.revertedWithCustomError(factory, "PTokenCollateralMismatch")
+            .withArgs(pTokenAddr, await underlying.getAddress(), await underlying2.getAddress())
 
         const { newPortal, newPortalAddr } = await remountPaused(fixture, oldPortal, pTokenAddr)
         expect(newPortalAddr).to.not.equal(oldPortalAddr)

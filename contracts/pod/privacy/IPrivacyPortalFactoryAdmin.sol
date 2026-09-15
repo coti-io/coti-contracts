@@ -14,6 +14,7 @@ interface IPrivacyPortalFactoryAdmin {
     function configureRouting(address inbox_, uint256 cotiChainId_, address cotiMotherContract_) external;
     function configurePToken(address pToken_, address inbox_, address cotiSideContract_) external;
     function transferPTokenOwnership(address pToken_, address newOwner_) external;
+    function rescuePTokenNative(address pToken_, address to, uint256 amount) external;
     function setPTokenMinter(address pToken_, address newMinter_) external;
     function setPTokenRequestKillMinAge(address pToken_, uint64 seconds_) external;
     function killPTokenStaleRequest(address pToken_, bytes32 requestId) external;

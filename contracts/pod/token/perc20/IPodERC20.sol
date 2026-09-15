@@ -298,12 +298,14 @@ interface IPodERC20 {
     function mint(address to, uint256 amount, uint256 callbackFeeLocalWei) external payable returns (bytes32 requestId);
 
     /**
-     * @notice Minter-only: mark a Pending request Failed and clear pending locks so a late Success cannot settle.
-     * @dev Used by Privacy Portal admin deposit refunds to prevent unbacked pToken mint after collateral return.
-     *      Does not write {failedRequests} or {RequestRecord.inboxFailure}; portal cancel treats that
-     *      as unproven far-side failure.
+     * @notice Current minter, or the mint/burn submitter recorded in {requestInvalidator}: mark Pending Failed.
+     * @dev Used by Privacy Portal admin deposit refunds (including after remount, when the retired portal
+     *      is no longer minter). Does not write {failedRequests} or {RequestRecord.inboxFailure}.
      */
     function invalidatePendingRequest(bytes32 requestId) external;
+
+    /// @notice Timestamp when `requestId` last entered Pending.
+    function requestCreatedAt(bytes32 requestId) external view returns (uint64);
 
     /**
      * @notice Owner: terminalize a Pending request that has aged past {requestKillMinAge}.

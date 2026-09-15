@@ -49,9 +49,9 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     mapping(address => bool) public blacklisted;
 
     /// @notice Optional per-portal deposit fee override; bytes32(0) inherits factory default.
-    bytes32 internal depositFeeOverridePacked;
+    bytes32 public depositFeeOverridePacked;
     /// @notice Optional per-portal withdraw fee override; bytes32(0) inherits factory default.
-    bytes32 internal withdrawFeeOverridePacked;
+    bytes32 public withdrawFeeOverridePacked;
     /// @notice Accumulated portal protocol fees awaiting sweep.
     uint256 public accumulatedPortalFees;
     /// @notice pToken amount held in portal custody pending owner batch burn.
@@ -135,6 +135,8 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     /// @notice A submitted batch burn was finalized: `pendingBurnAmount` decreased on success, or the
     ///         in-flight reservation was cleared (with `pendingBurnAmount` left untouched) on failure.
     event BatchBurnFinalized(bytes32 indexed burnRequestId, uint256 amount, bool success);
+    /// @notice Factory-admin resolved a still-Pending batch burn (lost ack). `remoteSucceeded` is an ops attestation.
+    event AdminBatchBurnResolved(bytes32 indexed burnRequestId, uint256 amount, bool remoteSucceeded);
     /// @notice Portal protocol fees swept to the factory fee recipient.
     event PortalFeesWithdrawn(address indexed recipient, uint256 amount);
     /// @notice Per-portal fee override updated.
@@ -231,6 +233,8 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     error EthTransferFailed();
     /// @notice Measured underlying received was zero (fee-on-transfer/rebasing token swallowed the deposit).
     error NoUnderlyingReceived();
+    /// @notice Admin stuck-burn resolve called before {IPodERC20.requestKillMinAge}.
+    error BatchBurnNotAged(bytes32 requestId, uint64 createdAt, uint64 minAge);
 
     /// @notice Lock implementation so it cannot be initialized.
     constructor() {
@@ -730,6 +734,85 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
             emit BatchBurnFinalized(burnRequestId, amount, false);
         } else {
             revert BatchBurnNotResolved(burnRequestId, status);
+        }
+    }
+
+    /// @notice Factory-admin: resolve a batch burn whose pToken request is still Pending (lost ack).
+    /// @dev Pause speed bump. Caller must confirm the COTI burn outcome off-chain — same class of
+    ///      attestation as {adminRefundPendingDeposit}. `remoteSucceeded=true` decrements {pendingBurnAmount}
+    ///      (tokens gone). `false` keeps it so the burn can be resubmitted, and invalidates the Pending request.
+    function adminResolveStuckBatchBurn(bytes32 burnRequestId, bool remoteSucceeded)
+        external
+        override
+        onlyFactoryAdmin
+        nonReentrant
+        whenPaused
+    {
+        uint256 amount = burnInFlight[burnRequestId];
+        if (amount == 0) {
+            revert UnknownBatchBurn(burnRequestId);
+        }
+        IPodERC20.RequestStatus status = pToken.requests(burnRequestId).status;
+        if (status != IPodERC20.RequestStatus.Pending) {
+            revert BatchBurnNotResolved(burnRequestId, status);
+        }
+        uint64 createdAt = pToken.requestCreatedAt(burnRequestId);
+        uint64 minAge = pToken.requestKillMinAge();
+        if (minAge != 0 && (createdAt == 0 || block.timestamp < uint256(createdAt) + uint256(minAge))) {
+            revert BatchBurnNotAged(burnRequestId, createdAt, minAge);
+        }
+
+        delete burnInFlight[burnRequestId];
+        burnInFlightTotal -= amount;
+        if (remoteSucceeded) {
+            pendingBurnAmount -= amount;
+        } else {
+            pToken.invalidatePendingRequest(burnRequestId);
+        }
+        emit AdminBatchBurnResolved(burnRequestId, amount, remoteSucceeded);
+        emit BatchBurnFinalized(burnRequestId, amount, remoteSucceeded);
+    }
+
+    /// @notice Factory-admin: credit {pendingBurnAmount} for pTokens that reached this portal outside withdraw.
+    /// @dev Pause speed bump. Does not prove COTI balance; over-credit makes a later burn revert on the mother.
+    function adminCreditPendingBurn(uint256 extra) external override onlyFactoryAdmin whenPaused {
+        if (extra == 0) {
+            revert InvalidAmount();
+        }
+        pendingBurnAmount += extra;
+        emit PendingBurnIncreased(bytes32(0), extra, pendingBurnAmount);
+    }
+
+    /// @notice Factory-only: copy scalar config from a remounted predecessor (blacklist mapping is not copied).
+    function applyRemountConfig(
+        uint256 minDeposit,
+        uint256 maxDeposit,
+        uint256 minWithdraw,
+        uint256 maxWithdraw,
+        bytes32 depositFeePacked,
+        bytes32 withdrawFeePacked,
+        bool depositsEnabled
+    ) external override {
+        if (msg.sender != factory) {
+            revert OnlyPortalFactory(msg.sender);
+        }
+        if (minDeposit > maxDeposit || minWithdraw > maxWithdraw) {
+            revert InvalidLimitConfiguration();
+        }
+        minDepositAmount = minDeposit;
+        maxDepositAmount = maxDeposit;
+        minWithdrawAmount = minWithdraw;
+        maxWithdrawAmount = maxWithdraw;
+        depositFeeOverridePacked = depositFeePacked;
+        withdrawFeeOverridePacked = withdrawFeePacked;
+        isDepositEnabled = depositsEnabled;
+        emit LimitsUpdated(minDeposit, maxDeposit, minWithdraw, maxWithdraw);
+        emit DepositEnabledUpdated(depositsEnabled);
+        if (depositFeePacked != bytes32(0)) {
+            emit PortalFeeOverrideUpdated(true, depositFeePacked);
+        }
+        if (withdrawFeePacked != bytes32(0)) {
+            emit PortalFeeOverrideUpdated(false, withdrawFeePacked);
         }
     }
 

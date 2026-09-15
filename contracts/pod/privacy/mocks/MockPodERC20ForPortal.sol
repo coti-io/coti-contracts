@@ -33,6 +33,8 @@ contract MockPodERC20ForPortal {
     mapping(bytes32 => IPodERC20.RequestStatus) private _requestStatus;
     mapping(bytes32 => bytes) public failedRequests;
     mapping(bytes32 => bool) private _inboxFailure;
+    mapping(bytes32 => uint64) public requestCreatedAt;
+    uint64 public requestKillMinAge;
 
     function estimateFee()
         external
@@ -114,6 +116,7 @@ contract MockPodERC20ForPortal {
         lastBurnRequestId = requestId;
         _lastBurnStatus = IPodERC20.RequestStatus.Pending;
         _requestStatus[requestId] = IPodERC20.RequestStatus.Pending;
+        requestCreatedAt[requestId] = uint64(block.timestamp);
         return requestId;
     }
 
@@ -219,6 +222,10 @@ contract MockPodERC20ForPortal {
     ///      multiple burns are in flight at once.
     function markBurnStatus(bytes32 requestId, IPodERC20.RequestStatus status) external {
         _requestStatus[requestId] = status;
+    }
+
+    function setRequestKillMinAge(uint64 seconds_) external {
+        requestKillMinAge = seconds_;
     }
 
     function invalidatePendingRequest(bytes32 requestId) external {

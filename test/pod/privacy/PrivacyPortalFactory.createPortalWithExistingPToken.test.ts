@@ -96,6 +96,8 @@ describe("PrivacyPortalFactory.createPortalWithExistingPToken", function () {
         expect(await pToken.minter()).to.equal(oldPortal)
         expect(await pToken.owner()).to.equal(await factory.getAddress())
 
+        const oldPortalC = await hre.ethers.getContractAt("PrivacyPortal", oldPortal)
+        await oldPortalC.pause()
         await factory.transferPTokenOwnership(pTokenAddr, await factory2.getAddress())
         expect(await pToken.owner()).to.equal(await factory2.getAddress())
 
@@ -129,6 +131,11 @@ describe("PrivacyPortalFactory.createPortalWithExistingPToken", function () {
 
         await factory.createPortal(await underlying.getAddress(), "pMockUSD", "pmUSD", 6, false)
         const pTokenAddr = await factory.pTokenForUnderlying(await underlying.getAddress())
+        const oldPortal = await hre.ethers.getContractAt(
+            "PrivacyPortal",
+            await factory.portalForUnderlying(await underlying.getAddress())
+        )
+        await oldPortal.pause()
         await factory.transferPTokenOwnership(pTokenAddr, await factory2.getAddress())
 
         await expect(
@@ -211,6 +218,11 @@ describe("PrivacyPortalFactory.createPortalWithExistingPToken", function () {
 
         await factory.createPortal(await underlying.getAddress(), "pMockUSD", "pmUSD", 6, false)
         const pTokenAddr = await factory.pTokenForUnderlying(await underlying.getAddress())
+        const oldPortal = await hre.ethers.getContractAt(
+            "PrivacyPortal",
+            await factory.portalForUnderlying(await underlying.getAddress())
+        )
+        await oldPortal.pause()
         await factory.transferPTokenOwnership(pTokenAddr, await factory2.getAddress())
 
         const MockERC20 = await hre.ethers.getContractFactory("MockERC20")
@@ -269,5 +281,31 @@ describe("PodErc20Mintable.setMinter", function () {
             token,
             "PodErc20MintableInvalidMinter"
         )
+    })
+
+    it("original minter can invalidate after setMinter; stranger cannot", async function () {
+        const { owner, minter, newMinter, stranger, token } = await deployMintable()
+        const mintTx = await token.connect(minter)["mint(address,uint256,uint256)"](
+            owner.address,
+            1,
+            100,
+            { value: 1000 }
+        )
+        const mintReceipt = await mintTx.wait()
+        const submitted = mintReceipt!.logs
+            .map((log) => {
+                try {
+                    return token.interface.parseLog(log)
+                } catch {
+                    return null
+                }
+            })
+            .find((parsed) => parsed?.name === "TransferRequestSubmitted")
+        const requestId = submitted!.args.requestId as string
+
+        await token.setMinter(newMinter.address)
+        await expect(token.connect(stranger).invalidatePendingRequest(requestId)).to.be.reverted
+        await token.connect(minter).invalidatePendingRequest(requestId)
+        expect((await token.requests(requestId)).status).to.equal(3n) // Failed
     })
 })

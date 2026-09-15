@@ -55,6 +55,12 @@ describe("PrivacyPortalFactory pToken admin forwarders", function () {
         const { factory, stranger, pToken, pTokenAddr, portalAddr } = await deployFactoryFixture()
         expect(await pToken.minter()).to.equal(portalAddr)
 
+        const portal = await hre.ethers.getContractAt("PrivacyPortal", portalAddr)
+        await expect(factory.setPTokenMinter(pTokenAddr, stranger.address))
+            .to.be.revertedWithCustomError(factory, "OldPortalNotPaused")
+            .withArgs(portalAddr)
+
+        await portal.pause()
         const newMinter = stranger.address
         await factory.setPTokenMinter(pTokenAddr, newMinter)
         expect(await pToken.minter()).to.equal(newMinter)
@@ -157,10 +163,26 @@ describe("PrivacyPortalFactory pToken admin forwarders", function () {
     })
 
     it("forwarders revert after transferPTokenOwnership handoff", async function () {
-        const { factory, stranger, pTokenAddr } = await deployFactoryFixture()
+        const { factory, stranger, pTokenAddr, portalAddr } = await deployFactoryFixture()
+        await expect(factory.transferPTokenOwnership(pTokenAddr, stranger.address))
+            .to.be.revertedWithCustomError(factory, "OldPortalNotPaused")
+            .withArgs(portalAddr)
+        const portal = await hre.ethers.getContractAt("PrivacyPortal", portalAddr)
+        await portal.pause()
         await factory.transferPTokenOwnership(pTokenAddr, stranger.address)
         await expect(factory.setPTokenRequestKillMinAge(pTokenAddr, 0))
             .to.be.revertedWithCustomError(factory, "PTokenNotOwnedByFactory")
             .withArgs(pTokenAddr, stranger.address)
+    })
+
+    it("admin can rescue native stranded on a factory-owned pToken", async function () {
+        const { owner, factory, pTokenAddr } = await deployFactoryFixture()
+        await owner.sendTransaction({ to: pTokenAddr, value: 500n })
+        const before = await hre.ethers.provider.getBalance(owner.address)
+        const tx = await factory.rescuePTokenNative(pTokenAddr, owner.address, 500n)
+        const receipt = await tx.wait()
+        const gas = receipt!.gasUsed * receipt!.gasPrice
+        expect(await hre.ethers.provider.getBalance(pTokenAddr)).to.equal(0n)
+        expect(await hre.ethers.provider.getBalance(owner.address)).to.equal(before - gas + 500n)
     })
 })

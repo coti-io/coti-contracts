@@ -173,6 +173,33 @@ interface IPrivacyPortal {
     /// @param withdrawalId Portal withdrawal id from {requestWithdrawWithPermit}.
     function cancelFailedWithdrawal(bytes32 withdrawalId) external;
 
+    /// @notice Factory-admin: resolve a still-Pending batch burn after {IPodERC20.requestKillMinAge}.
+    /// @dev Ops must confirm the COTI burn outcome. `remoteSucceeded` decrements {pendingBurnAmount}.
+    function adminResolveStuckBatchBurn(bytes32 burnRequestId, bool remoteSucceeded) external;
+
+    /// @notice Factory-admin: increase {pendingBurnAmount} for out-of-band pToken credits.
+    function adminCreditPendingBurn(uint256 extra) external;
+
+    /// @notice Factory-only: apply predecessor portal scalar config on remount (not blacklist).
+    function applyRemountConfig(
+        uint256 minDeposit,
+        uint256 maxDeposit,
+        uint256 minWithdraw,
+        uint256 maxWithdraw,
+        bytes32 depositFeePacked,
+        bytes32 withdrawFeePacked,
+        bool depositsEnabled
+    ) external;
+
+    /// @notice Soft deposit switch.
+    function isDepositEnabled() external view returns (bool);
+
+    /// @notice Packed deposit fee override; zero inherits factory default.
+    function depositFeeOverridePacked() external view returns (bytes32);
+
+    /// @notice Packed withdraw fee override; zero inherits factory default.
+    function withdrawFeeOverridePacked() external view returns (bytes32);
+
     /// @notice Escrow state for a deposit mint request id.
     function depositEscrows(bytes32 requestId)
         external

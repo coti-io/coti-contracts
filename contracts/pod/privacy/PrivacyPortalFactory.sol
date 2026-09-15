@@ -385,17 +385,31 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, IPrivacyPortalFactoryAdm
     }
 
     /// @notice Admin: transfer Ownable of a factory-deployed pToken (e.g. hand off after launch).
+    /// @dev Mapped portal must be paused first so a live minter/owner rotation cannot brick deposits
+    ///      or mint unbacked pTokens (same speed bump as remount).
     function transferPTokenOwnership(address pToken_, address newOwner_) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _requireFactoryOwnedPToken(pToken_);
+        _requireMappedPortalPaused(pToken_);
         if (newOwner_ == address(0)) {
             revert InvalidAddress();
         }
         Ownable(pToken_).transferOwnership(newOwner_);
     }
 
+    /// @notice Admin: recover native stranded on a factory-owned pToken (no auto-fee pre-fund path).
+    function rescuePTokenNative(address pToken_, address to, uint256 amount)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        _requireFactoryOwnedPToken(pToken_);
+        PodErc20Mintable(payable(pToken_)).rescueNative(to, amount);
+    }
+
     /// @notice Admin: rotate the authorized minter on a factory-owned pToken (factory is Ownable owner).
+    /// @dev Mapped portal must be paused first. Does not rewrite factory portal mappings.
     function setPTokenMinter(address pToken_, address newMinter_) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _requireFactoryOwnedPToken(pToken_);
+        _requireMappedPortalPaused(pToken_);
         PodErc20Mintable(payable(pToken_)).setMinter(newMinter_);
     }
 
@@ -419,6 +433,14 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, IPrivacyPortalFactoryAdm
         address tokenOwner = Ownable(pToken_).owner();
         if (tokenOwner != address(this)) {
             revert PTokenNotOwnedByFactory(pToken_, tokenOwner);
+        }
+    }
+
+    /// @dev Raw minter/owner rotation must not run while the mapped portal is live (Z-30).
+    function _requireMappedPortalPaused(address pToken_) private view {
+        address portal = portalForPToken[pToken_];
+        if (!IPrivacyPortal(portal).paused()) {
+            revert OldPortalNotPaused(portal);
         }
     }
 
@@ -653,6 +675,13 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, IPrivacyPortalFactoryAdm
         }
 
         address oldPortal = existingPortalForPToken;
+        uint256 copyMinDeposit;
+        uint256 copyMaxDeposit;
+        uint256 copyMinWithdraw;
+        uint256 copyMaxWithdraw;
+        bytes32 copyDepositFee;
+        bytes32 copyWithdrawFee;
+        bool copyDepositsEnabled;
         if (oldPortal != address(0)) {
             if (!IPrivacyPortal(oldPortal).paused()) {
                 revert OldPortalNotPaused(oldPortal);
@@ -666,6 +695,14 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, IPrivacyPortalFactoryAdm
                 }
                 revert NativeWrapMismatch(oldPortal, oldNative, nativeWrappedUnderlying);
             }
+            IPrivacyPortal oldP = IPrivacyPortal(oldPortal);
+            copyMinDeposit = oldP.minDepositAmount();
+            copyMaxDeposit = oldP.maxDepositAmount();
+            copyMinWithdraw = oldP.minWithdrawAmount();
+            copyMaxWithdraw = oldP.maxWithdrawAmount();
+            copyDepositFee = oldP.depositFeeOverridePacked();
+            copyWithdrawFee = oldP.withdrawFeeOverridePacked();
+            copyDepositsEnabled = oldP.isDepositEnabled();
             IPrivacyPortal(oldPortal).retireDepositsForUpgrade();
         }
 
@@ -675,6 +712,17 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, IPrivacyPortalFactoryAdm
         );
         // Soft close: new clone stays paused until admin migrates funds and unpauses.
         IPrivacyPortal(portal).pauseByFactory();
+        if (oldPortal != address(0)) {
+            IPrivacyPortal(portal).applyRemountConfig(
+                copyMinDeposit,
+                copyMaxDeposit,
+                copyMinWithdraw,
+                copyMaxWithdraw,
+                copyDepositFee,
+                copyWithdrawFee,
+                copyDepositsEnabled
+            );
+        }
         PodErc20Mintable(payable(existingPToken)).setMinter(portal);
 
         portalForUnderlying[underlying] = portal;
