@@ -20,11 +20,18 @@ contract PortalFeeOracle is IPodPriceOracle, Ownable {
 
     /// @notice Token address was zero.
     error ZeroToken();
+    /// @notice Ownership cannot be renounced (admin must remain reachable).
+    error OwnershipCannotBeRenounced();
 
     event TokenPriceUpdated(address indexed token, uint256 priceUsd);
 
     /// @param initialOwner Admin allowed to set rates.
     constructor(address initialOwner) Ownable(initialOwner) {}
+
+    /// @notice Ownership cannot be renounced (price admin must remain reachable).
+    function renounceOwnership() public pure override {
+        revert OwnershipCannotBeRenounced();
+    }
 
     /// @notice Set USD peg for `token`.
     /// @param priceUsd 18-decimal USD per whole token (must be non-zero).

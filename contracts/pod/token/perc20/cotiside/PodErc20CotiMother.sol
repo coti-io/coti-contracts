@@ -96,6 +96,8 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
     error MintToZeroAddress();
     error OwnerMintNotSupported();
     error ChainIdOverflow(uint256 sourceChainId);
+    /// @notice Ownership cannot be renounced (admin must remain reachable).
+    error OwnershipCannotBeRenounced();
 
     // --- Modifiers ---
 
@@ -132,6 +134,11 @@ contract PodErc20CotiMother is IPodErc20CotiSide, InboxUser, Ownable {
         }
         setInbox(inboxAddress);
         emit CotiMotherInitialized(inboxAddress, initialOwner);
+    }
+
+    /// @notice Ownership cannot be renounced (factory allow-list and inbox rotation must stay reachable).
+    function renounceOwnership() public pure override {
+        revert OwnershipCannotBeRenounced();
     }
 
     // --- External: views ---

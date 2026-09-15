@@ -17,6 +17,7 @@ import "./IPrivacyPortalFactory.sol";
 import "./IPrivacyPortalFactoryAdmin.sol";
 import "./IPodPriceOracle.sol";
 import "./PrivacyPortalFeeLib.sol";
+import "../token/erc7984/IERC7984PortalWrapper.sol";
 
 /// @title PrivacyPortalFactory
 /// @notice Deploys one-shot minimal-clone portals and pTokens for public ERC20 collateral.
@@ -122,6 +123,8 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, IPrivacyPortalFactoryAdm
     error PTokenAlreadyPaired(address pToken, address portal);
     /// @notice Remount requested for an underlying that is paired to a different pToken.
     error UnderlyingPTokenMismatch(address underlying, address expectedPToken, address providedPToken);
+    /// @notice Adopted pToken's current minter portal is paired to a different collateral token.
+    error PTokenCollateralMismatch(address pToken, address recordedUnderlying, address providedUnderlying);
     /// @notice Remount requested while the old portal is not paused (deposits/withdrawals still live).
     error OldPortalNotPaused(address portal);
     /// @notice Remount of a native-wrapped portal must keep {nativeWrappedUnderlying} true (no ERC20-WETH mode).
@@ -617,6 +620,7 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, IPrivacyPortalFactoryAdm
         if (pTokenOwner != address(this)) {
             revert PTokenNotOwnedByFactory(existingPToken, pTokenOwner);
         }
+        _requireExistingPTokenCollateral(existingPToken, underlying);
 
         address existingPortalForUnderlying = portalForUnderlying[underlying];
         address existingPortalForPToken = portalForPToken[existingPToken];
@@ -744,5 +748,19 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, IPrivacyPortalFactoryAdm
         requestId = IInbox(inbox).sendOneWayMessage{value: msg.value}(
             cotiChainId, cotiMotherContract, methodCall, bytes4(0)
         );
+    }
+
+    /// @dev Cross-factory adopt: pToken minter is the previous portal; require the same collateral.
+    ///      Same-factory remount is already gated by {UnderlyingPTokenMismatch}. Skip if minter is not a portal.
+    function _requireExistingPTokenCollateral(address existingPToken, address underlying) private view {
+        address currentMinter = PodErc20Mintable(payable(existingPToken)).minter();
+        if (currentMinter == address(0)) {
+            return;
+        }
+        try IERC7984PortalWrapper(currentMinter).underlying() returns (address recorded) {
+            if (recorded != address(0) && recorded != underlying) {
+                revert PTokenCollateralMismatch(existingPToken, recorded, underlying);
+            }
+        } catch {}
     }
 }

@@ -186,7 +186,7 @@ describe("PrivacyPortalFactory.createPortalWithExistingPToken", function () {
         expect(await newPortal.paused()).to.equal(true)
     })
 
-    it("reverts when pToken is paired but underlying does not match", async function () {
+    it("reverts when adopted underlying does not match pToken collateral", async function () {
         const fixture = await deployFactoryFixture()
         const { factory, underlying } = fixture
 
@@ -200,8 +200,28 @@ describe("PrivacyPortalFactory.createPortalWithExistingPToken", function () {
         await expect(
             factory.createPortalWithExistingPToken(await underlying2.getAddress(), pTokenAddr, false)
         )
-            .to.be.revertedWithCustomError(factory, "UnderlyingPTokenMismatch")
-            .withArgs(await underlying2.getAddress(), ZeroAddress, pTokenAddr)
+            .to.be.revertedWithCustomError(factory, "PTokenCollateralMismatch")
+            .withArgs(pTokenAddr, await underlying.getAddress(), await underlying2.getAddress())
+    })
+
+    it("reverts cross-factory adopt when pToken collateral does not match", async function () {
+        const fixture = await deployFactoryFixture()
+        const { factory, underlying } = fixture
+        const factory2 = await deploySecondFactory(fixture)
+
+        await factory.createPortal(await underlying.getAddress(), "pMockUSD", "pmUSD", 6, false)
+        const pTokenAddr = await factory.pTokenForUnderlying(await underlying.getAddress())
+        await factory.transferPTokenOwnership(pTokenAddr, await factory2.getAddress())
+
+        const MockERC20 = await hre.ethers.getContractFactory("MockERC20")
+        const otherUnderlying = await MockERC20.deploy("Mock USD 2", "mUSD2", 6)
+        await otherUnderlying.waitForDeployment()
+
+        await expect(
+            factory2.createPortalWithExistingPToken(await otherUnderlying.getAddress(), pTokenAddr, false)
+        )
+            .to.be.revertedWithCustomError(factory2, "PTokenCollateralMismatch")
+            .withArgs(pTokenAddr, await underlying.getAddress(), await otherUnderlying.getAddress())
     })
 })
 
