@@ -523,7 +523,7 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, IPrivacyPortalFactoryAdm
         view
         returns (uint256 fee, bool usedDynamicPricing)
     {
-        return _estimatePortalFee(defaultDepositFeePacked, underlying, amount, decimals);
+        return _estimatePortalFee(_packedForUnderlying(underlying, true), underlying, amount, decimals);
     }
 
     /// @inheritdoc IPrivacyPortalFactory
@@ -532,7 +532,7 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, IPrivacyPortalFactoryAdm
         view
         returns (uint256 fee, bool usedDynamicPricing)
     {
-        return _estimatePortalFee(defaultWithdrawFeePacked, underlying, amount, decimals);
+        return _estimatePortalFee(_packedForUnderlying(underlying, false), underlying, amount, decimals);
     }
 
     /// @inheritdoc IPrivacyPortalFactory
@@ -541,7 +541,7 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, IPrivacyPortalFactoryAdm
         view
         returns (uint256 floor, uint128 maxFee)
     {
-        return _portalFeeFloor(defaultDepositFeePacked, underlying, amount, decimals);
+        return _portalFeeFloor(_packedForUnderlying(underlying, true), underlying, amount, decimals);
     }
 
     /// @inheritdoc IPrivacyPortalFactory
@@ -550,7 +550,7 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, IPrivacyPortalFactoryAdm
         view
         returns (uint256 floor, uint128 maxFee)
     {
-        return _portalFeeFloor(defaultWithdrawFeePacked, underlying, amount, decimals);
+        return _portalFeeFloor(_packedForUnderlying(underlying, false), underlying, amount, decimals);
     }
 
     /// @inheritdoc IPrivacyPortalFactory
@@ -745,6 +745,21 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, IPrivacyPortalFactoryAdm
         emit PortalCreated(underlying, portal, existingPToken, cotiMotherContract, decimals);
         if (oldPortal != address(0)) {
             emit PortalReplaced(underlying, oldPortal, portal, existingPToken);
+        }
+    }
+
+    /// @dev Factory default, or the mapped portal's override when set.
+    function _packedForUnderlying(address underlying, bool isDeposit) private view returns (bytes32 packed) {
+        packed = isDeposit ? defaultDepositFeePacked : defaultWithdrawFeePacked;
+        address portal = portalForUnderlying[underlying];
+        if (portal == address(0)) {
+            return packed;
+        }
+        bytes32 overridePacked = isDeposit
+            ? IPrivacyPortal(portal).depositFeeOverridePacked()
+            : IPrivacyPortal(portal).withdrawFeeOverridePacked();
+        if (PrivacyPortalFeeLib.isOverrideSet(overridePacked)) {
+            return overridePacked;
         }
     }
 

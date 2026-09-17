@@ -89,6 +89,8 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
 
     /// @notice Public-amount transfer, burn, or mint used a zero value.
     error ZeroAmount();
+    /// @notice Transfer or mint used the zero address as `to`.
+    error ZeroAddress();
     /// @notice `syncBalances` account list is empty or exceeds {MAX_SYNC_BALANCE_ACCOUNTS}.
     error SyncBalancesInvalidLength(uint256 length);
     /// @notice `syncBalances` callback addresses/amounts length mismatch.
@@ -804,6 +806,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         uint256 totalValueWei,
         uint256 callbackFeeLocalWei
     ) internal returns (bytes32 requestId) {
+        _requireTo(to);
         if (from == to) {
             revert SelfTransfer(from);
         }
@@ -835,6 +838,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         uint256 totalValueWei,
         uint256 callbackFeeLocalWei
     ) internal returns (bytes32 requestId) {
+        _requireTo(to);
         if (from == to) {
             revert SelfTransfer(from);
         }
@@ -949,6 +953,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         if (amount == 0) {
             revert ZeroAmount();
         }
+        _requireTo(to);
         if (from == to) {
             revert SelfTransfer(from);
         }
@@ -983,6 +988,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         if (amount == 0) {
             revert ZeroAmount();
         }
+        _requireTo(to);
         if (from == to) {
             revert SelfTransfer(from);
         }
@@ -1018,6 +1024,7 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
         if (amount == 0) {
             revert ZeroAmount();
         }
+        _requireTo(to);
         if (from == to) {
             revert SelfTransfer(from);
         }
@@ -1130,6 +1137,10 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
     }
 
     // --- ERC-7984 mixin hooks ---
+
+    function _requireTo(address to) private pure {
+        if (to == address(0)) revert ZeroAddress();
+    }
 
     function _erc7984BalanceOf(address account) internal view override returns (ctUint256 memory) {
         return _balances[account];

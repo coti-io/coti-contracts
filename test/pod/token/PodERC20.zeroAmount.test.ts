@@ -30,4 +30,16 @@ describe("PodERC20 PP-05 zero public amounts", function () {
       pToken.transferFromAndCall(owner.address, to, 0n, "0x", 1n, { value: 1n })
     ).to.be.revertedWithCustomError(pToken, "ZeroAmount");
   });
+
+  it("rejects zero-address public transfer / transferFrom", async function () {
+    const { pToken, owner } = await deployPToken();
+    const zero = hre.ethers.ZeroAddress;
+
+    await expect(
+      pToken["transfer(address,uint256,uint256)"](zero, 1n, 1n, { value: 1n })
+    ).to.be.revertedWithCustomError(pToken, "ZeroAddress");
+    await expect(
+      pToken["transferFrom(address,address,uint256,uint256)"](owner.address, zero, 1n, 1n, { value: 1n })
+    ).to.be.revertedWithCustomError(pToken, "ZeroAddress");
+  });
 });

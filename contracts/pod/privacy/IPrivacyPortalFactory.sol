@@ -57,6 +57,7 @@ interface IPrivacyPortalFactory is IPrivacyPortalPauseController, IPrivacyPortal
     function defaultWithdrawFeePacked() external view returns (bytes32);
 
     /// @notice Estimate deposit portal fee for an underlying and amount.
+    /// @dev Uses the mapped portal's fee override when set; otherwise the factory default.
     function estimateDepositPortalFee(address underlying, uint256 amount, uint8 decimals)
         external
         view

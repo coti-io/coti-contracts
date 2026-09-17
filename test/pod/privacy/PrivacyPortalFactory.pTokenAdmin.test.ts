@@ -189,6 +189,19 @@ describe("PrivacyPortalFactory pToken admin forwarders", function () {
         expect(await factory.cotiMotherContract()).to.equal(stranger.address)
     })
 
+    it("factory fee estimate uses the mapped portal override", async function () {
+        const { factory, portalAddr } = await deployFactoryFixture()
+        const portal = await hre.ethers.getContractAt("PrivacyPortal", portalAddr)
+        const underlying = await portal.underlyingToken()
+        const [before] = await factory.estimateDepositPortalFee(underlying, 100, 6)
+        expect(before).to.equal(0n)
+        await portal.setDepositFee(1, 0, 1)
+        const [after] = await factory.estimateDepositPortalFee(underlying, 100, 6)
+        expect(after).to.equal(1n)
+        const [floor] = await factory.getDepositPortalFeeFloor(underlying, 100, 6)
+        expect(floor).to.equal(1n)
+    })
+
     it("admin can rescue native stranded on a factory-owned pToken", async function () {
         const { owner, factory, pTokenAddr } = await deployFactoryFixture()
         await owner.sendTransaction({ to: pTokenAddr, value: 500n })
