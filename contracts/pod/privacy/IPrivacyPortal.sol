@@ -23,9 +23,9 @@ interface IPrivacyPortal {
     enum DepositEscrowStatus {
         /// @notice No escrow exists for the mint request id.
         None,
-        /// @notice Underlying is locked awaiting mint success or failure.
+        /// @notice Underlying is locked awaiting mint success or refund.
         Pending,
-        /// @notice Mint request hit an Inbox system error; collateral is eligible for refund.
+        /// @notice Unused ABI member. Refundability is {Pending} + pToken {SystemFailed}; this status is never assigned.
         Failed,
         /// @notice Underlying was returned to the depositor after a failed mint.
         Refunded
@@ -156,12 +156,15 @@ interface IPrivacyPortal {
     ///         (`pToken.requests(requestId).status == SystemFailed`).
     /// @dev App `raise` / `Failed` is not refundable (mint should not raise). Portal protocol fee is kept.
     ///      Permissionless: anyone may call; underlying is always sent to the original depositor.
+    ///      Native-wrap deposits refund the wrapped ERC-20, not native coin (wrapped transfer cannot
+    ///      fail on receipt; unwrap-and-forward can revert and strand the escrow).
     /// @param requestId Mint request id returned by {deposit} / {depositNative} / {wrap}.
     function refundFailedDeposit(bytes32 requestId) external;
 
     /// @notice Factory-admin forced refund for a deposit escrow stuck {DepositEscrowStatus.Pending} while paused.
     /// @dev The caller is solely responsible for independently confirming the mint request can no longer
     ///      succeed before calling this — a late success after this refund creates unbacked pTokens.
+    ///      Native-wrap deposits refund wrapped ERC-20, same as {refundFailedDeposit}.
     /// @param requestId Mint request id returned by {deposit} / {depositNative} / {wrap}.
     function adminRefundPendingDeposit(bytes32 requestId) external;
 

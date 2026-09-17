@@ -3,7 +3,8 @@ pragma solidity ^0.8.20;
 
 import "./IPodPriceOracle.sol";
 
-/// @notice Unpacked portal fee parameters (`fixedFee` and `maxFee` in native wei; `percentageBps` / 1_000_000).
+/// @notice Unpacked portal fee parameters (`fixedFee` and `maxFee` in native wei;
+///         `percentageBps` is parts-per-million / 1_000_000, not BIP-44 basis points).
 struct PortalFeeConfig {
     uint256 fixedFee;
     uint256 percentageBps;

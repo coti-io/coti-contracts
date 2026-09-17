@@ -58,6 +58,7 @@ contract PortalFeeOracle is IPodPriceOracle, Ownable {
     }
 
     /// @notice Price plus last-write timestamp for ops / health bots.
+    /// @dev On-chain fee math uses {getLivePrices} / {getLivePrice} only — timestamps are not a fail-closed gate.
     function getTokenPriceMeta(address token) external view returns (uint256 priceUsd, uint64 updatedAt) {
         return (tokenPriceUSD[token], tokenPriceUpdatedAt[token]);
     }

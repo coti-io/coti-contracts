@@ -586,10 +586,11 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     }
 
     /// @inheritdoc IPrivacyPortal
+    /// @dev Refunds `{underlyingToken}` (wrapped native on wrap portals). Does not unwrap.
     function refundFailedDeposit(bytes32 requestId) external override nonReentrant {
         DepositEscrow storage escrow = depositEscrows[requestId];
         DepositEscrowStatus status = escrow.status;
-        if (status != DepositEscrowStatus.Pending && status != DepositEscrowStatus.Failed) {
+        if (status != DepositEscrowStatus.Pending) {
             revert DepositEscrowInvalid(requestId, status);
         }
         IPodERC20.RequestStatus mintStatus = pToken.requests(requestId).status;
@@ -943,6 +944,8 @@ contract PrivacyPortal is IPrivacyPortal, IERC7984PortalWrapper, Pausable, Reent
     }
 
     /// @notice Release an eligible withdrawal exactly once; pTokens remain in custody for batch burn.
+    /// @dev Blacklist is not rechecked: in-flight withdrawals complete. Pause does not freeze this path.
+    ///      Released amount is the stored escrow, not a fresh balance-of (rebasing collateral is out of scope).
     function _releaseWithdrawal(bytes32 withdrawalId) private {
         Withdrawal storage withdrawal = withdrawals[withdrawalId];
         if (withdrawal.user == address(0)) {

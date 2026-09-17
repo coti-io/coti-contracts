@@ -20,7 +20,8 @@ library PrivacyPortalFeeLib {
     /// @notice Invalid fee configuration.
     error InvalidFeeConfiguration();
 
-    /// @notice Pack fee config into one storage slot: uint96 fixed | uint32 bps | uint128 max.
+    /// @notice Pack fee config into one storage slot: uint96 fixed | uint32 percentage | uint128 max.
+    /// @dev `percentageBps` is ppm against {FEE_DIVISOR} (1e6), not 1e4 basis points. Max 100_000 = 10%.
     function packFeeConfig(uint256 fixedFee, uint256 percentageBps, uint256 maxFee)
         internal
         pure

@@ -52,8 +52,10 @@ interface IInbox {
         /// @notice Method call executed on the target.
         MpcMethodCall methodCall;
         /// @notice Immediate caller that submitted the request.
+        /// @dev Always equal to {originalSender} in this version (both are the submitting/source contract).
         address callerContract;
         /// @notice Application contract that should receive responses/errors.
+        /// @dev Always equal to {callerContract} in this version.
         address originalSender;
         /// @notice Request creation or ingestion timestamp.
         uint64 timestamp;
