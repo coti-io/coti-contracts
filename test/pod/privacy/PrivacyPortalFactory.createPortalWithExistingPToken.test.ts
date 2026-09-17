@@ -100,6 +100,10 @@ describe("PrivacyPortalFactory.createPortalWithExistingPToken", function () {
         await oldPortalC.pause()
         await factory.transferPTokenOwnership(pTokenAddr, await factory2.getAddress())
         expect(await pToken.owner()).to.equal(await factory2.getAddress())
+        expect(await factory.portalForPToken(pTokenAddr)).to.equal(ZeroAddress)
+        expect(await factory.portalForUnderlying(await underlying.getAddress())).to.equal(ZeroAddress)
+        expect(await factory.pTokenForUnderlying(await underlying.getAddress())).to.equal(ZeroAddress)
+        expect(await oldPortalC.factory()).to.equal(ZeroAddress)
 
         const tx = await factory2.createPortalWithExistingPToken(
             await underlying.getAddress(),

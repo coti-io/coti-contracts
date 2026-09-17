@@ -361,12 +361,16 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, IPrivacyPortalFactoryAdm
 
     /// @notice Admin: rotate inbox, COTI chain id, and mother ledger used for new portals / registration.
     /// @dev Existing pToken clones keep their peer until {configurePToken} (factory is their Ownable owner).
+    ///      Inbox must have code on this chain. Mother is a COTI-chain address — do not require code here.
     function configureRouting(address inbox_, uint256 cotiChainId_, address cotiMotherContract_)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         if (inbox_ == address(0) || cotiChainId_ == 0 || cotiMotherContract_ == address(0)) {
             revert InvalidAddress();
+        }
+        if (inbox_.code.length == 0) {
+            revert ImplementationHasNoCode(inbox_);
         }
         inbox = inbox_;
         cotiChainId = cotiChainId_;
@@ -385,13 +389,22 @@ contract PrivacyPortalFactory is IPrivacyPortalFactory, IPrivacyPortalFactoryAdm
     }
 
     /// @notice Admin: transfer Ownable of a factory-deployed pToken (e.g. hand off after launch).
-    /// @dev Mapped portal must be paused first so a live minter/owner rotation cannot brick deposits
-    ///      or mint unbacked pTokens (same speed bump as remount).
+    /// @dev Mapped portal must be paused. Detaches that portal ({retireDepositsForUpgrade}) and clears
+    ///      this factory's directory so the pair is no longer claimed here. Naive mapping-delete without
+    ///      retire would leave an unpausable portal whose pToken this factory no longer owns.
     function transferPTokenOwnership(address pToken_, address newOwner_) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _requireFactoryOwnedPToken(pToken_);
         _requireMappedPortalPaused(pToken_);
-        if (newOwner_ == address(0)) {
+        if (newOwner_ == address(0) || newOwner_ == address(this)) {
             revert InvalidAddress();
+        }
+        address portal = portalForPToken[pToken_];
+        address underlying = IERC7984PortalWrapper(portal).underlying();
+        IPrivacyPortal(portal).retireDepositsForUpgrade();
+        delete portalForPToken[pToken_];
+        if (pTokenForUnderlying[underlying] == pToken_) {
+            delete pTokenForUnderlying[underlying];
+            delete portalForUnderlying[underlying];
         }
         Ownable(pToken_).transferOwnership(newOwner_);
     }

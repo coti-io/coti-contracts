@@ -170,9 +170,23 @@ describe("PrivacyPortalFactory pToken admin forwarders", function () {
         const portal = await hre.ethers.getContractAt("PrivacyPortal", portalAddr)
         await portal.pause()
         await factory.transferPTokenOwnership(pTokenAddr, stranger.address)
+        expect(await factory.portalForPToken(pTokenAddr)).to.equal(ZeroAddress)
+        expect(await portal.factory()).to.equal(ZeroAddress)
+        await expect(portal.unpause()).to.be.revertedWithCustomError(portal, "FactoryNotConfigured")
         await expect(factory.setPTokenRequestKillMinAge(pTokenAddr, 0))
-            .to.be.revertedWithCustomError(factory, "PTokenNotOwnedByFactory")
-            .withArgs(pTokenAddr, stranger.address)
+            .to.be.revertedWithCustomError(factory, "UnknownPToken")
+            .withArgs(pTokenAddr)
+    })
+
+    it("configureRouting requires inbox code; mother may be a remote-chain address", async function () {
+        const { factory, stranger, inbox } = await deployFactoryFixture()
+        await expect(factory.configureRouting(stranger.address, 7082400, stranger.address))
+            .to.be.revertedWithCustomError(factory, "ImplementationHasNoCode")
+            .withArgs(stranger.address)
+        await expect(factory.configureRouting(await inbox.getAddress(), 7082400, stranger.address)).to.not.be
+            .reverted
+        expect(await factory.inbox()).to.equal(await inbox.getAddress())
+        expect(await factory.cotiMotherContract()).to.equal(stranger.address)
     })
 
     it("admin can rescue native stranded on a factory-owned pToken", async function () {
