@@ -229,16 +229,17 @@ interface IInbox {
     /// @return errorType {InboxErrorType} for the active context.
     function inboxErrorType() external view returns (InboxErrorType errorType);
 
-    // --- External: pure ---
+    // --- External: view (id helper reads the generation set in the constructor) ---
 
-    /// @notice Pack source chain id (64 bits), target chain id (64 bits) and nonce (128 bits) into a request id.
+    /// @notice Pack source chain id (64 bits), target chain id (64 bits), the Inbox generation byte, and
+    /// nonce (120 bits) into a request id. The generation byte is the Inbox constructor argument.
     /// @param sourceChainId Originating chain id.
     /// @param targetChainId Destination chain id.
     /// @param nonce Per-target nonce.
     /// @return requestId 256-bit packed id.
     function getRequestId(uint256 sourceChainId, uint256 targetChainId, uint256 nonce)
         external
-        pure
+        view
         returns (bytes32);
 
     /// @notice Split a packed request id into source chain id, target chain id and nonce.
