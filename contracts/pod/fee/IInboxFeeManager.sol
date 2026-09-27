@@ -35,6 +35,18 @@ interface IInboxFeeManager {
     /// @notice Minimum fee template for the remote execution leg.
     function remoteMinFeeConfig() external view returns (FeeConfig memory);
 
+    /// @notice Priority added to `basefee` for the send-side reference gas price.
+    function minPriorityFeeWei() external view returns (uint256);
+
+    /// @notice Floor for the reference gas price. Zero storage returns {DEFAULT_GAS_PRICE}.
+    function minGasPriceWei() external view returns (uint256);
+
+    /// @notice Cap for the reference gas price. Zero means no cap.
+    function maxGasPriceWei() external view returns (uint256);
+
+    /// @notice Fallback when `basefee` is zero and `tx.gasprice` is zero.
+    function DEFAULT_GAS_PRICE() external pure returns (uint256);
+
     /// @notice Estimate the local-token wei required for a two-way message.
     /// @param remoteMethodCallSize Remote calldata size term.
     /// @param callBackMethodCallSize Callback calldata size term.

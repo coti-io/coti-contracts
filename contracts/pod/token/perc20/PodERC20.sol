@@ -864,7 +864,9 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
 
     /**
      * @notice Shared two-way-fee estimator used by the auto-fee overloads.
-     * @dev Uses {InboxFeeManager.calculateTwoWayFeeRequiredInLocalToken} with heuristic calldata/execution sizes.
+     * @dev Uses {IInboxFeeManager.calculateTwoWayFeeRequiredInLocalToken} with heuristic calldata/execution sizes.
+     *      The gas price is the send-side reference price, not `tx.gasprice`. `basefee` can still move
+     *      after this view, and then the send reverts with the fee unspent.
      *      Amounts returned are in local (PoD) wei; the caller must send `msg.value >= targetFeeWei + callbackFeeWei`.
      */
     function _estimateTwoWayFeeInLocalToken()
@@ -877,8 +879,27 @@ contract PodERC20 is IPodERC20, InboxUser, PodErc7984Mixin, ReentrancyGuard, Own
             FEE_ESTIMATE_CALLBACK_CALL_SIZE,
             FEE_ESTIMATE_REMOTE_EXEC_GAS,
             FEE_ESTIMATE_CALLBACK_EXEC_GAS,
-            tx.gasprice
+            _quoteGasPrice()
         );
+    }
+
+    /// @dev Must match {FeeManager._referenceGasPrice}. `minGasPriceWei` already substitutes {DEFAULT_GAS_PRICE} for 0.
+    function _quoteGasPrice() private view returns (uint256 gasPrice) {
+        IInboxFeeManager fees = IInboxFeeManager(address(inbox));
+        if (block.basefee > 0) {
+            gasPrice = block.basefee + fees.minPriorityFeeWei();
+        } else {
+            uint256 txPrice = tx.gasprice;
+            gasPrice = txPrice != 0 ? txPrice : fees.DEFAULT_GAS_PRICE();
+        }
+        uint256 minGas = fees.minGasPriceWei();
+        if (gasPrice < minGas) {
+            gasPrice = minGas;
+        }
+        uint256 maxGas = fees.maxGasPriceWei();
+        if (maxGas != 0 && gasPrice > maxGas) {
+            gasPrice = maxGas;
+        }
     }
 
     function _consumePublicTransferPermit(
