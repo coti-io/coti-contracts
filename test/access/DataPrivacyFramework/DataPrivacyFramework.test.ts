@@ -777,4 +777,43 @@ describe("Data Privacy Framework", function () {
       expect(permissionGranted).to.equal(true)
     })
   })
+
+  describe("Admin gate on permission mutators", function () {
+    it("Non-admin cannot call setPermission", async function () {
+      const { contract, otherAccount } = deployment
+
+      const inputData = {
+        caller: await otherAccount.getAddress(),
+        operation: "op_decrypt",
+        active: true,
+        timestampBefore: "0",
+        timestampAfter: "0",
+        falseKey: false,
+        trueKey: true,
+        uintParameter: "0",
+        addressParameter: "0x0000000000000000000000000000000000000000",
+        stringParameter: "",
+      }
+
+      await expect(contract.connect(otherAccount).setPermission(inputData)).to.be.revertedWith(
+        "DPF: ADMIN_ONLY",
+      )
+    })
+
+    it("Non-admin cannot call addAllowedOperation", async function () {
+      const { contract, otherAccount } = deployment
+
+      await expect(contract.connect(otherAccount).addAllowedOperation("op_decrypt")).to.be.revertedWith(
+        "DPF: ADMIN_ONLY",
+      )
+    })
+
+    it("Non-admin cannot call setAddressDefaultPermission", async function () {
+      const { contract, otherAccount } = deployment
+
+      await expect(contract.connect(otherAccount).setAddressDefaultPermission(false)).to.be.revertedWith(
+        "DPF: ADMIN_ONLY",
+      )
+    })
+  })
 })
