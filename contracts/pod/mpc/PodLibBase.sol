@@ -13,6 +13,9 @@ import "./PodUser.sol";
 abstract contract PodLibBase is PodUser {
     using MpcAbiCodec for MpcAbiCodec.MpcMethodCallContext;
 
+    /// @notice Error handler was reached outside a system-error or `raise` return leg.
+    error UnexpectedErrorContext();
+
     constructor(address initialOwner) PodUser(initialOwner) {}
 
     /// @dev Minimum callback slice in wei; inbox applies stricter policy from {InboxFeeManager}.
@@ -65,8 +68,29 @@ abstract contract PodLibBase is PodUser {
         );
     }
 
-    function onDefaultMpcError(bytes32 requestId) external onlyMpcExecutor {
-        (uint256 code, bytes memory data) = inbox.getOutboxError(requestId);
-        emit ErrorRemoteCall(requestId, code, data);
+    /// @notice Default `errorSelector(bytes)` handler for requests sent to the COTI MPC executor.
+    /// @dev The inbox calls this with a `bytes` payload for both an Inbox system error and an app `raise`.
+    ///      System errors are attributed to the inbox `SYSTEM_SENDER`, so the executor check only applies
+    ///      to `raise`. Emits {ErrorRemoteCall} keyed by the original request id.
+    /// @param data {IInbox.ErrorData} fields for a system error, or the raw `raise` payload.
+    function onDefaultMpcError(bytes memory data) external onlyInboxReturnLeg {
+        (uint256 remoteChainId, address remoteContract) = inbox.inboxMsgSender();
+        if (remoteChainId != cotiChainId) {
+            revert OnlyMpcExecutor(remoteChainId, remoteContract);
+        }
+
+        bytes32 requestId = inbox.inboxSourceRequestId();
+        IInbox.InboxErrorType errType = inbox.inboxErrorType();
+        if (errType == IInbox.InboxErrorType.SystemError) {
+            (uint64 code, bytes memory message) = abi.decode(data, (uint64, bytes));
+            emit ErrorRemoteCall(requestId, code, message);
+        } else if (errType == IInbox.InboxErrorType.Exception) {
+            if (remoteContract != mpcExecutorAddress) {
+                revert OnlyMpcExecutor(remoteChainId, remoteContract);
+            }
+            emit ErrorRemoteCall(requestId, 0, data);
+        } else {
+            revert UnexpectedErrorContext();
+        }
     }
 }
